@@ -905,28 +905,28 @@ spec:RegisterAbilities( {
 
 
 spec:RegisterSetting( "use_deep_breath", true, {
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( 357210 ) ),
+    name = strformat( "使用 %s", Hekili:GetSpellLinkWithTexture( 357210 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended, which will force your character to select a destination and move.  By default, your Cooldowns "
-        .. "toggle must also be active.  This setting does not apply to %s.\n\n"
-        .. "If unchecked, it will never be recommended, which may result in lost DPS if left unused for an extended period of time.",
-        Hekili:GetSpellLinkWithTexture( 357210 ), Hekili:GetSpellLinkWithTexture( spec.abilities.breath_of_eons.id ) ),
+    desc = strformat( "如果勾选，可能会推荐使用 %s，这将迫使你的角色选择一个目的地进行移动。"
+        .. "默认情况下，需要【爆发】开关处于激活状态。\n\n"
+        .. "如果不勾选，将永远不会被推荐，如果一直不使用，可能会导致DPS损失。",
+        Hekili:GetSpellLinkWithTexture( 357210 ) ),
     width = "full",
     -- hidden = function() return state.talent.breath_of_eons.enabled end,
 } )
 
 spec:RegisterSetting( "use_unravel", false, {
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( 368432 ) ),
+    name = strformat( "使用 %s", Hekili:GetSpellLinkWithTexture( 368432 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended if your target has an absorb shield applied.  By default, your Interrupts toggle must also be active.",
+    desc = strformat( "如果勾选，若你的目标拥有减伤盾，%s 可能会被推荐。默认情况下，%s 需要【打断】开关处于激活状态。",
     Hekili:GetSpellLinkWithTexture( 368432 ) ),
     width = "full",
 } )
 
 spec:RegisterSetting( "use_hover", nil, {
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( 358267 ) ),
+    name = strformat( "使用 %s", Hekili:GetSpellLinkWithTexture( 358267 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended.  In the default priority, this occurs when you are moving and you have charges available.", Hekili:GetSpellLinkWithTexture( 358267 ) ),
+    desc = strformat( "如果勾选，可能会推荐是用 %s 。在默认优先级中，当你正在移动且有可用的技能充能时，才会出现此推荐。", Hekili:GetSpellLinkWithTexture( 358267 ) ),
     get = function()
         return not Hekili.DB.profile.specs[ 1473 ].abilities.hover.disabled
     end,
@@ -936,49 +936,49 @@ spec:RegisterSetting( "use_hover", nil, {
 } )
 
 spec:RegisterSetting( "use_verdant_embrace", false, {
-    name = strformat( "Use %s with %s", Hekili:GetSpellLinkWithTexture( 360995 ), Hekili:GetSpellLinkWithTexture( spec.talents.ancient_flame[2] ) ),
+    name = strformat( "使用 %s 获得 %s ", Hekili:GetSpellLinkWithTexture( 360995 ), Hekili:GetSpellLinkWithTexture( spec.talents.ancient_flame[2] ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended to cause %s.", Hekili:GetSpellLinkWithTexture( 360995 ), spec.auras.ancient_flame.name ),
+    desc = strformat( "如果勾选，可能会推荐使用 %s 来获得 %s。", Hekili:GetSpellLinkWithTexture( 360995 ), spec.auras.ancient_flame.name ),
     width = "full"
 } )
 
 --[[ spec:RegisterSetting( "skip_boe", false, {
-    name = strformat( "%s: Skip %s", Hekili:GetSpellLinkWithTexture( spec.abilities.time_skip.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.breath_of_eons.id ) ),
+    name = strformat( "%s: 跳过 %s", Hekili:GetSpellLinkWithTexture( spec.abilities.time_skip.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.breath_of_eons.id ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended without %s on cooldown.  This setting will waste cooldown recovery, but may be useful to you.",
+    desc = strformat( "如果勾选，可能会推荐你使用 %s，前提是 %s 处于冷却状态。这个设置将浪费冷却恢复时间，但可能对你有用。",
         Hekili:GetSpellLinkWithTexture( spec.abilities.time_skip.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.breath_of_eons.id ) ),
     width = "full",
 } ) ]]
 
 spec:RegisterSetting( "manage_attunement", false, {
-    name = strformat( "Manage %s", Hekili:GetSpellLinkWithTexture( spec.talents.draconic_attunements[2] ) ),
+    name = strformat( "协调 %s", Hekili:GetSpellLinkWithTexture( spec.talents.draconic_attunements[2] ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended when out-of-combat, resuming %s if no one else is supplying the aura or otherwise switching to %s.\n\n"
-        .. "This option can be distracting as some abilities can swap your attunement in combat.", Hekili:GetSpellLinkWithTexture( spec.talents.draconic_attunements[2] ),
+    desc = strformat( "如果勾选，当脱离战斗时，如果没有其他人提供光环或者需要切换到%s时，可能会建议使用%s。\n\n"
+        .. "此选项可能会使你分心，因为某些技能可能会在战斗中切换你的姿态。", Hekili:GetSpellLinkWithTexture( spec.talents.draconic_attunements[2] ),
         spec.abilities.black_attunement.name, spec.abilities.bronze_attunement.name ),
     width = "full"
 } )
 
 spec:RegisterSetting( "manage_source_of_magic", false, {
-    name = strformat( "Manage %s", Hekili:GetSpellLinkWithTexture( spec.talents.source_of_magic[2] ) ),
+    name = strformat( "协调 %s", Hekili:GetSpellLinkWithTexture( spec.talents.source_of_magic[2] ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended when out-of-combat when you are in a group and none of your allies appear to have your aura applied.\n\n"
-        .. "This option can be distracting because some groups may not have a healer.", Hekili:GetSpellLinkWithTexture( spec.talents.source_of_magic[2] ) ),
+    desc = strformat( "如果勾选，当你在团队中且没有队友拥有你的光环时，可能会在脱离战斗时建议使用%s。\n\n"
+        .. "由于某些团队可能没有治疗者，此选项可能会使你分心。", Hekili:GetSpellLinkWithTexture( spec.talents.source_of_magic[2] ) ),
     width = "full"
 } )
 
 spec:RegisterSetting( "use_early_chain", false, {
-    name = strformat( "%s: Chain Channel", Hekili:GetSpellLinkWithTexture( 356995 ) ),
+    name = strformat( "%s: 链接通道", Hekili:GetSpellLinkWithTexture( 356995 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended while already channeling it, extending the channel.",
+    desc = strformat( "如果勾选，%s 可能会在正在引导时被推荐，用于延续通道。",
         Hekili:GetSpellLinkWithTexture( 356995 ) ),
     width = "full"
 } )
 
 spec:RegisterSetting( "use_clipping", false, {
-    name = strformat( "%s: Clip Channel", Hekili:GetSpellLinkWithTexture( 356995 ) ),
+    name = strformat( "%s: 中断通道", Hekili:GetSpellLinkWithTexture( 356995 ) ),
     type = "toggle",
-    desc = strformat( "If checked, other abilities may be recommended during %s, breaking its channel.", Hekili:GetSpellLinkWithTexture( 356995 ) ),
+    desc = strformat( "如果勾选，在 %s 期间可能会打断通道，推荐其他技能。", Hekili:GetSpellLinkWithTexture( 356995 ) ),
     width = "full",
 } )
 
@@ -997,7 +997,7 @@ spec:RegisterOptions( {
     damageOnScreen = true,
     damageExpiration = 8,
 
-    package = "Augmentation",
+    package = "增辉Simc",
 } )
 
-spec:RegisterPack( "Augmentation", 20230716.3, [[Hekili:DN12YTnos0Vf)IS9KizjkBNlRSRkzMm14uBYlk7(OiHiHKWAsco8IKDkx8BF7g8gaiGKYmoztTVylj280NUr3nA0yXKfFzX8asoDXNDg7mD8RMC9Ojxof(4I55pMqxmpH4Fpzn8Hyse833vSoIgNtYz8y8HpgYjbiiz8IuFqGn55jzV9Il2TB3iM)Jd3szXzJ85rxSJV7cI0RpKULFpnDyYw6WGKSHP86F3NZdd47IZgswYcz5mA2I5llyH53fVyPb(686jtagKq9x85jx(kG7Bybb0kHPz(lMJcpC8Rgo563w6v69LDuY9LE)RKnuYwsyPxiFnZV0lNx6XIss5BPLER4PuFswonO0llh8bLEBZgv6r8ZlW3P(32THfc)ZFdjDnlE9OYpoS07tW7cWrcbJndGcEh4xaGyXOossz8uw(JGWLFSLBxj42V)(l6XlwMGoLEV4lSia453ZsEzP3W7IZPP7a2gd20MukjaeKhhka2d4XhIZkqMqaCz4hEpiu(MspAucFhvqj0gl9wtfeLfZY2qduj2LcI9UGavu6ZtbhJHLqJedxcdYuHEAh0Zfrqa)xb(pIaVeyfGhTKa8JKKeY8fbiG)yf6jfMvkHf0yT)gp(uquXlbHzaM)bqbGsrSGgsRQENg1JoIoFlSQYqVuJ3cP0h4XOZnbzqJc)D2dMeYNhhWQy6zljzi24N)Ws8VFITEdqYF93oVbL3f8FkWLG3hYGOTuiicyHpe7aqvKjcYWGMLW)HFldnWGI4asCUcpuxGjO53TafrEOogLwdQQJyIWrCxmqBuCijiK2MPc6UZkUdsQ)3ys9PqqtblGoAXCK4zIsj0vKIWC4JFwuAbI7ffk(ZcAy4I50yYYqAWI3VihsGLfOioLSLQlYuzr8jfO35RG)XDvOOAKIWxIc39lZ9HmmqEcujtSWoRku3T6B)sPNth2HSTDWcyDLvSI4BflqdW45vRgTbJWgHLR6(TLI1ax(kxkepiEyNQeVaQJRLnoispZNrJ91TQxzLjP0vWlTbFshouigZncdXWx(1wF5tAQonkKssAT9Sr1slmMAjqhMBgKwO8WoeyTj7U5v56kc2uoxcNuAeHHzkZUrzrPXb2zfDIERKKD27kiO3TYFdwAvrn3C(I5tq7)n2dj()AJhY2DR)o6gMm(q(HFMTYI6IygwFNmXQHPRKcOO(tpjrvteakrCzNIvtJf6ZXQ(WxAl1nGdotKNPKq3D8cSkmywJ1uUwfczpW0AzxYXs9dW9Kbo6kZXPJL8ozuxGdrv8B6pD8lHl(pso7fOflwA5I4c2ar3wn8wkCVI02RFpXEb8wBucUr5Pf0ot4fsEIMOV9isxTBnHqV1vDKSn5qWWR)2yOS)DTFWiXg6kRzTm1GOYKibsHbEiAWqWe7BX0vaGeJwyELhwj3)SJmHUIT1PWyJYklNNFev1Qs5TVN2pruvVaS9nIQJVPX0igTAnZPHSsmOOTtorU3XzfNFufrDSV7GbYD5pmY5iiN9k8gi31)Wi3ub5o42bTKdG)QFyKtl6ZX(UcDj4Av8BKUvtbuAstOoI5bkMVS9Sm1vA6ArwQIEpPk9UrPUEpbe62EX9J0dksVZYQkzJvLZ5UIcQZ6jwfIvY6USindBLqQF70IKMn4CSxsVZphaUWi0nNLiIam0YjyPPH0CxsajP6ayksz1gNzSrl1YHQNfboIh0hqG7YqyZCEKWiSVBWFn6PE0O9Xg4Cr4HAHq3LPeFX(4o79emnNfRDDQ6WynT6vZ3KIewi6XHV(qwEkj7RK(X36Dq4yVK9jhf0nz7T7pxro5iY6oPQOqZjjzz1VUuAo5RfWgnGcy3JKlxCEXQjJ0Eu79LlcXVOXbef36Fzkp(R6oFZc1EoDJOVoL3VlTQbbIWevneh1mATh3Ek)9rFI)9UK88IyXij6rC1hV)rbuF(C020Hu6876AS2kpX2ZJyXu5ZnOb)(NOGL6Lz5Gsej1tg)8u38ByGdw6wuvYxllP0GhuL6nYsPKLPiNiQgsaYq56gURZI57iPXWlbA)lBOIrtXtZRN14P1dC6uCOy)zbtmqtOsgoYZICEerm9w)nK41uCYJ)tyHQ071VT07x5XG2ep(uJdd40QPUz(Hnj5GqNn5HZpeYTD(RbAVJDFK41)44AaB)866A4nF38fwq(VSVWcEpJ(IjJFMPSnaFo58RmRcLnA1q34jK6bSLyV)2a7m1mWQDGQHS52t7b91MHwRPlnST0s2XcE)(H0W3Edt9uHLfZNtvyzz1uRmAkzFD70tnwYwF2ut5hVtSracUttpuLEIBIaEmSLtr(gE6I5Zj0WGcyVIZAV5IZ)hGgtjXzHv7pS8XsV)GEplKH7lYxX6MOE2O2oTEXnxyUjPxYwDZHA0Q8JMWtRzieirpvdS3p1nJndLEpjsKYq7twWqVXLoqm2X0aBDln4e79jzJ(AnSiXFJDgnBY4b7RJiB(PU(Em)C1oEmltxVoMFUCxoyKATmWte3dM8puFVxY)uV75s(HYqJUiClOzTN67xCKLvCGcuOQZjnq6issRE9VRkzmm4UuCai8sxeLSqsdh7LDtN4Mj4RCIXojgOVV6GtSUF4a735WSBADidSCy5B7oO8HzCe5bHR(Nrk3maOEE4)hZl1WQ2KzLlK5PN2ZLXm7sfZS5woqKKs7vVkJBhlbP5RW42PGm4vxmq5AlMnDSsuV4sl(XOl9mAHFQ3DHixRtkm9wfOAx(qCo49C8I9FhhV4q3VXTtVsv5YfoTYGgNWA)ajhO(DxGp(iYmvQLO085GZoy46tpzEc)NFekwTKW3fnBnZUosOE0YZCgCMHbkdbEhIfhuBog02LF302udA76VBAREbuvF3E1ZI(KgvUC8PArcLILFdn)i25wQyW(A8b3PUE(0MQaBkUS)qXNj94ke0ggUI6uhOSS5RDkRbwp5ITnAMPTvu)rjlZeTHjlLTEeASR9O9Re9A3Nu1PvTJQzA0p90EozJmCYJ5v21z69gCM5blJ7lvHO2aLpxmITf)3)]] )
+spec:RegisterPack( "增辉Simc", 20230716.3, [[Hekili:DN12YTnos0Vf)IS9KizjkBNlRSRkzMm14uBYlk7(OiHiHKWAsco8IKDkx8BF7g8gaiGKYmoztTVylj280NUr3nA0yXKfFzX8asoDXNDg7mD8RMC9Ojxof(4I55pMqxmpH4Fpzn8Hyse833vSoIgNtYz8y8HpgYjbiiz8IuFqGn55jzV9Il2TB3iM)Jd3szXzJ85rxSJV7cI0RpKULFpnDyYw6WGKSHP86F3NZdd47IZgswYcz5mA2I5llyH53fVyPb(686jtagKq9x85jx(kG7Bybb0kHPz(lMJcpC8Rgo563w6v69LDuY9LE)RKnuYwsyPxiFnZV0lNx6XIss5BPLER4PuFswonO0llh8bLEBZgv6r8ZlW3P(32THfc)ZFdjDnlE9OYpoS07tW7cWrcbJndGcEh4xaGyXOossz8uw(JGWLFSLBxj42V)(l6XlwMGoLEV4lSia453ZsEzP3W7IZPP7a2gd20MukjaeKhhka2d4XhIZkqMqaCz4hEpiu(MspAucFhvqj0gl9wtfeLfZY2qduj2LcI9UGavu6ZtbhJHLqJedxcdYuHEAh0Zfrqa)xb(pIaVeyfGhTKa8JKKeY8fbiG)yf6jfMvkHf0yT)gp(uquXlbHzaM)bqbGsrSGgsRQENg1JoIoFlSQYqVuJ3cP0h4XOZnbzqJc)D2dMeYNhhWQy6zljzi24N)Ws8VFITEdqYF93oVbL3f8FkWLG3hYGOTuiicyHpe7aqvKjcYWGMLW)HFldnWGI4asCUcpuxGjO53TafrEOogLwdQQJyIWrCxmqBuCijiK2MPc6UZkUdsQ)3ys9PqqtblGoAXCK4zIsj0vKIWC4JFwuAbI7ffk(ZcAy4I50yYYqAWI3VihsGLfOioLSLQlYuzr8jfO35RG)XDvOOAKIWxIc39lZ9HmmqEcujtSWoRku3T6B)sPNth2HSTDWcyDLvSI4BflqdW45vRgTbJWgHLR6(TLI1ax(kxkepiEyNQeVaQJRLnoispZNrJ91TQxzLjP0vWlTbFshouigZncdXWx(1wF5tAQonkKssAT9Sr1slmMAjqhMBgKwO8WoeyTj7U5v56kc2uoxcNuAeHHzkZUrzrPXb2zfDIERKKD27kiO3TYFdwAvrn3C(I5tq7)n2dj()AJhY2DR)o6gMm(q(HFMTYI6IygwFNmXQHPRKcOO(tpjrvteakrCzNIvtJf6ZXQ(WxAl1nGdotKNPKq3D8cSkmywJ1uUwfczpW0AzxYXs9dW9Kbo6kZXPJL8ozuxGdrv8B6pD8lHl(pso7fOflwA5I4c2ar3wn8wkCVI02RFpXEb8wBucUr5Pf0ot4fsEIMOV9isxTBnHqV1vDKSn5qWWR)2yOS)DTFWiXg6kRzTm1GOYKibsHbEiAWqWe7BX0vaGeJwyELhwj3)SJmHUIT1PWyJYklNNFev1Qs5TVN2pruvVaS9nIQJVPX0igTAnZPHSsmOOTtorU3XzfNFufrDSV7GbYD5pmY5iiN9k8gi31)Wi3ub5o42bTKdG)QFyKtl6ZX(UcDj4Av8BKUvtbuAstOoI5bkMVS9Sm1vA6ArwQIEpPk9UrPUEpbe62EX9J0dksVZYQkzJvLZ5UIcQZ6jwfIvY6USindBLqQF70IKMn4CSxsVZphaUWi0nNLiIam0YjyPPH0CxsajP6ayksz1gNzSrl1YHQNfboIh0hqG7YqyZCEKWiSVBWFn6PE0O9Xg4Cr4HAHq3LPeFX(4o79emnNfRDDQ6WynT6vZ3KIewi6XHV(qwEkj7RK(X36Dq4yVK9jhf0nz7T7pxro5iY6oPQOqZjjzz1VUuAo5RfWgnGcy3JKlxCEXQjJ0Eu79LlcXVOXbef36Fzkp(R6oFZc1EoDJOVoL3VlTQbbIWevneh1mATh3Ek)9rFI)9UK88IyXij6rC1hV)rbuF(C020Hu6876AS2kpX2ZJyXu5ZnOb)(NOGL6Lz5Gsej1tg)8u38ByGdw6wuvYxllP0GhuL6nYsPKLPiNiQgsaYq56gURZI57iPXWlbA)lBOIrtXtZRN14P1dC6uCOy)zbtmqtOsgoYZICEerm9w)nK41uCYJ)tyHQ071VT07x5XG2ep(uJdd40QPUz(Hnj5GqNn5HZpeYTD(RbAVJDFK41)44AaB)866A4nF38fwq(VSVWcEpJ(IjJFMPSnaFo58RmRcLnA1q34jK6bSLyV)2a7m1mWQDGQHS52t7b91MHwRPlnST0s2XcE)(H0W3Edt9uHLfZNtvyzz1uRmAkzFD70tnwYwF2ut5hVtSracUttpuLEIBIaEmSLtr(gE6I5Zj0WGcyVIZAV5IZ)hGgtjXzHv7pS8XsV)GEplKH7lYxX6MOE2O2oTEXnxyUjPxYwDZHA0Q8JMWtRzieirpvdS3p1nJndLEpjsKYq7twWqVXLoqm2X0aBDln4e79jzJ(AnSiXFJDgnBY4b7RJiB(PU(Em)C1oEmltxVoMFUCxoyKATmWte3dM8puFVxY)uV75s(HYqJUiClOzTN67xCKLvCGcuOQZjnq6issRE9VRkzmm4UuCai8sxeLSqsdh7LDtN4Mj4RCIXojgOVV6GtSUF4a735WSBADidSCy5B7oO8HzCe5bHR(Nrk3maOEE4)hZl1WQ2KzLlK5PN2ZLXm7sfZS5woqKKs7vVkJBhlbP5RW42PGm4vxmq5AlMnDSsuV4sl(XOl9mAHFQ3DHixRtkm9wfOAx(qCo49C8I9FhhV4q3VXTtVsv5YfoTYGgNWA)ajhO(DxGp(iYmvQLO085GZoy46tpzEc)NFekwTKW3fnBnZUosOE0YZCgCMHbkdbEhIfhuBog02LF302udA76VBAREbuvF3E1ZI(KgvUC8PArcLILFdn)i25wQyW(A8b3PUE(0MQaBkUS)qXNj94ke0ggUI6uhOSS5RDkRbwp5ITnAMPTvu)rjlZeTHjlLTEeASR9O9Re9A3Nu1PvTJQzA0p90EozJmCYJ5v21z69gCM5blJ7lvHO2aLpxmITf)3)]] )

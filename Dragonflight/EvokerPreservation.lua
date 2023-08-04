@@ -878,18 +878,18 @@ spec:RegisterAbilities( {
 
 spec:RegisterSetting( "experimental_msg", nil, {
     type = "description",
-    name = "|cFFFF0000WARNING|r:  Healer support in this addon is focused on DPS output only.  This is more useful for solo content or downtime when your healing output is less critical in a group/encounter.  Use at your own risk.",
+    name = "|cFFFF0000警告|r：插件中治疗专精的优先级只用于DPS输出场景。这对你在单人战斗或发呆时间更有用，因为此时你的治疗输出不那么重要。使用时需自行承担风险。",
     width = "full",
 } )
 
 local deep_breath = GetSpellInfo( 357210 ) or "Deep Breath"
 
 spec:RegisterSetting( "use_deep_breath", true, {
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( 357210 ) ),
+    name = strformat( "使用 %s", Hekili:GetSpellLinkWithTexture( 357210 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended, which will force your character to select a destination and move.  By default, %s requires your Cooldowns "
-        .. "toggle to be active.\n\n"
-        .. "If unchecked, |W%s|w will never be recommended, which may result in lost DPS if left unused for an extended period of time.",
+    desc = strformat( "如果勾选，可能会推荐使用 %s，这将迫使你的角色选择一个目的地进行移动。"
+        .. "默认情况下，%s 需要【爆发】开关处于激活状态。\n\n"
+        .. "如果不勾选，|W%s|w 将永远不会被推荐，如果一直不使用，可能会导致DPS损失。",
         Hekili:GetSpellLinkWithTexture( 357210 ), deep_breath, deep_breath ),
     width = "full",
 } )
@@ -897,9 +897,9 @@ spec:RegisterSetting( "use_deep_breath", true, {
 local unravel = GetSpellInfo( 368432 ) or "Unravel"
 
 spec:RegisterSetting( "use_unravel", false, {
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( 368432 ) ),
+    name = strformat( "使用 %s", Hekili:GetSpellLinkWithTexture( 368432 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended if your target has an absorb shield applied.  By default, %s also requires your Interrupts toggle to be active.",
+    desc = strformat( "如果勾选，若你的目标拥有减伤盾，%s 可能会被推荐。默认情况下，%s 需要【打断】开关处于激活状态。",
         Hekili:GetSpellLinkWithTexture( 368432 ), unravel ),
     width = "full",
 } )
@@ -921,8 +921,8 @@ spec:RegisterOptions( {
 
     potion = "potion_of_spectral_intellect",
 
-    package = "Preservation",
+    package = "恩护Simc",
 } )
 
 
-spec:RegisterPack( "Preservation", 20230205, [[Hekili:LwvtVjomq0Fl9svRAvwYhTL9q3d7PTCaTsPNDSjzcXQH4S2ou1kK)TVJDOGjb6UOkeOW438EJh)ghsi5zsAbtdK5rtIINen5UGWhcNgFhjv)wlqsBz5VWwIp0WwH)(BjOa5AMMlASl(wTGvyjrj6K5ias6IoET(PgYIJZCmjL1PRess6VGx41CsAfVOa6tau5K0NR4kd1(LzOBladvuI)p3kSHwZvAC5sH0q7zjaRgPOKxJ1qpkvqReYfRwW03843wudkfVzzMOmtxbzlKIM3bZmZSTOrm)PdQR9dKJvki5VBZRSgBa(l21izRHdWxaqlYmW0v(HBfUQ2pxfKX1WkLFWsUe2M9TWQwXRGmtlEm8wE5JL8Lv6mjSIXBu)im5MCMsNP5hwsNGHOXmm9SiiEmbrNfbjJj4OPxjwdsl2vI1yt)GElhp(0Wsj6PSiw0vwgGNPqtoQyNuPd6AV8Ql6ZCZg36o(cgj51(exZxV781s8)fd(eWEVd30kTK)cSV2V0l9cXR40c(KYo2SBGGK(kt2GyvK0NWMLudfgA0aBEGzgoE1c5K5Hj3pLK6I6gCHswxTgFCUBqUpnsQZhtsHgg66li)KOrn9bmYxpaCSp4T(8bqs8H457ha7oFy9ZbdqC)bA9XCXaqpybTpYo8E2nCxj52DfZg2ZPzO)Wqdtm0Bm0DNFiB7CN2UhQX0VQgt)mjISs89VQerFMeXwjcN8v14eSN4ypCa77jQ31VxpNZ3Lt0jZ5OZWg6Lg6vg6fg62BbOB2yOJNgpSAn0R9mKExw4QH4twdNPm71W)EdNgj)JEJBJn6wHpOZ)weKoT99zBF91Ob8J)YSdNz(4d5Vd]] )
+spec:RegisterPack( "恩护Simc", 20230205, [[Hekili:LwvtVjomq0Fl9svRAvwYhTL9q3d7PTCaTsPNDSjzcXQH4S2ou1kK)TVJDOGjb6UOkeOW438EJh)ghsi5zsAbtdK5rtIINen5UGWhcNgFhjv)wlqsBz5VWwIp0WwH)(BjOa5AMMlASl(wTGvyjrj6K5ias6IoET(PgYIJZCmjL1PRess6VGx41CsAfVOa6tau5K0NR4kd1(LzOBladvuI)p3kSHwZvAC5sH0q7zjaRgPOKxJ1qpkvqReYfRwW03843wudkfVzzMOmtxbzlKIM3bZmZSTOrm)PdQR9dKJvki5VBZRSgBa(l21izRHdWxaqlYmW0v(HBfUQ2pxfKX1WkLFWsUe2M9TWQwXRGmtlEm8wE5JL8Lv6mjSIXBu)im5MCMsNP5hwsNGHOXmm9SiiEmbrNfbjJj4OPxjwdsl2vI1yt)GElhp(0Wsj6PSiw0vwgGNPqtoQyNuPd6AV8Ql6ZCZg36o(cgj51(exZxV781s8)fd(eWEVd30kTK)cSV2V0l9cXR40c(KYo2SBGGK(kt2GyvK0NWMLudfgA0aBEGzgoE1c5K5Hj3pLK6I6gCHswxTgFCUBqUpnsQZhtsHgg66li)KOrn9bmYxpaCSp4T(8bqs8H457ha7oFy9ZbdqC)bA9XCXaqpybTpYo8E2nCxj52DfZg2ZPzO)Wqdtm0Bm0DNFiB7CN2UhQX0VQgt)mjISs89VQerFMeXwjcN8v14eSN4ypCa77jQ31VxpNZ3Lt0jZ5OZWg6Lg6vg6fg62BbOB2yOJNgpSAn0R9mKExw4QH4twdNPm71W)EdNgj)JEJBJn6wHpOZ)weKoT99zBF91Ob8J)YSdNz(4d5Vd]] )

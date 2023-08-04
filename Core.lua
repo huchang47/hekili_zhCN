@@ -41,7 +41,7 @@ local function EmbedBlizOptions()
     open:SetPoint( "CENTER", panel, "CENTER", 0, 0 )
     open:SetWidth( 250 )
     open:SetHeight( 25 )
-    open:SetText( "Open Hekili Options Panel" )
+    open:SetText( "打开Hekili设置界面" )
 
     open:SetScript( "OnClick", function ()
         ns.StartConfiguration()
@@ -97,15 +97,15 @@ function Hekili:OnInitialize()
 
         if p.toggles.essences.override then
             -- Don't show Essences here if it's overridden by CDs anyway?
-            return format( "|c%s%s|r %sCD|r %sInt|r %sDef|r", color,
-                m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
+            return format( "|c%s%s|r %s爆发|r %s打断|r %s防御|r", color,
+                m == "single" and "单体" or ( m == "aoe" and "AOE" or ( m == "dual" and "双显" or ( m == "reactive" and "响应" or "自动" ) ) ),
                 p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
                 p.toggles.interrupts.value and "|cFF00FF00" or "|cFFFF0000",
                 p.toggles.defensives.value and "|cFF00FF00" or "|cFFFF0000" )
         else
-            return format( "|c%s%s|r %sCD|r %smCD|r %sInt|r",
+            return format( "|c%s%s|r %s爆发|r %s盟约|r %s打断|r",
                 color,
-                m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
+                m == "single" and "单体" or ( m == "aoe" and "AOE" or ( m == "dual" and "双显" or ( m == "reactive" and "响应" or "自动" ) ) ),
                 p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
                 p.toggles.essences.value and "|cFF00FF00" or "|cFFFF0000",
                 p.toggles.interrupts.value and "|cFF00FF00" or "|cFFFF0000" )
@@ -193,7 +193,7 @@ function Hekili:OnEnable()
     self:ForceUpdate( "ADDON_ENABLED" )
 
     if self.BuiltFor > self.CurrentBuild then
-        self:Notify( "|cFFFF0000WARNING|r: This version of Hekili is for a future version of WoW; you should reinstall for " .. self.GameBuild .. "." )
+        self:Notify( "|cFFFF0000WARNING|r: 当前版本的Hekili是为WOW的未来版本准备的。你应该重新安装 " .. self.GameBuild .. "。" )
     end
 end
 
