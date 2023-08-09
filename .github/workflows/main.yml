@@ -9,6 +9,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 # a workflow is built up as jobs, and within these jobs are steps
 jobs:
@@ -38,6 +39,8 @@ jobs:
       # once cloned, we just run the GitHub Action for the packager project
       - name: Package and Release
         uses: BigWigsMods/packager@v2
+        with:
+          args: -n "Hekili_zhCN-{project-version}"
 
       # another example where we supply additional arguments, this example is specifically to release
       # for the Classic version of the game
