@@ -42,10 +42,10 @@ Hekili.GameBuild = buildStr
 ns.PTR = buildNum > 100205
 
 
-ns.Patrons = "|cFFFFD100Current Status|r\n\n"
-    .. "All existing specializations are currently supported, though healer priorities are experimental and focused on rotational DPS only.\n\n"
-    .. "If you find odd recommendations or other issues, please follow the |cFFFFD100Issue Reporting|r link below and submit all the necessary information to have your issue investigated.\n\n"
-    .. "Please do not submit tickets for routine priority updates (i.e., from SimulationCraft).  I will routinely update those when they are published.  Thanks!"
+ns.Patrons = "|cFFFFD100目前的状态|r\n\n"
+    .. "目前已经支持所有的专精，但治疗专精的优先级是试验性的，只可用于发呆时打DPS。\n\n"
+    .. "如果你发现奇怪的问题或建议，请前往下方的|cFFFFD100问题报告|r链接提交必要的信息，以便你的问题能够尽快修正。\n\n"
+    .. "请不要提交默认优先级的问题（来自于SimulationCraft），它们将在发布后同步更新。谢谢！"
 
 do
     local cpuProfileDB = {}
