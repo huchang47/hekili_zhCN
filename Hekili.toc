@@ -1,5 +1,5 @@
 ## Interface: 100207
-## Version: @project-version@
+## Version: v10.2.7-1.0.4
 ## Title: Hekili
 ## Author: Hekili
 ## IconTexture: Interface\AddOns\Hekili\Textures\LOGO-ORANGE.blp
