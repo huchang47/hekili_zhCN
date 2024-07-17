@@ -1,0 +1,13 @@
+# Hekili
+
+- Merge branch 'dragonflight' of https://github.com/Hekili/hekili into dragonflight  
+- Arms: Fix AOE action list.  
+- Destro: Tweak Immolate in multi-target.  
+- Resto: Remove Primordial Wave from priority.  
+- Holy: Tweak Empyreal Blaze.  
+- Remove ancient changelog.  
+- Prot: Tweak setting.  
+- Tweak targeting diagnostic.  
+- Ret: Adjust Fyr'alath usage.  
+- Remove redundant interrupt filters.  
+- Merge pull request #3281 from syrifgit/dragonflight  
