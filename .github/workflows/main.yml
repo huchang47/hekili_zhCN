@@ -1,47 +1,48 @@
-# 对该工作流程的描述，可以是任何你想要的内容
+# description of this workflow, can be anything you want
 name: Package and Release
 
-# 我们需要让 GitHub 知道我们想在什么时候发布，通常只有在创建新标签时。
-# 这将只针对标签，而不是所有推送到主分支的内容。
-# 这一部分可以根据您的喜好进行大量定制，比如只针对与某个词匹配的标签、
-# 其他分支，甚至是 pullrequests。
+# we need to let GitHub know _when_ we want to release, typically only when we create a new tag.
+# this will target only tags, and not all pushes to the master branch.
+# this part can be heavily customized to your liking, like targeting only tags that match a certain word,
+# other branches or even pullrequests.
 on:
   push:
     tags:
       - "v*"
 
-# 工作流程是以工作的形式建立起来的，而在这些工作中又有步骤
+# a workflow is built up as jobs, and within these jobs are steps
 jobs:
 
-  # "release" 这是一份工作，你可以给它起任何你想要的名字
+  # "release" is a job, you can name it anything you want
   release:
 
-    # 我们可以在任何地方运行我们的步骤，但 "ubuntu-latest "镜像是一个安全的选择
+    # we can run our steps on pretty much anything, but the "ubuntu-latest" image is a safe bet
     runs-on: ubuntu-latest
 
-    # 指定打包程序使用的环境变量，与 GitHub 上项目的机密相匹配
+    # specify the environment variables used by the packager, matching the secrets from the project on GitHub
     env:
       CF_API_KEY: ${{ secrets.CF_API_KEY }}
       WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
       WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
-      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}  # "GITHUB_TOKEN "是始终提供给工作流的一个密钥
-                                                 # 对于您自己的标记，名称不能以 "GITHUB_"开头
-    # "steps"包含打包和发布附加组件所需的所有步骤列表
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }} # "GITHUB_TOKEN" is a secret always provided to the workflow
+                                                 # for your own token, the name cannot start with "GITHUB_"
+
+    # "steps" holds a list of all the steps needed to package and release our AddOn
     steps:
 
-     # 我们首先要克隆 AddOn 项目，这是一个必要步骤
+      # we first have to clone the AddOn project, this is a required step
       - name: Clone Project
-        uses: actions/checkout@v1  # 注意：checkout@v2 会破坏 git 历史记录，因此生成更新日志和
-                                   # 无标记构建的文件命名将无法正常工作
+        uses: actions/checkout@v1 # note: checkout@v2 breaks git history, so generating a changelog and
+                                   # file naming for non-tagged builds will not work properly
 
-      # 克隆后，我们只需运行打包程序项目的 GitHub 操作即可
+      # once cloned, we just run the GitHub Action for the packager project
       - name: Package and Release
         run: make changelog > CHANGELOG.txt
         uses: BigWigsMods/packager@v2
 
-      # 另一个我们提供额外参数的例子，这个例子专门用于释放
-      # 经典版游戏
-      # - 名称： Classic 的软件包和发布
-      # 使用：BigWigsMods/packager@v1
-      #   with:
-      #     args: -g classic -w 0
+      # another example where we supply additional arguments, this example is specifically to release
+      # for the Classic version of the game
+      # - name: Package and release for Classic
+      # uses: BigWigsMods/packager@v1
+      # with:
+      # args: -g classic -w 0

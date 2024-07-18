@@ -1,5 +1,8 @@
 # Hekili
 
+## [v10.2.7-1.0.4](https://github.com/Hekili/hekili/tree/v10.2.7-1.0.4) (2024-07-15)
+[Full Changelog](https://github.com/Hekili/hekili/compare/v10.2.7-1.0.3...v10.2.7-1.0.4) [Previous Releases](https://github.com/Hekili/hekili/releases)
+
 - Merge branch 'dragonflight' of https://github.com/Hekili/hekili into dragonflight  
 - Arms: Fix AOE action list.  
 - Destro: Tweak Immolate in multi-target.  
@@ -10,4 +13,4 @@
 - Tweak targeting diagnostic.  
 - Ret: Adjust Fyr'alath usage.  
 - Remove redundant interrupt filters.  
-- Merge pull request #3281 from syrifgit/dragonflight  
+- Merge pull request #3281 from syrifgit/dragonflight
