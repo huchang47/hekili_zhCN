@@ -1639,7 +1639,7 @@ spec:RegisterAbilities( {
 
 spec:RegisterSetting( "experimental_msg", nil, {
     type = "description",
-    name = "|cFFFF0000WARNING|r:  Healer support in this addon is focused on DPS output only.  This is more useful for solo content or downtime when your healing output is less critical in a group/encounter.  Use at your own risk.",
+    name = "这对你在单人战斗或发呆时间更有用，因为此时你的治疗输出不那么重要。使用时需自行承担风险",
     width = "full",
 } )
 
@@ -1662,8 +1662,8 @@ spec:RegisterOptions( {
 
     potion = "potion_of_spectral_intellect",
 
-    package = "Holy Paladin",
+    package = "神圣圣骑士",
 } )
 
 
-spec:RegisterPack( "Holy Paladin", 20240730, [[Hekili:TAvWUnUnq0VLCjzxSjQYXjXnlGZH2EORBrWcOfi3KenfTeRPivjPI2aiWV9DOuKnfTu3gGCjqHZJV5nKZ8mJxe)T4OmKMe)41HxFt4QLHbH3hU6MvXr6xQiXrvi8Euo8bhvc)9pfSxmPFfXqzuUn6lmbkZYIsulXaI4OT1uM(l84T(udGQi44hV724OcAwgPhdrHbIjigrAsRKuHKQPeLjfjjM0)4RrxTtGRvKmtQGdPFJzJLXRcxD1YWpBs)wba7jeS5NO6cRSyuLw1jQkcpJiTF)yxTs4OTmsw8VfhHH0qKuuC0zMunKDUoa1G2t4uEEWRanPTTGqWA6ZKecNu2jShmPlIJSRkGSPkOewwIyxIUGKiP5fAIOwfRHkF2CoFcp3KMlf1vhtaZsPL)mud3s7Y3mThjRri70AotiFbitBVb2HQz6dhsdqLKT17jUzAOKgqGEMWZH0K0ir6cpKlNejwwRqWDIh4BCbdlRuwWGov1LLNG(25qJQ11LCp03nh6gkxFc3RMvjqVjp3d9V6IgAstGBIsLhO7))065FanUfeleSmrdFcCssjIY7BlZXzbLOV3VNcyynPs0ayGRykMQnPRnP25qTKI12R7dAhJySK()jXo)0pfL0p2FyoYUNq3soJ(mLts0cgZROxmQxQxlsQQ0h28ZiNzlBUIGHMlGKG6QUPJEkdgQ)eBXSNeq5jse3AvDOKC2CxQg1rwGSnwDTbt08Uyud5)uNLxc3s(GU9KsuviW79HD3SL4HR1JBEQ7tNAACv3paxjjyr5wK(eFUToYJGK6eODMWX97d25ZWLQnQJhDdsADoGE4oJvAzLqcno7eGb7fdncxysLK)TMkT9Nkrjaeg9eLGFpSaUWErOcmB(BO5amlbx6FxWHK1f(cFxkGnTyI1hgbG4FyX3)4b(U(DMVLVB8z2mXH2R(RVTZS7Nrt(J)(ABoBexn(Lo5zPD5W4KjT7hnHW22jXok7WGK6tR)L(FkWS54kJT(NmYGeCdEQ1(Cr7TYNlAV19Sm3zv7g9G1S7I(EExAD7wp0JFzVl56fxs3T(S5oFBB)5wZp86yCB7PwYRdDvKJDQ7YhDphjFh)Ton65wE(pXPCugg7g6gAW87eb1zxnsqJtKvt)hgCdNk2oYx5iy4ShiBMNvn6YyyqST1sWXNO9WIjPC0dPSe5ZZ5DV8AY9o6DttTxyCPwxiGNt8xqeXE4nYCANlB8po]] )
+spec:RegisterPack( "神圣圣骑士", 20240730, [[Hekili:TAvWUnUnq0VLCjzxSjQYXjXnlGZH2EORBrWcOfi3KenfTeRPivjPI2aiWV9DOuKnfTu3gGCjqHZJV5nKZ8mJxe)T4OmKMe)41HxFt4QLHbH3hU6MvXr6xQiXrvi8Euo8bhvc)9pfSxmPFfXqzuUn6lmbkZYIsulXaI4OT1uM(l84T(udGQi44hV724OcAwgPhdrHbIjigrAsRKuHKQPeLjfjjM0)4RrxTtGRvKmtQGdPFJzJLXRcxD1YWpBs)wba7jeS5NO6cRSyuLw1jQkcpJiTF)yxTs4OTmsw8VfhHH0qKuuC0zMunKDUoa1G2t4uEEWRanPTTGqWA6ZKecNu2jShmPlIJSRkGSPkOewwIyxIUGKiP5fAIOwfRHkF2CoFcp3KMlf1vhtaZsPL)mud3s7Y3mThjRri70AotiFbitBVb2HQz6dhsdqLKT17jUzAOKgqGEMWZH0K0ir6cpKlNejwwRqWDIh4BCbdlRuwWGov1LLNG(25qJQ11LCp03nh6gkxFc3RMvjqVjp3d9V6IgAstGBIsLhO7))065FanUfeleSmrdFcCssjIY7BlZXzbLOV3VNcyynPs0ayGRykMQnPRnP25qTKI12R7dAhJySK()jXo)0pfL0p2FyoYUNq3soJ(mLts0cgZROxmQxQxlsQQ0h28ZiNzlBUIGHMlGKG6QUPJEkdgQ)eBXSNeq5jse3AvDOKC2CxQg1rwGSnwDTbt08Uyud5)uNLxc3s(GU9KsuviW79HD3SL4HR1JBEQ7tNAACv3paxjjyr5wK(eFUToYJGK6eODMWX97d25ZWLQnQJhDdsADoGE4oJvAzLqcno7eGb7fdncxysLK)TMkT9Nkrjaeg9eLGFpSaUWErOcmB(BO5amlbx6FxWHK1f(cFxkGnTyI1hgbG4FyX3)4b(U(DMVLVB8z2mXH2R(RVTZS7Nrt(J)(ABoBexn(Lo5zPD5W4KjT7hnHW22jXok7WGK6tR)L(FkWS54kJT(NmYGeCdEQ1(Cr7TYNlAV19Sm3zv7g9G1S7I(EExAD7wp0JFzVl56fxs3T(S5oFBB)5wZp86yCB7PwYRdDvKJDQ7YhDphjFh)Ton65wE(pXPCugg7g6gAW87eb1zxnsqJtKvt)hgCdNk2oYx5iy4ShiBMNvn6YyyqST1sWXNO9WIjPC0dPSe5ZZ5DV8AY9o6DttTxyCPwxiGNt8xqeXE4nYCANlB8po]] )

@@ -61,8 +61,8 @@ local specTemplate = {
     maxTime = 20,
 
     -- Toggles
-    custom1Name = "Custom 1",
-    custom2Name = "Custom 2",
+    custom1Name = "自定义 1",
+    custom2Name = "自定义 2",
     noFeignedCooldown = false,
 
     abilities = {
@@ -144,7 +144,7 @@ local HekiliSpecMixin = {
         local resource = GetResourceKey( resourceID )
 
         if not resource then
-            Hekili:Error( "Unable to identify resource with PowerType " .. resourceID .. "." )
+            Hekili:Error( "无法使用 PowerType 识别资源" .. resourceID .. "." )
             return
         end
 
@@ -496,7 +496,7 @@ local HekiliSpecMixin = {
         end
 
         self:RegisterVariable( key, function()
-            return self.phases[ key ].virtual[ display or "Primary" ]
+            return self.phases[ key ].virtual[ display or "主显示" ]
         end )
     end,
 
@@ -881,11 +881,11 @@ local HekiliSpecMixin = {
                     end
                     Hekili.InvalidSpellIDs = Hekili.InvalidSpellIDs or {}
                     table.insert( Hekili.InvalidSpellIDs, a.id )
-                    Hekili:Error( "Name info not available for " .. a.id .. "." )
+                    Hekili:Error( "名称信息在" .. a.id .. "上不可用。" )
                     return
                 end
 
-                if not a.name then Hekili:Error( "Name info not available for " .. a.id .. "." ); return false end
+                -- if not a.name then Hekili:Error( "名称信息在" .. a.id .. "上不可用。" ); return false end
 
                 a.desc = GetSpellDescription( a.id ) -- was returning raw tooltip data.
 
@@ -1136,9 +1136,9 @@ function Hekili:RestoreDefaults()
         local msg
 
         if #changed == 1 then
-            msg = "The |cFFFFD100" .. changed[1] .. "|r priority was updated."
+            msg = "|cFFFFD100" .. changed[1] .. "|r优先级更新完成。"
         elseif #changed == 2 then
-            msg = "The |cFFFFD100" .. changed[1] .. "|r and |cFFFFD100" .. changed[2] .. "|r priorities were updated."
+            msg = "|cFFFFD100" .. changed[1] .. "|r 和 |cFFFFD100" .. changed[2] .. "|r优先级更新完成。"
         else
             msg = "|cFFFFD100" .. changed[1] .. "|r"
 
@@ -1146,7 +1146,7 @@ function Hekili:RestoreDefaults()
                 msg = msg .. ", |cFFFFD100" .. changed[i] .. "|r"
             end
 
-            msg = "The " .. msg .. ", and |cFFFFD100" .. changed[ #changed ] .. "|r priorities were updated."
+            msg = "" .. msg .. ", 和 |cFFFFD100" .. changed[ #changed ] .. "|r优先级更新完成。"
         end
 
         if msg then
@@ -2337,7 +2337,7 @@ do
 
     all:RegisterAbility( "potion", {
         name = "Potion",
-        listName = '|T136243:0|t |cff00ccff[Potion]|r',
+        listName = '|T136243:0|t |cff00ccff[药剂]|r',
         cast = 0,
         cooldown = 300,
         gcd = "off",
@@ -2371,7 +2371,7 @@ do
 
         usable = function ()
             if getValidPotion() ~= nil then return true end
-            return false, "no valid potions found in inventory"
+            return false, "背包中未发现有效的药剂"
         end,
     } )
 end
@@ -2673,8 +2673,8 @@ all:RegisterAbilities( {
 
     -- INTERNAL HANDLERS
     call_action_list = {
-        name = "|cff00ccff[Call Action List]|r",
-        listName = '|T136243:0|t |cff00ccff[Call Action List]|r',
+        name = "跳转技能列表",
+        listName = '|T136243:0|t |cff00ccff[跳转技能列表]|r',
         cast = 0,
         cooldown = 0,
         gcd = "off",
@@ -2682,8 +2682,8 @@ all:RegisterAbilities( {
     },
 
     run_action_list = {
-        name = "|cff00ccff[Run Action List]|r",
-        listName = '|T136243:0|t |cff00ccff[Run Action List]|r',
+        name = "执行技能列表",
+        listName = '|T136243:0|t |cff00ccff[执行技能列表]|r',
         cast = 0,
         cooldown = 0,
         gcd = "off",
@@ -2691,8 +2691,8 @@ all:RegisterAbilities( {
     },
 
     wait = {
-        name = "|cff00ccff[Wait]|r",
-        listName = '|T136243:0|t |cff00ccff[Wait]|r',
+        name = "等待",
+        listName = '|T136243:0|t |cff00ccff[等待]|r',
         cast = 0,
         cooldown = 0,
         gcd = "off",
@@ -2700,16 +2700,16 @@ all:RegisterAbilities( {
     },
 
     pool_resource = {
-        name = "|cff00ccff[Pool Resource]|r",
-        listName = "|T136243:0|t |cff00ccff[Pool Resource]|r",
+        name = "资源池",
+        listName = "|T136243:0|t |cff00ccff[资源池]|r",
         cast = 0,
         cooldown = 0,
         gcd = "off",
     },
 
     cancel_action = {
-        name = "|cff00ccff[Cancel Action]|r",
-        listName = "|T136243:0|t |cff00ccff[Cancel Action]|r",
+        name = "取消指令",
+        listName = "|T136243:0|t |cff00ccff[取消指令]|r",
         cast = 0,
         cooldown = 0,
         gcd = "off",
@@ -2726,8 +2726,8 @@ all:RegisterAbilities( {
     },
 
     variable = {
-        name = "|cff00ccff[Variable]|r",
-        listName = '|T136243:0|t |cff00ccff[Variable]|r',
+        name = "变量",
+        listName = '|T136243:0|t |cff00ccff[变量]|r',
         cast = 0,
         cooldown = 0,
         gcd = "off",
@@ -2735,11 +2735,11 @@ all:RegisterAbilities( {
     },
 
     healthstone = {
-        name = function () return ( GetItemInfo( 5512 ) ) or "Healthstone" end,
+        name = function () return ( GetItemInfo( 5512 ) ) or "治疗石" end,
         listName = function ()
             local _, link, _, _, _, _, _, _, _, tex = GetItemInfo( 5512 )
             if link and tex then return "|T" .. tex .. ":0|t " .. link end
-            return "|cff00ccff[Healthstone]|r"
+            return "|cff00ccff[治疗石]|r"
         end,
         cast = 0,
         cooldown = function () return time > 0 and 3600 or 60 end,
@@ -2752,9 +2752,9 @@ all:RegisterAbilities( {
         texture = 538745,
 
         usable = function ()
-            if GetItemCount( 5512 ) == 0 then return false, "requires healthstone in bags"
-            elseif not IsUsableItem( 5512 ) then return false, "healthstone on CD"
-            elseif health.current >= health.max then return false, "must be damaged" end
+            if GetItemCount( 5512 ) == 0 then return false, "需要背包中有治疗石"
+            elseif not IsUsableItem( 5512 ) then return false, "治疗石CD中"
+            elseif health.current >= health.max then return false, "必须已受到伤害" end
             return true
         end,
 
@@ -2803,8 +2803,8 @@ all:RegisterAbilities( {
     },
 
     cancel_buff = {
-        name = "|cff00ccff[Cancel Buff]|r",
-        listName = '|T136243:0|t |cff00ccff[Cancel Buff]|r',
+        name = "取消Buff",
+        listName = '|T136243:0|t |cff00ccff[取消Buff]|r',
         cast = 0,
         gcd = "off",
 
@@ -2826,7 +2826,7 @@ all:RegisterAbilities( {
             return a or 134400
         end,
 
-        usable = function () return args.buff_name ~= nil, "no buff name detected" end,
+        usable = function () return args.buff_name ~= nil, "未检测到该Buff" end,
         timeToReady = function () return gcd.remains end,
         handler = function ()
             if not args.buff_name then return end
@@ -2844,8 +2844,8 @@ all:RegisterAbilities( {
     },
 
     null_cooldown = {
-        name = "|cff00ccff[Null Cooldown]|r",
-        listName = "|T136243:0|t |cff00ccff[Null Cooldown]|r",
+        name = "禁止爆发",
+        listName = "|T136243:0|t |cff00ccff[禁止爆发]|r",
         cast = 0,
         cooldown = 0.001,
         gcd = "off",
@@ -2856,8 +2856,8 @@ all:RegisterAbilities( {
     },
 
     trinket1 = {
-        name = "|cff00ccff[Trinket #1]|r",
-        listName = "|T136243:0|t |cff00ccff[Trinket #1]|r",
+        name = "饰品#1",
+        listName = "|T136243:0|t |cff00ccff[饰品#1]",
         cast = 0,
         cooldown = 600,
         gcd = "off",
@@ -2868,8 +2868,8 @@ all:RegisterAbilities( {
     },
 
     trinket2 = {
-        name = "|cff00ccff[Trinket #2]|r",
-        listName = "|T136243:0|t |cff00ccff[Trinket #2]|r",
+        name = "饰品#2",
+        listName = "|T136243:0|t |cff00ccff[饰品#2]",
         cast = 0,
         cooldown = 600,
         gcd = "off",
@@ -2900,16 +2900,16 @@ do
     -- 2.  Respect item preferences registered in spec options.
 
     all:RegisterAbility( "use_items", {
-        name = "Use Items",
-        listName = "|T136243:0|t |cff00ccff[Use Items]|r",
+        name = "使用道具",
+        listName = "|T136243:0|t |cff00ccff[使用道具]|r",
         cast = 0,
         cooldown = 120,
         gcd = "off",
     } )
 
     all:RegisterAbility( "unusable_trinket", {
-        name = "Unusable Trinket",
-        listName = "|T136240:0|t |cff00ccff[Unusable Trinket]|r",
+        name = "无法使用的饰品",
+        listName = "|T136240:0|t |cff00ccff[无法使用的饰品]|r",
         cast = 0,
         cooldown = 180,
         gcd = "off",
@@ -2919,11 +2919,11 @@ do
     } )
 
     all:RegisterAbility( "heart_essence", {
-        name = function () return ( GetItemInfo( 158075 ) ) or "Heart Essence" end,
+        name = function () return ( GetItemInfo( 158075 ) ) or "心能" end,
         listName = function ()
             local _, link, _, _, _, _, _, _, _, tex = GetItemInfo( 158075 )
             if link and tex then return "|T" .. tex .. ":0|t " .. link end
-            return "|cff00ccff[Heart Essence]|r"
+            return "|cff00ccff[心能]|r"
         end,
         cast = 0,
         cooldown = 0,
@@ -2934,7 +2934,7 @@ do
 
         toggle = "essences",
 
-        usable = function () return false, "your equipped major essence is supported elsewhere in the priority or is not an active ability" end
+        usable = function () return false, "你装备的心能效果在其他地方已被使用，或它不是主动技能。" end
     } )
 end
 
@@ -6105,10 +6105,10 @@ local function addItemSettings( key, itemID, options )
 
     options.disabled = {
         type = "toggle",
-        name = function () return format( "Disable %s via |cff00ccff[Use Items]|r", select( 2, GetItemInfo( itemID ) ) or ( "[" .. itemID .. "]" ) ) end,
+        name = function () return format( "禁用%s通过|cff00ccff[使用道具]使用|r", select( 2, GetItemInfo( itemID ) ) or ( "[" .. itemID .. "]" ) ) end,
         desc = function( info )
-            local output = "If disabled, the addon will not recommend this item via the |cff00ccff[Use Items]|r action.  " ..
-                "You can still manually include the item in your action lists with your own tailored criteria."
+            local output = "如果禁用，插件将不会通过|cff00ccff[使用道具]|r执行此项。" ..
+            "你仍然可以将其包含在你的技能列表中，在被插件推荐时手动使用它。"
             return output
         end,
         order = 25,
@@ -6117,8 +6117,8 @@ local function addItemSettings( key, itemID, options )
 
     options.minimum = {
         type = "range",
-        name = "Minimum Targets",
-        desc = "The addon will only recommend this trinket (via |cff00ccff[Use Items]|r) when there are at least this many targets available to hit.",
+        name = "最小目标数",
+        desc = "插件只会在至少有此数量的目标能被命中时，推荐使用（通过|cff00ccff[使用道具]|r）该饰品。",
         order = 26,
         width = "full",
         min = 1,
@@ -6128,9 +6128,9 @@ local function addItemSettings( key, itemID, options )
 
     options.maximum = {
         type = "range",
-        name = "Maximum Targets",
-        desc = "The addon will only recommend this trinket (via |cff00ccff[Use Items]|r) when there are no more than this many targets detected.\n\n" ..
-            "This setting is ignored if set to 0.",
+        name = "最大目标数",
+        desc = "插件只会在监测到小于该目标数时，推荐使用（通过|cff00ccff[使用道具]|r）该饰品。" ..
+        "设置为0时忽略此设置。",
         order = 27,
         width = "full",
         min = 0,
