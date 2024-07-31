@@ -1889,45 +1889,45 @@ spec:RegisterAbilities( {
 } )
 
 spec:RegisterSetting( "shockwave_interrupt", true, {
-    name = "Only |T236312:0|t Shockwave as Interrupt",
-    desc = "If checked, |T236312:0|t Shockwave will only be recommended when your target is casting (and talented).",
+    name = "|T236312:0|t震荡波仅用于打断",
+    desc = "如果勾选，|T236312:0|t震荡波将只在你的目标施法时被推荐（拥有天赋）。",
     type = "toggle",
     width = "full"
 } )
 
 spec:RegisterSetting( "overlap_ignore_pain", false, {
-    name = "Overlap |T1377132:0|t Ignore Pain",
-    desc = "If checked, |T1377132:0|t Ignore Pain can be recommended while it is already active even if its remaining absorb is greater than 30% of your maximum health.  This setting may cause you to spend more Rage on mitigation.",
+    name = "叠加|T1377132:0|t无视苦痛",
+    desc = "如果勾选，默认优先级将会在|T1377132:0|t无视苦痛持续时再次推荐它。此设置可能会导致你在减伤上花费更多的怒气。",
     type = "toggle",
     width = "full"
 } )
 
 spec:RegisterSetting( "stack_shield_block", false, {
-    name = "Overlap |T132110:0|t Shield Block",
+    name = "叠加|T132110:0|t盾牌格挡",
     desc = function()
-        return "If checked, the addon can recommend overlapping |T132110:0|t Shield Block usage. \n\n" ..
-        "This setting avoids leaving Shield Block at 2 charges, which wastes cooldown recovery time."
+        return "如果勾选，插件将会推荐叠加|T132110:0|t盾牌格挡。\n\n" ..
+        "此设置可避免在盾牌格挡有2层充能时被错误使用，浪费冷却恢复的时间。\n\n"
     end,
     type = "toggle",
     width = "full"
 } )
 
 spec:RegisterSetting( "stance_weaving", false, {
-    name = "Allow Stance Changes",
+    name = "允许改变姿态",
     desc = function()
-        return "If checked, custom priorities can be written to recommend changing between stances.  For example, Battle Stance could be recommended when "
-            .. "using offensive cooldowns, then Defensive Stance can be recommended when tanking resumes.\n\n"
-            .. "If left unchecked, the addon will not recommend changing your stance as long as you are already in a stance.  This choice prevents the addon "
-            .. "from endlessly recommending that you change your stance when you do not want to change it."
+        return "如果勾选，在自定义优先级中可以推荐在不同的姿态中转换。"
+            .. "比如在使用进攻型爆发技能时使用战斗姿态，想要使用防御型技能时使用防御姿态。\n\n"
+            .. "如果不勾选，你处于某个姿态时，插件就不会推荐你改变姿态。"
+            .. "这样能够避免你不想改变姿态时，插件无休止地推荐你改变姿态。"
     end,
     type = "toggle",
     width = "full"
 } )
 
 spec:RegisterSetting( "reserve_rage", 35, { -- Ignore Pain cost is 35, Shield Block is 30.
-    name = "|T135726:0|t Reserve Rage for Mitigation",
-    desc = "If set above 0, the addon will not recommend |T132353:0|t Revenge or |T135358:0|t Execute unless you'll be still have this much Rage afterward.\n\n"
-        .. "When set to |cFFFFD10035|r or higher, this feature ensures that you can always use |T1377132:0|t Ignore Pain and |T132110:0|t Shield Block when following recommendations for damage and threat.",
+    name = "|T135726:0|t保留怒气",
+    desc = "如果设置大于0，插件将不会推荐|T132353:0|t复仇和|T135358:0|t斩杀，除非施放之后怒气剩余量大于该值。\n\n"
+        .. "当设置为|cFFFFD10035|r或更高时，这个功能确保你总是可以使用|T1377132:0|t无视苦痛和|T132110:0|t盾牌格挡，来保证伤害和仇恨。",
     type = "range",
     min = 0,
     max = 100,
@@ -1936,10 +1936,10 @@ spec:RegisterSetting( "reserve_rage", 35, { -- Ignore Pain cost is 35, Shield Bl
 } )
 
 spec:RegisterSetting( "shield_wall_amount", 50, {
-    name = "|T132362:0|t Shield Wall Damage Required",
-    desc = "If set above 0, the addon will not recommend |T132362:0|t Shield Wall unless you have taken this much damage in the past 5 seconds, as a percentage of your maximum health.\n\n"
-        .. "If set to |cFFFFD10050%|r and your maximum health is 50,000, then the addon will only recommend Shield Wall when you've taken 25,000 damage in the past 5 seconds.\n\n"
-        .. "This value is reduced by 50% when playing solo.",
+    name = "|T132362:0|t盾墙伤害阈值",
+    desc = "如果设置大于0，插件将不会推荐|T132362:0|t盾墙，除非你在5秒内受到大于此百分比最大生命值的伤害。\n\n"
+        .. "例如设置为|cFFFFD10050%|r，你最大生命值为50000，只有在5秒内你受到超过25000伤害时，插件才会推荐盾墙。\n\n",
+        .. "单人游戏时，该值会减少 50%。",
     type = "range",
     min = 0,
     max = 200,
@@ -1948,8 +1948,8 @@ spec:RegisterSetting( "shield_wall_amount", 50, {
 } )
 
 spec:RegisterSetting( "shield_wall_health", 50, {
-    name = "|T132362:0|t Shield Wall Health Percentage",
-    desc = "If set below 100, the addon will not recommend |T132362:0|t Shield Wall unless your current health has fallen below this percentage.",
+    name = "|T132362:0|t盾墙生命阈值",
+    desc = "如果设置小于100，当你的生命值小于此百分比，插件才会推荐使用|T132362:0|t盾墙。",
     type = "range",
     min = 0,
     max = 100,
@@ -1958,18 +1958,18 @@ spec:RegisterSetting( "shield_wall_health", 50, {
 } )
 
 spec:RegisterSetting( "shield_wall_condition", false, {
-    name = "Require |T132362:0|t Shield Wall Damage and Health",
-    desc = "If checked, |T132362:0|t Shield Wall will not be recommended unless both the Damage Required |cFFFFD100and|r Health Percentage requirements are met.\n\n"
-        .. "Otherwise, Shield Wall can be recommended when |cFFFFD100either|r requirement is met.",
+    name = "|T132362:0|t盾墙需双阈值",
+    desc = "如果勾选，|cFFFFD100同时满足|r伤害阈值和生命阈值时，插件才会推荐使用|T132362:0|t盾墙。\n\n"
+        .. "否则，满足|cFFFFD100二者之一|r就会推荐使用盾墙。",
     type = "toggle",
     width = "full"
 } )
 
 spec:RegisterSetting( "rallying_cry_amount", 50, {
-    name = "|T132351:0|t Rallying Cry Damage Required",
-    desc = "If set above 0, the addon will not recommend |T132351:0|t Rallying Cry unless you have taken this much damage in the past 5 seconds, as a percentage of your maximum health.\n\n"
-        .. "If set to |cFFFFD10050%|r and your maximum health is 50,000, then the addon will only recommend Rallying Cry when you've taken 25,000 damage in the past 5 seconds.\n\n"
-        .. "This value is reduced by 50% when playing solo.",
+    name = "|T132351:0|t集结呐喊伤害阈值",
+    desc = "如果设置大于0，插件将不会推荐|T132351:0|t集结呐喊，除非你在5秒内受到大于此百分比最大生命值的伤害。\n\n"
+        .. "例如设置为|cFFFFD10050%|r，你最大生命值为50000，只有在5秒内你受到超过25000伤害时，插件才会推荐集结呐喊。\n\n",
+        .. "单人游戏时，该值会减少 50%。",
     type = "range",
     min = 0,
     max = 200,
@@ -1978,8 +1978,8 @@ spec:RegisterSetting( "rallying_cry_amount", 50, {
 } )
 
 spec:RegisterSetting( "rallying_cry_health", 50, {
-    name = "|T132351:0|t Rallying Cry Health Percentage",
-    desc = "If set below 100, the addon will not recommend |T132351:0|t Rallying Cry unless your current health has fallen below this percentage.",
+    name = "|T132351:0|t集结呐喊生命阈值",
+    desc = "如果设置小于100，当你的生命值小于此百分比，插件才会推荐使用|T132351:0|t集结呐喊。",
     type = "range",
     min = 0,
     max = 100,
@@ -1988,30 +1988,30 @@ spec:RegisterSetting( "rallying_cry_health", 50, {
 } )
 
 spec:RegisterSetting( "rallying_cry_condition", false, {
-    name = "Require |T132351:0|t Rallying Cry Damage and Health",
-    desc = "If checked, |T132351:0|t Rallying Cry will not be recommended unless both the Damage Required |cFFFFD100and|r Health Percentage requirements are met.\n\n"
-        .. "Otherwise, Rallying Cry can be recommended when |cFFFFD100either|r requirement is met.",
+    name = "|T132351:0|t集结呐喊需双阈值",
+    desc = "如果勾选，|cFFFFD100同时满足|r伤害阈值和生命阈值时，插件才会推荐使用|T132351:0|t集结呐喊。\n\n"
+        .. "否则，满足|cFFFFD100二者之一|r就会推荐使用集结呐喊。",
     type = "toggle",
     width = "full"
 } )
 
 spec:RegisterSetting( "last_stand_offensively", false, {
-    name = "Use |T135871:0|t Last Stand Offensively",
+    name = "使用|T135871:0|t破釜沉舟参与进攻",
     desc = function()
-        return "If checked, the addon will recommend using |T135871:0|t Last Stand to generate rage.\n\n"
-            .. "If unchecked, the addon will only recommend |T135871:0|t Last Stand defensively after taking significant damage.\n\n"
-            .. "Requires " .. ( state.set_bonus.tier30_2pc > 0 and "|cFF00FF00" or "|cFFFF0000" ) .. "2-piece Tier 30|r or "
-            .. "|W|T571316:0|t " .. ( ( state.talent.unnerving_focus.enabled or state.conduit.unnerving_focus.enabled ) and "|cFF00FF00" or "|cFFFF0000" ) .. " Unnerving Focus|r|w"
+        return "如果勾选，插件将推荐使用 |T135871:0|t 破釜沉舟生成怒气。\n\n"
+            .. "如果不勾选，插件只会在受到重大伤害后推荐使用|T135871:0|t 破釜沉舟进行防御。\n\n"
+            .. "需求 " .. ( state.set_bonus.tier30_2pc > 0 and "|cFF00FF00" or "|cFFFF0000" ) .. "2件套30层|r 或者 "
+            .. "|W|T571316:0|t " .. ( ( state.talent.unnerving_focus.enabled or state.conduit.unnerving_focus.enabled ) and "|cFF00FF00" or "|cFFFF0000" ) .. " 破敌专注|r|w"
     end,
     type = "toggle",
     width = "full"
 } )
 
 spec:RegisterSetting( "last_stand_amount", 50, {
-    name = "|T135871:0|t Last Stand Damage Required",
-    desc = "If set above 0, the addon will not recommend |T135871:0|t Last Stand unless you have taken this much damage in the past 5 seconds, as a percentage of your maximum health.\n\n"
-        .. "If set to |cFFFFD10050%|r and your maximum health is 50,000, then the addon will only recommend Last Stand when you've taken 25,000 damage in the past 5 seconds.\n\n"
-        .. "This value is reduced by 50% when playing solo.",
+    name = "|T135871:0|t破釜沉舟伤害阈值",
+    desc = "如果设置大于0，插件将不会推荐|T135871:0|破釜沉舟，除非你在5秒内受到大于此百分比最大生命值的伤害。\n\n"
+        .. "例如设置为|cFFFFD10050%|r，你最大生命值为50000，只有在5秒内你受到超过25000伤害时，插件才会推荐破釜沉舟。\n\n"
+        .. "单人游戏时，该值会减少 50%。",
     type = "range",
     min = 0,
     max = 200,
@@ -2021,8 +2021,8 @@ spec:RegisterSetting( "last_stand_amount", 50, {
 } )
 
 spec:RegisterSetting( "last_stand_health", 50, {
-    name = "|T135871:0|t Last Stand Health Percentage",
-    desc = "If set below 100, the addon will not recommend |T135871:0|t Last Stand unless your current health has fallen below this percentage.",
+    name = "|T135871:0|t破釜沉舟生命阈值",
+    desc = "如果设置小于100，当你的生命值小于此百分比，插件才会推荐使用|T135871:0|t破釜沉舟。",
     type = "range",
     min = 0,
     max = 100,
@@ -2032,9 +2032,9 @@ spec:RegisterSetting( "last_stand_health", 50, {
 } )
 
 spec:RegisterSetting( "last_stand_condition", false, {
-    name = "Require |T135871:0|t Last Stand Damage and Health",
-    desc = "If checked, |T135871:0|t Last Stand will not be recommended unless both the Damage Required |cFFFFD100and|r Health Percentage requirements are met.\n\n"
-        .. "Otherwise, Last Stand can be recommended when |cFFFFD100either|r requirement is met.",
+    name = "|T135871:0|t破釜沉舟需双阈值",
+    desc = "如果勾选，|cFFFFD100同时满足|r伤害阈值和生命阈值时，插件才会推荐使用|T135871:0|t破釜沉舟。\n\n"
+        .. "否则，满足|cFFFFD100二者之一|r就会推荐使用破釜沉舟。",
     type = "toggle",
     width = "full",
     disabled = function() return state.settings.last_stand_offensively end,
@@ -2064,8 +2064,8 @@ spec:RegisterOptions( {
 
     potion = "potion_of_spectral_strength",
 
-    package = "Protection Warrior",
+    package = "防战Simc",
 } )
 
 
-spec:RegisterPack( "Protection Warrior", 20240723, [[Hekili:nRvZUnoos4NL5Irm2mowY2XjdIZHDpn9HglGhG9MKPLOTvhjrbkkNndm8Z(wKIsIKMuwU707mansNiwSQVQy9NyPaVG)iyDmIHd(Q)u)5tx6pBIV3SLZFoyn7JcCW6cu0BO9WVKJYGF(VPegoILqYpV5)GO0ecLtZhPeumNxLKkAeq3bgRO83E4H9jSdvBNerYEOmjRkfX3AefTJX)7OhcwVTkjL975bBTcKzlbEwGJc(6YzaxtIJX1KIlJcwZj9xNU8x9N)BN38hhWcmb)aeAsoGlkzxskGgKaXLtkOyajBrS)XQhGFYsXHLmuEe(Egz)(u8kqT(Y5Vijhik6aIUhFFYUvSKm8QPQRvvIdty4Ss1hIoIyaeuEs5HeCAC47O0ubFqP4C2KKSmYr0waaKTFdmOtW58)kE02QD7MuZLjXK3Zvz12ucjoCxf9dTNIPLy6Bj571acncLJdzekfKN6kPj7pWkd)wv8(mJL2LqXcHOXjW(uYOO0Wiqh0KmAFizxiJMe9MMvOGW)nU6QQovfNoP)3JyCZlBYbmkLDysre7Lv(Ag5K95ekoSaLKxB9mO)vG(r3rbp0jX4Djrjah8wmkIqs5wVjsRFzkkBcfJI)40jDINp9cIRp0RjFK88cEwwbhtHBRsFhrFR5aZKF(9ZptYNPqEmoJaM5K)eokdlpqQy6yylHKXx6ijjcpe5lTZ217f)GcU2tnfvYeXqX1hNc6RYZX0J8DSJevv6cQZCa1FCo7pDahZD(e1c8ycHlJqq93wrlzkIf83o(rifxGPGulf5sAmdTb0f4CmeMWJP5b7UW2I(8oDJKB2M8Za7El7d7xxGxWVNga)CIUXNojI8FD1YPYmlLym3qqXXtaZu0BRwoQMIzlg7suzqULsal1My5AqwWO3Aw81vZhvIzHBj5G9LLGPZ8c9lIUNxcGSBx4(O4vEA5yBpO4zTUZsARNNEvFARjhVYUgZ3MmOnTKHPDSZqdMY1alpDErKQMqHiZ9yTkAxMUqPWM1CfgLuLzsH666LkHwfYJXusvziLywffopEhDeRikAv22uUSa2agOgNAGTPPH1gVYjTBe8bSuwUo3SLfeoaTvW08kIROI2yaFMPM2L0KYdAMVQ8W6)kewIDpVlQviIqn0bQu5dJsrfgyLx39sUShIkGkVknSmbyCNzeql4fYfumHNqhsA05S7ApCPFJBPvmoZDzvrf65JJUOHaP3DjJuuic53rOw8KCG7)kWafFeNx3Lyt6OgEuItkZsIc5KqHg1e(no8uLSr9SxkaL8vnc5Lvp2KZ7M02xwTS3ZX(SVxvVNjl7(kVCBt(aef(hycGe4j5q0ANvSJFsxzDv12YdW123rnuTMPTWs3E(3khX)xCufd3L8OI)wlHXyeKLQZ)s7Xx4ADb7gK54UEYP4D6uFvah9lU8MgpeZ2))KSIBNS8)ttV8fjE1Vj(qsVZx3yuD8K7EreGCamdezxljwX0SfdGnqJXl(8WeVXhPdxgQSefrTKhZQVR1StQLbSEKOHGxvEzUVx32vxZ75MCEUf32pxjhJpcAl)gowd1c4TflVQdpVhdwdVsjp5yzW6FpRGqzWPZM5N3uZMZB4v9lNC(lbRf)g)MwGCWW)9vXn4ipqd(NbRJOjqxFjOG1MjYoV5LvN341CBibR1ogcyaC(X5f3WXz1mNSYLr78MrN34SU15nVEEZJcA0RwlE01Qy3Jop)V5aTXGUWjo5PkaPcNhlNQkKE79WIsidIRz1SoKiFohepEfqWDkEeaXPtsT)7W8X5XYoPRe3XrWsHRV1dtfGbe(KncfgtD6EEa21zsvQ7jZ1S0o7XXMreaQmPqB4RnDvhL3AKPFNdO12w6jGWDK7NLOACPVsONrBtAU2wADQtoYAyTrnMpx3062N(oh(PHTX5E1(f9vKqa7FPVWHX9CyS8VHGR547P(WwxOYtnHkgDMiWOVAYIU(yCTdH)wn)6s449K4b9RN3GqKWAC9MgUUmBXnjgo05B5NTUWLXy1GhZ2aTMP3DArhfn0Bhqje0BQtwPbyPH3kA8C3LZ1Idwn8aHBkkOne1ZDU5)QWwteQ3m10FknGQMaKXxzhQkL1F7K8bGjoMvoIQV9S2cunpUDYygPA1GtDJrgu4UKWvMB2fnCPx6rziCxuwOBQA2Qm0sv7u2mOsRJe9PU1xljgtHZwxjnK2ovodIQJSAfT2y6mjvRpdT52zsPB3zZ(zBZdz2JRJ82DaOE(GDUOkIRHeLb)5mLHmhxxrbzY6MbmiZPUOVCQO4p6AUtFJYM86BCEQ5vDoIqx83Fi83(wNzSvxtWtRlvR3m)aXM685CAVw8PbQMGzTbEPUphJ)yO2lD15ZwA(tVrxkvFXEt23bPEMYMkzohEMleU46rlxdHFN2YF(6M3YHOBdbeo4FVDVzW)EqVTwpxQ2PS5yof1LRvoL3ATTXV(7U4L62qAo4Snau5l9kiY2GqRl5lNekVjcEMD31YVZEVQGiEE6GCv4gI(F9GRXHXnmrMfsBwP1RzBEPowzo3e0wzV1Zxyg061qonvZAUUFh0(stQ2ANzMwbB1AnXyURMqW29L0miwtAD)Yb9oz2A3h7tN9IBDQDfr3LAD6OvN0aB(UBG9sV7Mb5kJbMEHieKjyRVEN01d61u2UV6KR9AaQx3M(eJRVX3W6V(o(D(YfKzOv7zSXGI12CZTojA5V9lHRTP)6VaUG1KC1gfv(g5mFTbGlOk2b(ha462pTV)f)t7tSyW)l]] )
+spec:RegisterPack( "防战Simc", 20240723, [[Hekili:nRvZUnoos4NL5Irm2mowY2XjdIZHDpn9HglGhG9MKPLOTvhjrbkkNndm8Z(wKIsIKMuwU707mansNiwSQVQy9NyPaVG)iyDmIHd(Q)u)5tx6pBIV3SLZFoyn7JcCW6cu0BO9WVKJYGF(VPegoILqYpV5)GO0ecLtZhPeumNxLKkAeq3bgRO83E4H9jSdvBNerYEOmjRkfX3AefTJX)7OhcwVTkjL975bBTcKzlbEwGJc(6YzaxtIJX1KIlJcwZj9xNU8x9N)BN38hhWcmb)aeAsoGlkzxskGgKaXLtkOyajBrS)XQhGFYsXHLmuEe(Egz)(u8kqT(Y5Vijhik6aIUhFFYUvSKm8QPQRvvIdty4Ss1hIoIyaeuEs5HeCAC47O0ubFqP4C2KKSmYr0waaKTFdmOtW58)kE02QD7MuZLjXK3Zvz12ucjoCxf9dTNIPLy6Bj571acncLJdzekfKN6kPj7pWkd)wv8(mJL2LqXcHOXjW(uYOO0Wiqh0KmAFizxiJMe9MMvOGW)nU6QQovfNoP)3JyCZlBYbmkLDysre7Lv(Ag5K95ekoSaLKxB9mO)vG(r3rbp0jX4Djrjah8wmkIqs5wVjsRFzkkBcfJI)40jDINp9cIRp0RjFK88cEwwbhtHBRsFhrFR5aZKF(9ZptYNPqEmoJaM5K)eokdlpqQy6yylHKXx6ijjcpe5lTZ217f)GcU2tnfvYeXqX1hNc6RYZX0J8DSJevv6cQZCa1FCo7pDahZD(e1c8ycHlJqq93wrlzkIf83o(rifxGPGulf5sAmdTb0f4CmeMWJP5b7UW2I(8oDJKB2M8Za7El7d7xxGxWVNga)CIUXNojI8FD1YPYmlLym3qqXXtaZu0BRwoQMIzlg7suzqULsal1My5AqwWO3Aw81vZhvIzHBj5G9LLGPZ8c9lIUNxcGSBx4(O4vEA5yBpO4zTUZsARNNEvFARjhVYUgZ3MmOnTKHPDSZqdMY1alpDErKQMqHiZ9yTkAxMUqPWM1CfgLuLzsH666LkHwfYJXusvziLywffopEhDeRikAv22uUSa2agOgNAGTPPH1gVYjTBe8bSuwUo3SLfeoaTvW08kIROI2yaFMPM2L0KYdAMVQ8W6)kewIDpVlQviIqn0bQu5dJsrfgyLx39sUShIkGkVknSmbyCNzeql4fYfumHNqhsA05S7ApCPFJBPvmoZDzvrf65JJUOHaP3DjJuuic53rOw8KCG7)kWafFeNx3Lyt6OgEuItkZsIc5KqHg1e(no8uLSr9SxkaL8vnc5Lvp2KZ7M02xwTS3ZX(SVxvVNjl7(kVCBt(aef(hycGe4j5q0ANvSJFsxzDv12YdW123rnuTMPTWs3E(3khX)xCufd3L8OI)wlHXyeKLQZ)s7Xx4ADb7gK54UEYP4D6uFvah9lU8MgpeZ2))KSIBNS8)ttV8fjE1Vj(qsVZx3yuD8K7EreGCamdezxljwX0SfdGnqJXl(8WeVXhPdxgQSefrTKhZQVR1StQLbSEKOHGxvEzUVx32vxZ75MCEUf32pxjhJpcAl)gowd1c4TflVQdpVhdwdVsjp5yzW6FpRGqzWPZM5N3uZMZB4v9lNC(lbRf)g)MwGCWW)9vXn4ipqd(NbRJOjqxFjOG1MjYoV5LvN341CBibR1ogcyaC(X5f3WXz1mNSYLr78MrN34SU15nVEEZJcA0RwlE01Qy3Jop)V5aTXGUWjo5PkaPcNhlNQkKE79WIsidIRz1SoKiFohepEfqWDkEeaXPtsT)7W8X5XYoPRe3XrWsHRV1dtfGbe(KncfgtD6EEa21zsvQ7jZ1S0o7XXMreaQmPqB4RnDvhL3AKPFNdO12w6jGWDK7NLOACPVsONrBtAU2wADQtoYAyTrnMpx3062N(oh(PHTX5E1(f9vKqa7FPVWHX9CyS8VHGR547P(WwxOYtnHkgDMiWOVAYIU(yCTdH)wn)6s449K4b9RN3GqKWAC9MgUUmBXnjgo05B5NTUWLXy1GhZ2aTMP3DArhfn0Bhqje0BQtwPbyPH3kA8C3LZ1Idwn8aHBkkOne1ZDU5)QWwteQ3m10FknGQMaKXxzhQkL1F7K8bGjoMvoIQV9S2cunpUDYygPA1GtDJrgu4UKWvMB2fnCPx6rziCxuwOBQA2Qm0sv7u2mOsRJe9PU1xljgtHZwxjnK2ovodIQJSAfT2y6mjvRpdT52zsPB3zZ(zBZdz2JRJ82DaOE(GDUOkIRHeLb)5mLHmhxxrbzY6MbmiZPUOVCQO4p6AUtFJYM86BCEQ5vDoIqx83Fi83(wNzSvxtWtRlvR3m)aXM685CAVw8PbQMGzTbEPUphJ)yO2lD15ZwA(tVrxkvFXEt23bPEMYMkzohEMleU46rlxdHFN2YF(6M3YHOBdbeo4FVDVzW)EqVTwpxQ2PS5yof1LRvoL3ATTXV(7U4L62qAo4Snau5l9kiY2GqRl5lNekVjcEMD31YVZEVQGiEE6GCv4gI(F9GRXHXnmrMfsBwP1RzBEPowzo3e0wzV1Zxyg061qonvZAUUFh0(stQ2ANzMwbB1AnXyURMqW29L0miwtAD)Yb9oz2A3h7tN9IBDQDfr3LAD6OvN0aB(UBG9sV7Mb5kJbMEHieKjyRVEN01d61u2UV6KR9AaQx3M(eJRVX3W6V(o(D(YfKzOv7zSXGI12CZTojA5V9lHRTP)6VaUG1KC1gfv(g5mFTbGlOk2b(ha462pTV)f)t7tSyW)l]] )
