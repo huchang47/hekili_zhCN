@@ -3300,14 +3300,14 @@ spec:RegisterOptions( {
 
     potion = "spectral_intellect",
 
-    package = "Balance",
+    package = "平衡Simc",
 } )
 
 
 spec:RegisterSetting( "vigil_damage", 50, {
-    name = strformat( "%s Damage Threshold", Hekili:GetSpellLinkWithTexture( spec.abilities.natures_vigil.id ) ),
-    desc = strformat( "If set below 100%%, |W%s|w may only be recommended if your health has dropped below the specified percentage.\n\n"
-        .. "By default, |W%s|w also requires the |cFFFFD100Defensives|r toggle to be active.", spec.abilities.natures_vigil.name, spec.abilities.natures_vigil.name ),
+    name = strformat( "%s 伤害阈值", Hekili:GetSpellLinkWithTexture( spec.abilities.natures_vigil.id ) ),
+    desc = strformat( "如果设置小于100%%，|W%s|w 可能只在你的生命值下降到指定百分比以下才会被推荐。\n\n"
+        .. "默认情况下，|W%s|w 需要|cFFFFD100【防御】|r 开关处于激活状态。", spec.abilities.natures_vigil.name, spec.abilities.natures_vigil.name ),
     type = "range",
     min = 1,
     max = 100,
@@ -3316,9 +3316,9 @@ spec:RegisterSetting( "vigil_damage", 50, {
 } )
 
 spec:RegisterSetting( "starlord_cancel", false, {
-    name = strformat( "%s |TInterface\\Addons\\Hekili\\Textures\\Cancel:0|t Cancel", Hekili:GetSpellLinkWithTexture( spec.auras.starlord.id ) ),
-    desc = strformat( "If checked, canceling |TInterface\\Addons\\Hekili\\Textures\\Cancel:0|t your %s may be recommended.  Canceling it allows you to start building stacks via %s and %s at its full duration.\n\n"
-        .. "You will likely want a |cFFFFD100/cancelaura %s|r macro to manage this during combat.", spec.auras.starlord.name, Hekili:GetSpellLinkWithTexture( spec.abilities.starsurge.id ),
+    name = strformat( "%s |TInterface\\Addons\\Hekili\\Textures\\Cancel:0|t 取消", Hekili:GetSpellLinkWithTexture( spec.auras.starlord.id ) ),
+    desc = strformat( "如果选中，可能会建议取消|TInterface\\Addons\\Hekili\\Textures\\Cancel:0|t 你的 %s 。取消它可以让你在全部持续时间内，通过 %s 和 %s 堆叠层数。\n\n"
+        .. "你可能需要 |cFFFFD100/cancelaura %s|r 的宏，来处理在战斗中的这个操作。", spec.auras.starlord.name, Hekili:GetSpellLinkWithTexture( spec.abilities.starsurge.id ),
         Hekili:GetSpellLinkWithTexture( spec.abilities.starfall.id ), spec.auras.starlord.name ),
     icon = 462651,
     iconCoords = { 0.1, 0.9, 0.1, 0.9 },
@@ -3342,4 +3342,4 @@ end, state )
 } ) ]]
 
 
-spec:RegisterPack( "Balance", 20240723, [[Hekili:9Ev0UTTnu0VLIb0eJ1OyPKm3weNb0I9qdgYlQa7njrltzreksnsQKyad9TVlPSSjLPSRbA3lgYKhE45E1LxEusyY3tIxIu4KNIMgD70zr3eenD6S7IsIvRRXjX1O8NrRGhyOk43VGOiwUz81uoAPE9sEJqpuPsvl)81xVOdZvssvEWkIQSzraHF92LEvmP6RxxTmOuvr)ZccfpF7ccuVPsIx0qOQVXsw4xyjXOgvjxKeR5b2uYYL4o0yzEsSg9vtNDv0nFUn77L42S)bjGFazqyjXuIujnbnUa1qvWJpzscygAbfVm5lDeji1kchwWF9goVrHx2MHFblw3MPivaPknZOCfh4MiHhFbrOAgcabM3TujNIePlWOQefeg6DPFQgjoLOWvs7ngaDZaP0JVIZzfebKKbLPWcckjwGleyzPglm86CkovHeRWq8bHeq2TJqMS5856UX4sHP6OSa(58y8pSZhfCOckLxKYqQgnrozLzoqBeR1iX0g2qGF0giHLJeaFM)4a7t2WYXuSurq0ueLSIvHzQbWdNoi43hLVdQequyjbGAG0qoIsjSvbBb3M9(2Sfnffb4CkPgEPBQjce4keHbLn33MnRnBZMJtZEX(ksiiCX(4xlVH1V7L3LTz)ikuwdVe7F9eiHh01hTzZBZcBZMyWCP3aPP(hje7u)oIdYrsvA35iDOVDHbewkJZGbNyxF1TgtGgDSa94rPEFglmF4iHPHU(W0)KEI0xfivPDyo50rQznMWCytG9HPz31c)vmc6gjtH6HAqDdYxqWBiAydG9e5jvalYecrUKjBamg2g2c40SPtSJinNt)5C2l8NHgeLq1tnb4DyFXqNwam8RP6oIdb5C8Verl8I6tUDtaL7bv0uBuhCSBa4qhWe6Y0QgzPGZRgIC8s4tx)oEH5XQS9Fwk6ghjBQ9CKk0eSwGZ5vlqN(ssWCqTSKRAZeiYYoLQvnSJk4GXcm0FhKthB6)VYCGbXamWUCvnxPGWT7Q0LWjJa3R(EgoWauC49OEe(tNkYo4ErFTZDUx7W(W2PY7S3Vb3h6MrHCQ(uRgyNRM7M(rtXfdcEOK3yxHuvZfqsQqBT4IT2uUaYS4)Tb2rDwLRBPa2G4viJZK8seBfwg0(4Ft0DvcNcEF(kCOclmZFHVAlGsfFK56dyaZLHVn5)bId)vrC0ViIJ(5tC7JEka2Di88kbU1V6CkphOoVL82Q7BgHPPlQ)MU2mJHAyAD7cU2nFs8V1M9ZVHq7JD7Omyxg53NFTDZb)imnao7P6pF)bsX835l)m2YCG0(iKko7pGyh1Ac39je2JU7RhShS)te(GJz75H6qWYmUd7nN9kSdWZyDd837mLTFE7jS8VBpSh)62tp8QA73GoN)E)4MwVF2Mn(wIBMyFfYL(3a)3kppCY7V0Rv6JPOUn2Jf6nBgyQCIt2qxIBKOpfUzJFj(WbsS3TH3HhOXbMFNCCf27kulYXS3oeVXtQEb(nEEF0yBGF8pe6uFDOzu7P79EAp2oRMU11BDwESQtN5S9nowPM)xJ(Fxn2l3dkqmo4Z1FOBKXLsY)9]] )
+spec:RegisterPack( "平衡Simc", 20240723, [[Hekili:9Ev0UTTnu0VLIb0eJ1OyPKm3weNb0I9qdgYlQa7njrltzreksnsQKyad9TVlPSSjLPSRbA3lgYKhE45E1LxEusyY3tIxIu4KNIMgD70zr3eenD6S7IsIvRRXjX1O8NrRGhyOk43VGOiwUz81uoAPE9sEJqpuPsvl)81xVOdZvssvEWkIQSzraHF92LEvmP6RxxTmOuvr)ZccfpF7ccuVPsIx0qOQVXsw4xyjXOgvjxKeR5b2uYYL4o0yzEsSg9vtNDv0nFUn77L42S)bjGFazqyjXuIujnbnUa1qvWJpzscygAbfVm5lDeji1kchwWF9goVrHx2MHFblw3MPivaPknZOCfh4MiHhFbrOAgcabM3TujNIePlWOQefeg6DPFQgjoLOWvs7ngaDZaP0JVIZzfebKKbLPWcckjwGleyzPglm86CkovHeRWq8bHeq2TJqMS5856UX4sHP6OSa(58y8pSZhfCOckLxKYqQgnrozLzoqBeR1iX0g2qGF0giHLJeaFM)4a7t2WYXuSurq0ueLSIvHzQbWdNoi43hLVdQequyjbGAG0qoIsjSvbBb3M9(2Sfnffb4CkPgEPBQjce4keHbLn33MnRnBZMJtZEX(ksiiCX(4xlVH1V7L3LTz)ikuwdVe7F9eiHh01hTzZBZcBZMyWCP3aPP(hje7u)oIdYrsvA35iDOVDHbewkJZGbNyxF1TgtGgDSa94rPEFglmF4iHPHU(W0)KEI0xfivPDyo50rQznMWCytG9HPz31c)vmc6gjtH6HAqDdYxqWBiAydG9e5jvalYecrUKjBamg2g2c40SPtSJinNt)5C2l8NHgeLq1tnb4DyFXqNwam8RP6oIdb5C8Verl8I6tUDtaL7bv0uBuhCSBa4qhWe6Y0QgzPGZRgIC8s4tx)oEH5XQS9Fwk6ghjBQ9CKk0eSwGZ5vlqN(ssWCqTSKRAZeiYYoLQvnSJk4GXcm0FhKthB6)VYCGbXamWUCvnxPGWT7Q0LWjJa3R(EgoWauC49OEe(tNkYo4ErFTZDUx7W(W2PY7S3Vb3h6MrHCQ(uRgyNRM7M(rtXfdcEOK3yxHuvZfqsQqBT4IT2uUaYS4)Tb2rDwLRBPa2G4viJZK8seBfwg0(4Ft0DvcNcEF(kCOclmZFHVAlGsfFK56dyaZLHVn5)bId)vrC0ViIJ(5tC7JEka2Di88kbU1V6CkphOoVL82Q7BgHPPlQ)MU2mJHAyAD7cU2nFs8V1M9ZVHq7JD7Omyxg53NFTDZb)imnao7P6pF)bsX835l)m2YCG0(iKko7pGyh1Ac39je2JU7RhShS)te(GJz75H6qWYmUd7nN9kSdWZyDd837mLTFE7jS8VBpSh)62tp8QA73GoN)E)4MwVF2Mn(wIBMyFfYL(3a)3kppCY7V0Rv6JPOUn2Jf6nBgyQCIt2qxIBKOpfUzJFj(WbsS3TH3HhOXbMFNCCf27kulYXS3oeVXtQEb(nEEF0yBGF8pe6uFDOzu7P79EAp2oRMU11BDwESQtN5S9nowPM)xJ(Fxn2l3dkqmo4Z1FOBKXLsY)9]] )
