@@ -21,14 +21,12 @@ local GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
 local UA_GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 local IsUsableItem = C_Item.IsUsableItem
 local GetItemSpell = C_Item.GetItemSpell
-
 local GetSpellCooldown = function(spellID)
     local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID);
     if spellCooldownInfo then
         return spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.isEnabled, spellCooldownInfo.modRate;
     end
 end
-
 local FindStringInInventoryItemTooltip = ns.FindStringInInventoryItemTooltip
 local ResetDisabledGearAndSpells = ns.ResetDisabledGearAndSpells
 local WipeCovenantCache = ns.WipeCovenantCache
@@ -1188,10 +1186,10 @@ local noClassWarned = false
 -- Need to make caching system.
 RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", "target", function( event, unit, _, spellID )
     if not noClassWarned and not class.initialized then
-        Hekili:Notify( UnitClass( "player" ) .. " does not have any Hekili modules loaded (yet).\nWatch for updates.", 5 )
+        Hekili:Notify( UnitClass( "player" ) .. " 尚未加载任何 Hekili 模块。\n请关注更新。", 5 )
         noClassWarned = true
     elseif not lowLevelWarned and UnitLevel( "player" ) < 50 then
-        Hekili:Notify( "Hekili is designed for current content.\nUse below level 50 at your own risk.", 5 )
+        Hekili:Notify( "Hekili 专为当前版本内容而设计。\n角色50级以下使用，风险自负。", 5 )
         lowLevelWarned = true
     end
 

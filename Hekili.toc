@@ -1,9 +1,9 @@
-## Interface: 110002
-## Version: @project-version@
+## Interface: 110000
+## Version: v11.0.0-1.0.5
 ## Title: Hekili
 ## Author: Hekili
 ## IconTexture: Interface\AddOns\Hekili\Textures\LOGO-ORANGE.blp
-## Notes: Priority helper based on SimulationCraft action lists.
+## Notes: 基于SimulationCraft行动列表的技能优先级提示助手。
 ## SavedVariables: HekiliDB
 ## OptionalDeps: AddOnSkins, ButtonForge, ConsolePort, ElvUI, LibDualSpec-1.0, Masque, WeakAuras
 ## X-Curse-Project-ID: 69254
