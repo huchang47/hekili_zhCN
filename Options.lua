@@ -4797,7 +4797,7 @@ do
                         name = function () return "禁用" .. ( ability.item and ability.link or k ) end,
                         desc = function () return "如果勾选，此技能将|cffff0000永远|r不会被插件推荐。" ..
                             "如果其他技能依赖此技能" .. ( ability.item and ability.link or k ) .. "，那么可能会出现问题。" end,
-                        width = 1,
+                        width = 1.5,
                         order = 1,
                     },
 
@@ -4805,7 +4805,7 @@ do
                         type = "toggle",
                         name = "仅用于BOSS战",
                         desc = "如果勾选，插件将不会推荐此技能" .. k .. "，除非你处于BOSS战中。如果不勾选，" .. k .. "技能会在所有战斗中被推荐。",
-                        width = 1,
+                        width = 1.5,
                         order = 1.1,
                     },
 
@@ -6271,7 +6271,7 @@ do
                 -- Toggles
                 --[[ BuildToggleList( options, id, "cooldowns",  "Cooldowns" )
                 BuildToggleList( options, id, "essences",   "次要爆发" )
-                BuildToggleList( options, id, "interrupts", "功能性/打断" )
+                BuildToggleList( options, id, "interrupts", "功能/打断" )
                 BuildToggleList( options, id, "defensives", "防御",   "防御切换一般用于坦克专精，因为在战斗过程中，" ..
                                                                             "你可能由于各种原因想要开启/关闭减伤技能的提醒。" ..
                                                                             "输出专精玩家可能会想要添加自己的减伤技能，" ..
@@ -7212,7 +7212,7 @@ do
                                     name = "文件",
                                     desc = "如果此优先级配置的技能列表是来自于SimulationCraft文件的，那么该文件就在这里。",
                                     order = 4,
-                                    multiline = 20,
+                                    multiline = 10,
                                     width = "full",
                                 },
 
@@ -11671,6 +11671,7 @@ do
         { "rune_word%.([%w_]+)%.enabled"                    , "buff.rune_word_%1.up"                    },
         { "conduit%.([%w_]+)"                               , "conduit.%1.enabled"                      },
         { "soulbind%.([%w_]+)"                              , "soulbind.%1.enabled"                     },
+        { "soul_shard%.deficit"                             , "soul_shard_deficit"                      },
         { "pet.[%w_]+%.([%w_]+)%.([%w%._]+)"                , "%1.%2"                                   },
         { "essence%.([%w_]+).rank(%d)"                      , "essence.%1.rank>=%2"                     },
         { "target%.1%.time_to_die"                          , "time_to_die"                             },
@@ -11955,7 +11956,7 @@ do
                     if ability and ( ability == "use_item" or class.abilities[ ability ] ) then
                         if ability == "pocketsized_computation_device" then ability = "cyclotronic_blast" end
                         -- Stub abilities that are replaced sometimes.
-                        if ability == "any_dnd" or ability == "wound_spender" or ability == "summon_pet" or ability == "apply_poison" then
+                        if ability == "any_dnd" or ability == "wound_spender" or ability == "summon_pet" or ability == "apply_poison" or ability == "trinket1" or ablity == "trinket2" or ability == "raptor_bite" or ability == "mongoose_strike" then
                             result.action = ability
                         else
                             result.action = class.abilities[ ability ] and class.abilities[ ability ].key or ability
