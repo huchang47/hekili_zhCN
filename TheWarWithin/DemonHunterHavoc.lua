@@ -1995,15 +1995,15 @@ spec:RegisterOptions( {
 
     potion = "phantom_fire",
 
-    package = "Havoc",
+    package = "浩劫Simc",
 } )
 
 
 spec:RegisterSetting( "demon_blades_text", nil, {
     name = function()
-        return strformat( "|cFFFF0000WARNING!|r  If using the %s talent, Fury gains from your auto-attacks will be forecast conservatively and updated when you "
-            .. "actually gain resources.  This prediction can result in Fury spenders appearing abruptly since it was not guaranteed that you'd have enough Fury on "
-            .. "your next melee swing.", Hekili:GetSpellLinkWithTexture( 203555 ) )
+        return strformat( "|cFFFF0000警告！|r  如果使用 %s 天赋，来自自动攻击的怒气将被保守地预测，并只在实际获得时更新。"
+            .. "这样预测可能会导致怒气消耗突然出现，因此不能保证在下一次近战攻击有足够的怒气。"
+            .. "", Hekili:GetSpellLinkWithTexture( 203555 ) )
     end,
     type = "description",
     width = "full"
@@ -2011,10 +2011,10 @@ spec:RegisterSetting( "demon_blades_text", nil, {
 
 spec:RegisterSetting( "demon_blades_acknowledged", false, {
     name = function()
-        return strformat( "I understand that Fury generation from %s is unpredictable.", Hekili:GetSpellLinkWithTexture( 203555 ) )
+        return strformat( "我明白来自 %s 的怒气是不可预测的。", Hekili:GetSpellLinkWithTexture( 203555 ) )
     end,
     desc = function()
-        return strformat( "If checked, %s will not trigger a warning when entering combat.", Hekili:GetSpellLinkWithTexture( 203555 ) )
+        return strformat( "如果勾选，在战斗时 %s 将不会触发警告。", Hekili:GetSpellLinkWithTexture( 203555 ) )
     end,
     type = "toggle",
     width = "full",
@@ -2029,18 +2029,18 @@ spec:RegisterSetting( "fel_rush_head", nil, {
 } )
 
 spec:RegisterSetting( "fel_rush_warning", nil, {
-    name = strformat( "The %s, %s, and/or %s talents require the use of %s.  If you do not want |W%s|w to be recommended to trigger these talents, you may want to "
-        .. "consider a different talent build.\n\n"
-        .. "You can reserve |W%s|w charges to ensure recommendations will always leave you with charge(s) available to use, but failing to use |W%s|w may ultimately "
-        .. "cost you DPS.", Hekili:GetSpellLinkWithTexture( 388113 ), Hekili:GetSpellLinkWithTexture( 206476 ), Hekili:GetSpellLinkWithTexture( 347461 ),
+    name = strformat( "当 %s, %s, 或者 %s 天赋需要使用 %s。如果不希望|W%s|w 被推荐来触发这些天赋的收益，你可能需要考虑使用其他的天赋。"
+        .. "\n\n"
+        .. "你可以保留|W%s|w的资源，以确保总是留给你可使用的资源，但如果不使用|W%s|w，最终可能会导致损失DPS。"
+        .. "", Hekili:GetSpellLinkWithTexture( 388113 ), Hekili:GetSpellLinkWithTexture( 206476 ), Hekili:GetSpellLinkWithTexture( 347461 ),
         Hekili:GetSpellLinkWithTexture( 195072 ), spec.abilities.fel_rush.name, spec.abilities.fel_rush.name, spec.abilities.fel_rush.name ),
     type = "description",
     width = "full",
 } )
 
 spec:RegisterSetting( "fel_rush_charges", 0, {
-    name = strformat( "Reserve %s Charges", Hekili:GetSpellLinkWithTexture( 195072 ) ),
-    desc = strformat( "If set above zero, %s will not be recommended if it would leave you with fewer (fractional) charges.", Hekili:GetSpellLinkWithTexture( 195072 ) ),
+    name = strformat( "储存 %s 资源", Hekili:GetSpellLinkWithTexture( 195072 ) ),
+    desc = strformat( "如果设置大于0，当使用 %s 将使你剩余很少的资源，它将不会被推荐。", Hekili:GetSpellLinkWithTexture( 195072 ) ),
     type = "range",
     min = 0,
     max = 2,
@@ -2049,9 +2049,9 @@ spec:RegisterSetting( "fel_rush_charges", 0, {
 } )
 
 spec:RegisterSetting( "fel_rush_filler", true, {
-    name = strformat( "%s: Filler and Movement", Hekili:GetSpellLinkWithTexture( 195072 ) ),
-    desc = strformat( "When enabled, %s may be recommended as a filler ability or for movement.\n\n"
-        .. "These recommendations may occur with %s talented, when your other abilities are on cooldown, and/or because you are out of range of your target.",
+    name = strformat( "%s：填充和移动", Hekili:GetSpellLinkWithTexture( 195072 ) ),
+    desc = strformat( "启用后，%s 可被推荐为填充技能或用于运动战。\n\n"
+        .. "这种推荐可能发生在有天赋支撑时，其他技能处于冷却，或你在攻击范围之外时。",
         Hekili:GetSpellLinkWithTexture( 195072 ), Hekili:GetSpellLinkWithTexture( 203555 ) ),
     type = "toggle",
     width = "full"
@@ -2064,8 +2064,8 @@ spec:RegisterSetting( "throw_glaive_head", nil, {
 } )
 
 spec:RegisterSetting( "throw_glaive_charges_text", nil, {
-    name = strformat( "You can reserve charges of %s to ensure that it is always available for %s or |W|T1385910:0::::64:64:4:60:4:60|t |cff71d5ff%s (affix)|r|w procs. "
-        .. "If set to your maximum charges (2 with %s, 1 otherwise), |W%s|w will never be recommended.  Failing to use |W%s|w when appropriate may impact your DPS.",
+    name = strformat( "你可以保留 %s 的层数，以确保它始终对于 %s 或者 |W|T1385910:0::::64:64:4:60:4:60|t |cff71d5ff%s (词缀)|r|w 的触发有效。 "
+        .. "如果设置为你的最大层数（使用 %s 时为2层，否则为1层），|W%s|w 将永远不会被推荐。在某些时候不使用 |W%s|w 可能会影响你的DPS。",
         Hekili:GetSpellLinkWithTexture( 185123 ), Hekili:GetSpellLinkWithTexture( 391429 ), GetSpellInfo( 396363 ) or "Thundering", Hekili:GetSpellLinkWithTexture( 389763 ),
         spec.abilities.throw_glaive.name, spec.abilities.throw_glaive.name ),
     type = "description",
@@ -2073,8 +2073,8 @@ spec:RegisterSetting( "throw_glaive_charges_text", nil, {
 } )
 
 spec:RegisterSetting( "throw_glaive_charges", 0, {
-    name = strformat( "Reserve %s Charges", Hekili:GetSpellLinkWithTexture( 185123 ) ),
-    desc = strformat( "If set above zero, %s will not be recommended if it would leave you with fewer (fractional) charges.", Hekili:GetSpellLinkWithTexture( 185123 ) ),
+    name = strformat( "保留 %s 的资源", Hekili:GetSpellLinkWithTexture( 185123 ) ),
+    desc = strformat( "如果设置为零以上，如果 %s 会减少你的资源，它将不会被推荐。", Hekili:GetSpellLinkWithTexture( 185123 ) ),
     type = "range",
     min = 0,
     max = 2,
@@ -2084,9 +2084,9 @@ spec:RegisterSetting( "throw_glaive_charges", 0, {
 
 --[[ Retired 20240712:
 spec:RegisterSetting( "footloose", true, {
-    name = strformat( "%s before %s", Hekili:GetSpellLinkWithTexture( 185123 ) , Hekili:GetSpellLinkWithTexture( 188499 ) ),
-    desc = strformat( "When enabled, %s may be recommended without having %s on cooldown.\n\n"
-        .. "This setting deviates from the default SimulationCraft profile, but performs equally on average with higher top-end damage.",
+    name = strformat( "%s 之前 %s", Hekili:GetSpellLinkWithTexture( 185123 ) , Hekili:GetSpellLinkWithTexture( 188499 ) ),
+    desc = strformat( "启用后，推荐 %s 时不再需求 %s 冷却。\n\n"
+        .. "此设置偏离了 SimulationCraft 的模拟结果，但平均伤害相同，伤害天花板更高。",
         Hekili:GetSpellLinkWithTexture( 185123 ) , Hekili:GetSpellLinkWithTexture( 188499 ) ),
     type = "toggle",
     width = "full"
@@ -2099,43 +2099,43 @@ spec:RegisterSetting( "retreat_head", nil, {
 } )
 
 spec:RegisterSetting( "retreat_warning", nil, {
-    name = strformat( "The %s, %s, and/or %s talents require the use of %s.  If you do not want |W%s|w to be recommended to trigger the benefit of these talents, you "
-        .. "may want to consider a different talent build.", Hekili:GetSpellLinkWithTexture( 388108 ),Hekili:GetSpellLinkWithTexture( 206476 ),
+    name = strformat( "当 %s, %s, 或者 %s 天赋需要使用 %s。如果不希望|W%s|w 被推荐来触发这些天赋的收益，你可能需要考虑使用其他的天赋。"
+        .. "", Hekili:GetSpellLinkWithTexture( 388108 ),Hekili:GetSpellLinkWithTexture( 206476 ),
         Hekili:GetSpellLinkWithTexture( 389688 ), Hekili:GetSpellLinkWithTexture( 198793 ), spec.abilities.vengeful_retreat.name ),
     type = "description",
     width = "full",
 } )
 
 spec:RegisterSetting( "retreat_and_return", "off", {
-    name = strformat( "%s: %s and %s", Hekili:GetSpellLinkWithTexture( 198793 ), Hekili:GetSpellLinkWithTexture( 195072 ), Hekili:GetSpellLinkWithTexture( 232893 ) ),
+    name = strformat( "%s: %s 和 %s", Hekili:GetSpellLinkWithTexture( 198793 ), Hekili:GetSpellLinkWithTexture( 195072 ), Hekili:GetSpellLinkWithTexture( 232893 ) ),
     desc = function()
-        return strformat( "When enabled, %s will |cFFFF0000NOT|r be recommended unless either %s or %s are available to quickly return to your current target.  This "
-            .. "requirement applies to all |W%s|w and |W%s|w recommendations, regardless of talents.\n\n"
-            .. "If |W%s|w is not talented, its cooldown will be ignored.\n\n"
-            .. "This option does not guarantee that |W%s|w or |W%s|w will be the first recommendation after |W%s|w but will ensure that either/both are available immediately.",
+        return strformat( "启用后，除非使用 %s 或 %s 能够快速返回你当前的目标，否则 %s 将|cFFFF0000不会|r 被推荐。"
+            .. "适用于所有|W%s|w 和 |W%s|w 的推荐，无论天赋如何。\n\n"
+            .. "如果|W%s|w 没有天赋支撑，将忽略它的冷却时间。\n\n"
+            .. "该选项并不保证|W%s|w 和 |W%s|w 会在|W%s|w 后被首先推荐，但会确保其中之一立即可用。",
             Hekili:GetSpellLinkWithTexture( 198793 ), Hekili:GetSpellLinkWithTexture( 195072 ), Hekili:GetSpellLinkWithTexture( 232893 ),
             spec.abilities.fel_rush.name, spec.abilities.vengeful_retreat.name, spec.abilities.felblade.name,
             spec.abilities.fel_rush.name, spec.abilities.felblade.name, spec.abilities.vengeful_retreat.name )
     end,
     type = "select",
     values = {
-        off = "Disabled (default)",
-        fel_rush = "Require " .. Hekili:GetSpellLinkWithTexture( 195072 ),
-        felblade = "Require " .. Hekili:GetSpellLinkWithTexture( 232893 ),
-        either = "Either " .. Hekili:GetSpellLinkWithTexture( 195072 ) .. " or " .. Hekili:GetSpellLinkWithTexture( 232893 )
+        off = "禁用（默认）",
+        fel_rush = "需要 " .. Hekili:GetSpellLinkWithTexture( 195072 ),
+        felblade = "需要 " .. Hekili:GetSpellLinkWithTexture( 232893 ),
+        either = "其中之一 " .. Hekili:GetSpellLinkWithTexture( 195072 ) .. " 或 " .. Hekili:GetSpellLinkWithTexture( 232893 )
     },
     width = "full"
 } )
 
 spec:RegisterSetting( "retreat_filler", false, {
-    name = strformat( "%s: Filler and Movement", Hekili:GetSpellLinkWithTexture( 198793 ) ),
+    name = strformat( "%s：填充和移动", Hekili:GetSpellLinkWithTexture( 198793 ) ),
     desc = function()
-        return strformat( "When enabled, %s may be recommended as a filler ability or for movement.\n\n"
-            .. "These recommendations may occur with %s talented, when your other abilities being on cooldown, and/or because you are out of range of your target.",
+        return strformat( "启用后，%s 可被推荐为填充技能或用于运动战。\n\n"
+            .. "这种推荐可能发生在有天赋支撑时，其他技能处于冷却，或你在攻击范围之外时。",
             Hekili:GetSpellLinkWithTexture( 198793 ), Hekili:GetSpellLinkWithTexture( 203555 ) )
     end,
     type = "toggle",
     width = "full"
 } )
 
-spec:RegisterPack( "Havoc", 20240903, [[Hekili:L3txVTnss(BXyXPiAhRLKsYjzpBn4U5LBcomV4zX(WHtu0s02CTKOgsQKXhm0V9R7MF1Fuv1KusjtWIfyNyXMvxD113v1nN7n)3MF)QW8O5)QVR)e3p5oEKNR34PFy(95VUlA(97cx(s4tS)X2WnS)))RWVKSK)RVUojCf)TZs2NUK9K7J3SFDyECY2Fon8X853)W(415)Y25papd3WE1DrlN)Rt)aBYEoE1QOIXgLXMa(yV29tx769(dl4)3X)TdlytXpFyX(DCWD4Zh(CXG(41(3WE4FV4NxKSlABu6HfRtEkEPYOMudIDPXjPX5VcbmpF2W(5NJw(cdMBFiz)2v8)omj7WI8W1rBZpS4Xe2e8lB2KCyX)X(0WMx)dx7Zr0F7zgI8pczd6FeN)C8wgbln5X41mYu4sojkB0U0OLjBEim)Q7(RFjmno8H1rVNtJVBt4)mjnipnE7lr5V)lHR3hDx5FnYB0YKK1Rs(62rRytmhu359r33ERAa(Wd4WNTpVLGii71TldYwNun3EVp(rje45WSGS8W8rHBFny1USbdVOzY1FydIbG5ZUJaRDogu2xgLnXkju2C9qslNrSCAfgN(uWQS3Vk6XW9RZVZ99j7Ulnklkh(DdtxgUnkipjnLZ3boMS4NIxhK8yWJRzta8yIzSQfYMbHmSLtDEy)Jpos73hXxpCM5)YF5WIs4WE70O8W0NyK5W95jbH55mvcVFDmdXwUIXDu(qgm3eVDvKaWpSpDB82Nc(kx8zuA0MW4TzInfHeK6Zhu(JRI2WqKhwhYubmGp9FjkyvI2GVDitRX61bfZA2SFASZXGVxu8xJIZcEij70GI3bHInONbdr82LC(GSAPDbjKTJVIdYmgl3lrITMbIh806q(0(469PPVoA)Ub1CIc8kyv42Lr8F)PL1K(7yQiQM3rft5agdYxc4JXJTScZFoi7Rrr70jM7Ix(sW(DbpMg(0ggj497ZIyCBpYFZ78WxxpgTo4HWu2BfPU4kPKspFWW6vG0VwH63YrXnH)XLFyWWskotb)M4OSz3X2fItJwvrPVknmEvq0x4WpC1QmMm6(T5V9M(phVTbOqpD2NCDKqQnm(PnjP7EojloRcTE7nnKX35T3e7pYRH97CgCHgAFN3Gl0NZO)iolptHnzvCw6(D5Y)ehYP7ZEUw(DFH9PGLCZt8TCGFvNm6ldrXqkzXQHQgNxfyn47gkZrTk7oFaAI8KfUDB8ZXf6Bo7twAu4xIsZckau90Pc3gHkuPT8NtJxl0VM)m79IF65CMe2gig0jxzGKox1WgXF)Nz8JgV3yNlhlnUOxJcEikCJ54Q0cL9mtPweNXNjaKhV9vgamiqAs8R48DiAkmgPp8ilriMSHnsdhMxaRGH9annrodu3jVD8Glk2ihPUloADywEatb0QBNoO0stuwwed3cEGn0xe7BV9wbQur(8C)oXxm5mtNM5tVuxgYM1I)mynt)sHI5QDw7JSWtAojcG5KJ5iAivEK6(dxFyE8MOB9MoyiGI3jUkcX1(2KTloxSzHURxXpuT)Ujm9LQDIz35FDPOZVVNzpJTSwfiGDMcRX(TMebz7yS5VElr2(L(cz)ozWc48L((yLGnhApYSObPhxSizoUAy(uIydy(CgZnWN5Mhd40DhCXMbOkGubXvtlzRv30lK8aEqfqM6yHO8CuAclSNibTnBjBzeTAaTrygdpoAZF4qeczHXJKckg3K6OIvOqTjHQ4FIgFCUDQt1EzyaFNKj3MfVk6y5hm5Wm(P6v9uShnJqPz3CZWaFR5lzEzNMhhkRaqJgEL)mCVuuDuoAlB5VNHmrm2IqnxpLCvpEBmBo5O0a89UzmcJKhX36oA8BVP(d(emt3jnuq2kUwVsMk9WQuKFMDdtZUo1Q8V3KWDXE)gREFoZZvIedyJUXDVbdTmzGsTmf1ofQQNPz)SNkjBw0kXqbfnaGx0i644Mtq0fzfN5VY75M1xMxWmbsf6MCHkLUa1k)dnDSqBztiubpTi4haMRsfxZCBh73v(3IolesTeYSxR64TmvsJtJq8cm6eanLqkxrTwY0DWvEiT6LflaC)W8fmIYqlKtBg1OFBC78AVx)J0fynzdNH4IbWr8nZPNx8VXAJIDmuNoRrlN(SYvKFRNzf6rPgutAKZanxNWL9ivnytVXzLC7mOufdphqcQx46zEJCDTqm55tBGw8jtPxMyMQQ8dco4arIpL2(YY3VI9FfXnW2xIszbWzx1JSRdGSp1H53yktzGNqJ2QjmScJ5lrWzUHTKZ6LhVK5gD42Shts3i2sqJuRwY4QXxILBbBVmBv5yWaQX)DPpiV2y3QWYw(6Y1CF7cyZo79yB4BF5spCYamvOLBG(xnLy1I9Kb0qVGmqU7cKRrUdms(ox5gRenx3jyfMjn)ihCHHRDGtO6M1vJpg9fw2dVXbi2GU59CDKzdAJ)nS4mzZO5Y2e5RiKF0HonksBLCwpCxKA8Tal1rDp1RAEwjWfeNvlD5HN(kMYYLX5ZMOSoktXvE0MDmoAaNtocUavkMPMzTzACnNkKU6sgKK9IFMXg9uzI3QC(lnVkzAfRjkYkyeV7nkZr3mMmKifbtSKZIz(UoK5yOYEecy4rMrYvyq3yS34Cf5pNM8vPSHQTt5vhH2(04K9zbIXNrrXBHasbgntu4AqLhwCTqxV3PXxEJ0AyXDdeUu8mS1JS35pLXROIxe1psTas84SZcEiopIAdhZ9E14MW9BLy5IZj8r2Yg0PsVYa6njR6mMDiY8VVRhkexTa)9IPIljXSy5YRBFjGR7nb2mOO8Gpbd7N)goul)78DrdkdrbC5(SmpFbrgSQamHauZ3nUbjbmZAL40momVKbIyzSRtvyGmDnbczknH5uM101SLNO4ErPV9gC9CCCgG5UMMBSnjcpC9kg30ZXbfv1O0WyHG9EoVSe8ld4SiLDtpZ8c0rXneRIw1)UpYVpwHIHh0wx52WDR)hi(WHimIyEB2mrTMf1bneC9qDpBmP7s4)escegpfjB1O78ko6jppXB)sYlS9L)GrqykRd4VDrMH3L8vgfoE7J7ZIL6ubZPeabzAcbxv8sxWmeVPQf)wf877JI2YRt5wEhiAwBdOISvXRbtfkOTdl7OjonMzyjyvmJuZDJW83VLhZQyVWfok0sgUQFOqqQiil6vjVx8QAappG1wlC)v3SjwzkaLujAtVR9MshlOwVbkM1qEMba2U9frBg977J3TJfY7xJzbLKYe9FH9EmH6Lpd2nHsrc0xY)ajSKrhmzOA)(J)3X9hGwSS97p(N09hVZ0(JFh2FQAri0axlu4Rr6pI42h6D1fzr5bpKSDFgt1qu6yVa)DlDUCcNYb1tfIwwbv7VZaL3OSVDKSt1zfAGeQU0yiGRIgpxX6me6vjPdq1M3AW9IEPrsemd4zgf8MTUW6stJx2W5omNWSKSyKeswmFMUeUkoJxQ3vTWTrfFFe(hWBqFJfICcnq3vR7N3BCbarHpeapaixcvPx0V7f3PYHSMcer1uInybyJqk7xhVFhT5KiE6HaMr5CNJlPGfOdI7puYaqibqLHRtGtBOKqvICpKOGSAunOOPQeuP4e3RM6EjOErisRmDe450sTYScGVSuoCAEUuagxP341pXF1W8K0G97u78A5enj2Y0TPlTLQMTl9b2omHNzIag6OIfE)Bd9hDZLfTLFaZcEEKZLE(xvWbOLA)m(GU8MIhMZN0LHn6v2V7sPepttvwYI4JTxRHm1fCZhdmTqwf7vLf6eVMzqM6orb0OxiSOoOZQm)i(udktJbtjEyuiI9UaQC7UIwDDbWTApgkyw5dyAI(Ubg80QiuNihpQ2QuI8G756c6L8NCPo7c4EjpHit2aOdDpnjWqFxZ0KGZUyMQCTcq0fG9OE9nuFn0kErZcZFRRR7tTATdxpE6mxGoqRo)dsTkVSIwPcA008BLQ)M59XoWzIIyUFtrmnw8)KqUmtx(XXyrZ6J9IYUxiwhS590gtgsiz4k9r8tGRFhr9nCJGyyFVecGwbpoqmeSFVfawk3HYVvr2eSMzIlhtgDMT(zbQjCQwdwzz07aukePzIiNNsiw3dLfK(Y)Yaw(gWImKhd)pS3G4O7NaEg9DE7YWvirP)QSLz)e8uxW6jqUlvNcHM((anMSMNiNm8QLqfeuB4qzfqylOkJZNSopZ3H4mtOHEg9FeuTB1tByTVFunAMrbgNq1JovuNA3owLKiC6MmjnTNth70t3OMAu1Xwu6NmzZ11TTK)p2WlAdV3gH2VbM5wC(DawTvCYx5oAkAd9QP7sz3wmaZwQ4QXevsNqMzkLnkt2((N9ct1wp8AwglgYNc))SK3W2bptp4AtdeqSfv3Dm3a0xLhHBfEUMkiT2Ow(DqmrVXsQKZt2lSUd3irNslq0MrkPPuNrTBLAp5QWoGelrAfiewDKgAbYOFVBKlCmZc)TD0ct7NzpQO2HnuNIoCY1jLLN6Op0cxTiz4SY(JPL97wFiHSRPla2vNE)XCrHeWK9kiyuJgZINcx4Lk7j1vlSsAWh2sJz5fREbUn8sczZt51hy5lrPk1oGQJR5ZbVFpG7Kg8RAG3EBi4lG6xNJujNm7QEWz3bQ8b2P8aQvKD9guHdwB9l)IgSXORgqkZqZSQlkBzJTjIkncqi0T71NaPBUpCGQFw3J)8M6gfI4yJ1eFS653ZS6pWPN(T3GwQeNP92T0OX4larzq8dy6KZveYAcv2ag7R9ra)u4lAj0jUsvYvb5LjJTGDl14gZaQG6IDTUSravxG6etCnmvN2dpyMJHxGlFaDYlrPQ06rCGNF0iZf9pMmBVzK4uxwdfVku1YUDkaXgQIfgxXoDHrCzRo9ker7dXPPqHAHcDOW6bTLIXe05E41O5glO5357y70NH3bQyhNqacKzBVaTSQ7fYu1(2rQNcupTfezEXI1tsKSknmWBj9lrgaZNrzwHeETjjzWW0YCsQ70aO96wNYHUUY1thi95pSkfC4oJHyHQ3ChiYDMTiSI3jCacrhpvDsX875sfShxFLK6n)(VgkUb)YMFV4Y7mEZUK0QB6Z3vaL3DyrkVvc5NpPfzmpGoSGFddUjmN)dmnIm)tZgD4Z)3mv6hwWVhq)5KTSPs843vj6b2opmqNNyBqJI2kA1k2Gh69ho2MPMyd0GUuifDdIL9SLg4k)vmyDdmSum9QbrvZYiW9dFZOVFcJ(kmCBqClmNJalpeYXjfyk6f0aPQwNocydngAa345DDc(XfZp7tWXtAqKyoDyoYeC8yoIeyvuOAWSo40ocU(jdIamLax0aPYZWaSV7jelXa2XJLENzMkF)ZfMp5Cb4PNBsY5wfKpIGSwusAGx7PDf4NDS)Ovd5)rexouJMsd06xlgyUCHWNFcilh(mGlTLxb5VRt(0IGJs9IKg2j3jwDZpUtW6UubnIgk9Z7Hg81Fmk4r8vMVK5kl0fsk)5UcUJIe7DUu15HOQRVl(tQZXimwhryr4G8eIF91PM)mJBikoLVji1aP8J6kypkzLtRBxi6E6jD8BUVq9BrJaSJ3(lI2M(HLia7OZlbM3z9dlrawpvWI67fWLCKgOHgsxNMJNdarI)Sb4Zq2KWMQtMdp(irKE8ejeaF2X8Z(eCe(eGdY(iUFAt0Xjf3gJOw)eR7aBAmU030MdJNJobikNu7lrnOR(quqFwdq8uUzobXlNE66eyeM1FaQExNIX0WLj8RYJAuSCi5WJr1PXtm4TcyGR4cdadpMwH39f8nkjqji6Fz0aOhadrvdekwBf4GdPvaVVBLNzWBfW9DRSL4DFbFJgOZ5MjgWpjSH4yE)ijNzWBfW9LfSL4DFbpMLavRkDWwGgRCYUOIzkJndBza(uFxcuTk9(RNy4wVIq8q4iI6eKIxT30nYns2kocVJrG4rhkccC7P7lKW8meciYmDskVc6Eyp8s8CT7HKgRJGpdbINlm90fq6zGpgbMNb(yKz6KWhJYJ0d(4Zf3bAwt7nFmhI)9Tz73XvMZHz11fw1vy5Hf)phwyEBY9)(VFybBgsF9WIQlKRAyAKOZJ0kVgkFQbFlaS81(ham1EClX2wau(MbFiTfOMx5JgagCiNrGJd2JM3fN0cEbicqJXgNY0yKr8J0z7Zm4BbGj58mEClX2waum2zmGAEdzsjqJWoFAbooypA2zCsB7yNXhNY0GeqWr3DcIGcEmz96KVgV9jUB)PHSWM(kZReHvLvfHqLZhwLPf(hhVdlEyFE142MiIOGf9H8OxTIpy2Ij8HWSO)gleKfxZ(z(5ebmyeEVH)UofiYPSCKik66zk1pLjH9CxTdVtPpuyfBV649RJKL)Cxb3jil8y1FUZ74h(8VSPYpSBuLs4SQZVNXb)Cs687VpEZpp)EXVp)3MFFXPfG9V(vp(Fw8EZVV(MFD(9Lt18)Z55Z)vF(GA(L7xMYgvAC487Hpesnqu)eXYH24ocTdlE7n2k(WIlyKL2eeWHfohwmq7vmvNwa3cmf)wJTyu1Q1XU5ypSygBFvmZ8X3mVAN9GgsJY5rHtxMGsxqpoonqR6yxY3KfhB253FJlhQtL3GloZ4A7U3GoVLh2XdlUtS20jPGP9Py9JC2fL2zuozHfpRA7O5yXxtvBwcA52IVa(a6cW4KtTFN5YWgZKY(VXbQvg3KpGpCe7JDFhvGEGh4ljeh8qqPHOqNplzCT6GsXXZpHINWAE73EyZst)emRWglo7ZCSYZffTaMHvQ3bhfyI5nUHyStCpS4kMDx2)5sbbf62SRbPQoH0cKsrHPY(NMyLNV8iv0oQoUXYJtHfsBGtubO0PftDC2f59WL5zBRyQHB4m1VWhoS42knei8U1kfqEz3rtfVo1TgbKsDn(sB6EQv)OagWuPigPnhAQv4pSfa7IUbVwn8bTyD4Oi4Bys(EPBPcUdbC(dlQun19mavhz9US8quXuDaOFioB5wXaBeIIT(6Pb(UUO2ao6vqq3jN4gcGo8PnYr43ogyAmQT(7jS(7zv1UUZLntU(nOHqo9McYdHDbqn8YBoG97jHjLbKg8GjGoYktS43uTbhFCdo9A9ErlwYGRme0ZRRcLQEIIk5aBPZh3R)HG4DJIE(T7HGBHBOfWxCeYH62jLqxT3UC8epEcSBbK2YCKQCVIiMmCN0hkssGS)Yx3I18aBUSzJhFOMUki1iqgdLe3W2gTPq3Hc7001cZCQiTlRMP6k6L7FMVKL7243muXVfaDkzue(tPfV0VmsARj9MjvA)vmH4oHvY2Q)L21qqIYpIM5DP0nHIyIpkR7GCPdSh0cfBsZkcP2BfSlyoM6iXnPFXNujm6yWsQYePiWzN8QQAfZXlIO997Qpb8ze(wtXKkI0WMAI1GUzzvOVznP6)KyrH7Ubo7bTmnfFhaQiUvjfzzc3yoPsV2OHbHj3UICc)FrcnFmUr)tbDtzQin4tV4Kvz3o1I28R7i5sTQ4bqHH5D8I62IsW(Cc242fH)4jTmc)XtBve(58NjoBSZRYGR0UwcB6ZIYLIqP87xa)FTEFeS1fvoCqBDGCaLpJV5xt8zkCDliW1F6esFI55ZsXqXszmBSb8peom3UedwOpPZRTs2oGMqXqk9rZpheg(E8HQ3YiJt3bKYPRmZ4K4QFfpzuMthrAR(KlKzmejaYeXvZ8)O63HIsWFb4sMTI9QEm8x3BH4sZ(OeWfC3km3XzP73LRjaG7DnEuwapb1ts4aRS44hSFy4Yjdv57xvhpaXwcUZA9YjXZfYPNGBlosQIbQQyi1)y)dFGXE7eH4h6YZP6X1YnvX6IcXXI3Q4FO9UM2KmF3bTXgOJ0OHXDanPRKfgr1kJ8w(w9o4GwrAi2mKsYavT7UaWsqXCOZXDBfX4I6kZPge(O1Hz5bfDhapKoBEqkshH8NLbXR55sfKpUN5Ft4QN8DJ6pRwtqxjz6(9xRnlKH7f)raV6Zf1GU0(qftOirL4URdk4z4MOnVinD4UqenM3Oh8130kYorrJCA5kRS(65v1lQh(VdfQxtTMRtWuPkgSUTHkynpC)9B(Kx1ycxGvMF8)K4k2VfLGO5kGhEo7G5jBuMQFaYX8bqoWSMWra9luHrb0RWz8EdAzZ9hF7shfH5ctaEvLYmBzLd4HYGD6blvl3d3jl0u0yZztH(bBR5MbnKyhRYpKKITcUpAJKZRAP9qlwJ)j74StLbehz2lW00stpXDFSx8YMIyG)SczDk9qMz1qj9k0IpOGULJU2hATaUeBSxjGYmAV(DGDZNOOM1yJzpcnWgV2SA6VsqWIAApUybz(aFRcl3P9AOInvM6kfA0t)TMAMz1LWZYMaA5bBDeOZkK3v2rTM8OlLyt6f6HOIS0IVJQD)zQ(1CK1Yf2QPkTg6wdswLarIladyh12vJloiwt6NHBlj41SsMCpHxYFZ2nFCaiY8JL03svGz0Q0AuxzR8LtSjNotYSnIeyT1Rz1wVANSAHYUBjNFl6lTOP8A9a8Bz9MP6DG2hKms6yik8S1APs5iO53AjCvpiXaabcKeNyKCqAVYiQIDBaULL(5lbMiefllwCxqTjcJSaPz6M(9HiO7SdsvcjItvBr4yLWI7lQncRHUrfuV)T6lyyo060SQy26aKZIY3298If9sJpgyf(AmY1LE)JWt7KSIvoqQzM2cssRDPYmOel8CwDRM6YvQfsVYfwCyRev0YlSQhy4nj5GZQBTJpaw786cwt0qawrEDX1L9VL21u5CLaXVSn5YUnaTK45GkCciBEzDwjrKdh7kNkm9EFGrcEraep1Da5sFt03cTHW3rws)k1GTMSAFudSJf60ERCVivJSjYcTq5HpGn1td5rNPsKIiQ0bYpfoWpsuvNxRG1(0zoOLSH3Gq9AxNSBjAFTmLnOTHAmtktydbRWB1etLKPpEOQ4Y01pqPRtWd0JoUgt)2XQatZeR1bEenxdeSKt2TEzAjAEg0S5oOOtzR(A5kwvtCvckQUlxh3H4dozC0Y7zQFfPfOeUx8aQ1hRjat7uqn3V5x)xoyQIde7gvKYo7yCFKbtpk5UULmJcG9cPJwVRJ7Bfaj2tM2aFsuBMg5pgWIPc39JojhwT(kui4Qy)cPTejOV42LPnuCEcHFqlArcapKNyjxwW8401w6evvl)PfdeW8yRA3hl(0or50YHFK1Myr7jsu)MjZHoQsRKuAo9pwsurdUZtjLRWBRqYT4sLtWv7)djHHE1lNfWjw6fS(i0uFUu8KJdpmDz4wgPkjLzVNBzlxCs0lUzyN3RoSe6cbP6(wPqYQwZiXnZs1iL7PUnH)ZK0GY3se6sNropLWBuV)GKVIkL1ZOETSOokLLb4cM7rc9cvPVblhAq2RBxgKTob8wdW(60hCDcTcmxNqud7BxZSriSVm1565lZ0i0fQulZUkRPTGV38O)RXLRQ)9g5rQPgxDK2oR9AHzO6(TPTX8Yk(aiLr6anqO1Y2zAARyajK(dy92Fex58qBhjl8t2jue6wlLsH310r03M8ZqMZk9LFF6wxcF2SMpcfmd2QH18F3XJ7AlkxvxU(mqDAVFnMbUW4W6S6RE3x8JcRfEWi1E0472S31MoRCMrEHhyPzQUdkjdilt9ZiHKoijsWDQzZwPWlYXzACutWJdQowlFxJ92tCgSLpfDOEFwh5EZ6YAM9WCAgergOf8tBZinONRtABgR03qi6xvAAA7e2ndLIOrs1mOOCiaK(zAbCDRsl5)Jn8SFjkgKm3julIHBKTL9ijiXswM9QMljeQqF6CDoHsiqrQHTg2eP2dBN3yVwE6Xi6xZECwfLyPLsclrpmE6MdCdLTp8tRCjajH6gYcoDctwQIfnZ8Ls0)Ha(f4FeQkiSEwQZu7UVtwYboXHhT7l6z2GOtYS7RHYEBTfhYczoqnBycqpc9Euj3EhOr2c2GMZSTVz7c(4yZMmrJv1cP8UTuSK3k4S3yM2klEQ(t078FdK6phn)KEmkWXD4RgEp(Pk229mXpA5qKGbcsbfUkiB3dg)ldHrHT6JQULGFg0RqB6K3m801MaTj4vXjJQosiRnodFMrQ6NcvvU(jYBDeNvSYYQyPE5Qrgbwih0mN3CwU7wN)q0kzJDvw2exNlLZxFVVwkMK22ThKDFdXvgvTRbsb2ihzEXAs)ebi53U512Y3ogDRXrwmJuh9Z6N5t8SXgBodSPs7OfTe5s3A87)lTaiuk8Kx5IhcEEJvrOJqcTgrOAsjAUaNVlsPeEFsq6NIglrflR1geP82wvp54paLBwYaiqqezsHyFH776iorjipjyvCjTPQS(qp)w52aSMCcyYetbwjxz9dRLNL7KS53xvVs9pVaqhQk90pu7XwrjYyUQiQpM0FRbdd9WTm)2iUgrYi4yr3dDjaVUOFTHcPqtZKKQf1Ysw9vXWQYeFTE6J)5ny3UOvJ(ACotEKPO7fMVDmfvlFUCleO8MYyL)5NXP2YFZAog6RubuPx0yB81yB8)XGTbS0YhfBJ)3k2gZV)jF3yBq(4Mqx2mRHQD(sKWqb)ZvIfb01rUynYRBL8Md29byjda1LPAJRvPQxWkg(yCe2PKJ9U5MLTVxl(ily1y)AZTIr7jqw9bh0FeJ7AJC1dsBV6PiZSxcQAIVYQhQAI5GEb5Mi5jgPIPVjjnypyJtyhhzCW)vX(K)OBeCRYFFsR4G9ko)dfI1WxwRfTjF1Ga(ILwaiLoJINg0a2saY)p7yUsbX8vOklzrMWeABtlpOwUD8ClB5ghdlyhyBodAFZ6dFv2ixLgl5keeZan4jbE9ANAjTB6ZXCWIKrQhrXUs)p7IWKCFP314e3tM6xlhEEqIlDM7aQYKLYwGtD1oCeefCUU8lEUUw8Q5tU4CI6QTOCSzcgXW88RlFDf0P(kUSU56DubWgnCQtjUvJaQrJDyduzpl6F0zhh0HQdrud4ckY1s3Jy1kff)mpYzzF6mWfLWSl2SBaLKvNIhzC8bAUynk1XxW89rLTEnLdeLB26YX9pblNov)yRRO)mSbPRFbx9DVKwmAJBRxwjT7ZqerDGRPdtC)ggGaz0bUOED73UZIr1)B())p]] )
+spec:RegisterPack( "浩劫Simc", 20240903, [[Hekili:L3txVTnss(BXyXPiAhRLKsYjzpBn4U5LBcomV4zX(WHtu0s02CTKOgsQKXhm0V9R7MF1Fuv1KusjtWIfyNyXMvxD113v1nN7n)3MF)QW8O5)QVR)e3p5oEKNR34PFy(95VUlA(97cx(s4tS)X2WnS)))RWVKSK)RVUojCf)TZs2NUK9K7J3SFDyECY2Fon8X853)W(415)Y25papd3WE1DrlN)Rt)aBYEoE1QOIXgLXMa(yV29tx769(dl4)3X)TdlytXpFyX(DCWD4Zh(CXG(41(3WE4FV4NxKSlABu6HfRtEkEPYOMudIDPXjPX5VcbmpF2W(5NJw(cdMBFiz)2v8)omj7WI8W1rBZpS4Xe2e8lB2KCyX)X(0WMx)dx7Zr0F7zgI8pczd6FeN)C8wgbln5X41mYu4sojkB0U0OLjBEim)Q7(RFjmno8H1rVNtJVBt4)mjnipnE7lr5V)lHR3hDx5FnYB0YKK1Rs(62rRytmhu359r33ERAa(Wd4WNTpVLGii71TldYwNun3EVp(rje45WSGS8W8rHBFny1USbdVOzY1FydIbG5ZUJaRDogu2xgLnXkju2C9qslNrSCAfgN(uWQS3Vk6XW9RZVZ99j7Ulnklkh(DdtxgUnkipjnLZ3boMS4NIxhK8yWJRzta8yIzSQfYMbHmSLtDEy)Jpos73hXxpCM5)YF5WIs4WE70O8W0NyK5W95jbH55mvcVFDmdXwUIXDu(qgm3eVDvKaWpSpDB82Nc(kx8zuA0MW4TzInfHeK6Zhu(JRI2WqKhwhYubmGp9FjkyvI2GVDitRX61bfZA2SFASZXGVxu8xJIZcEij70GI3bHInONbdr82LC(GSAPDbjKTJVIdYmgl3lrITMbIh806q(0(469PPVoA)Ub1CIc8kyv42Lr8F)PL1K(7yQiQM3rft5agdYxc4JXJTScZFoi7Rrr70jM7Ix(sW(DbpMg(0ggj497ZIyCBpYFZ78WxxpgTo4HWu2BfPU4kPKspFWW6vG0VwH63YrXnH)XLFyWWskotb)M4OSz3X2fItJwvrPVknmEvq0x4WpC1QmMm6(T5V9M(phVTbOqpD2NCDKqQnm(PnjP7EojloRcTE7nnKX35T3e7pYRH97CgCHgAFN3Gl0NZO)iolptHnzvCw6(D5Y)ehYP7ZEUw(DFH9PGLCZt8TCGFvNm6ldrXqkzXQHQgNxfyn47gkZrTk7oFaAI8KfUDB8ZXf6Bo7twAu4xIsZckau90Pc3gHkuPT8NtJxl0VM)m79IF65CMe2gig0jxzGKox1WgXF)Nz8JgV3yNlhlnUOxJcEikCJ54Q0cL9mtPweNXNjaKhV9vgamiqAs8R48DiAkmgPp8ilriMSHnsdhMxaRGH9annrodu3jVD8Glk2ihPUloADywEatb0QBNoO0stuwwed3cEGn0xe7BV9wbQur(8C)oXxm5mtNM5tVuxgYM1I)mynt)sHI5QDw7JSWtAojcG5KJ5iAivEK6(dxFyE8MOB9MoyiGI3jUkcX1(2KTloxSzHURxXpuT)Ujm9LQDIz35FDPOZVVNzpJTSwfiGDMcRX(TMebz7yS5VElr2(L(cz)ozWc48L((yLGnhApYSObPhxSizoUAy(uIydy(CgZnWN5Mhd40DhCXMbOkGubXvtlzRv30lK8aEqfqM6yHO8CuAclSNibTnBjBzeTAaTrygdpoAZF4qeczHXJKckg3K6OIvOqTjHQ4FIgFCUDQt1EzyaFNKj3MfVk6y5hm5Wm(P6v9uShnJqPz3CZWaFR5lzEzNMhhkRaqJgEL)mCVuuDuoAlB5VNHmrm2IqnxpLCvpEBmBo5O0a89UzmcJKhX36oA8BVP(d(emt3jnuq2kUwVsMk9WQuKFMDdtZUo1Q8V3KWDXE)gREFoZZvIedyJUXDVbdTmzGsTmf1ofQQNPz)SNkjBw0kXqbfnaGx0i644Mtq0fzfN5VY75M1xMxWmbsf6MCHkLUa1k)dnDSqBztiubpTi4haMRsfxZCBh73v(3IolesTeYSxR64TmvsJtJq8cm6eanLqkxrTwY0DWvEiT6LflaC)W8fmIYqlKtBg1OFBC78AVx)J0fynzdNH4IbWr8nZPNx8VXAJIDmuNoRrlN(SYvKFRNzf6rPgutAKZanxNWL9ivnytVXzLC7mOufdphqcQx46zEJCDTqm55tBGw8jtPxMyMQQ8dco4arIpL2(YY3VI9FfXnW2xIszbWzx1JSRdGSp1H53yktzGNqJ2QjmScJ5lrWzUHTKZ6LhVK5gD42Shts3i2sqJuRwY4QXxILBbBVmBv5yWaQX)DPpiV2y3QWYw(6Y1CF7cyZo79yB4BF5spCYamvOLBG(xnLy1I9Kb0qVGmqU7cKRrUdms(ox5gRenx3jyfMjn)ihCHHRDGtO6M1vJpg9fw2dVXbi2GU59CDKzdAJ)nS4mzZO5Y2e5RiKF0HonksBLCwpCxKA8Tal1rDp1RAEwjWfeNvlD5HN(kMYYLX5ZMOSoktXvE0MDmoAaNtocUavkMPMzTzACnNkKU6sgKK9IFMXg9uzI3QC(lnVkzAfRjkYkyeV7nkZr3mMmKifbtSKZIz(UoK5yOYEecy4rMrYvyq3yS34Cf5pNM8vPSHQTt5vhH2(04K9zbIXNrrXBHasbgntu4AqLhwCTqxV3PXxEJ0AyXDdeUu8mS1JS35pLXROIxe1psTas84SZcEiopIAdhZ9E14MW9BLy5IZj8r2Yg0PsVYa6njR6mMDiY8VVRhkexTa)9IPIljXSy5YRBFjGR7nb2mOO8Gpbd7N)goul)78DrdkdrbC5(SmpFbrgSQamHauZ3nUbjbmZAL40momVKbIyzSRtvyGmDnbczknH5uM101SLNO4ErPV9gC9CCCgG5UMMBSnjcpC9kg30ZXbfv1O0WyHG9EoVSe8ld4SiLDtpZ8c0rXneRIw1)UpYVpwHIHh0wx52WDR)hi(WHimIyEB2mrTMf1bneC9qDpBmP7s4)escegpfjB1O78ko6jppXB)sYlS9L)GrqykRd4VDrMH3L8vgfoE7J7ZIL6ubZPeabzAcbxv8sxWmeVPQf)wf877JI2YRt5wEhiAwBdOISvXRbtfkOTdl7OjonMzyjyvmJuZDJW83VLhZQyVWfok0sgUQFOqqQiil6vjVx8QAappG1wlC)v3SjwzkaLujAtVR9MshlOwVbkM1qEMba2U9frBg977J3TJfY7xJzbLKYe9FH9EmH6Lpd2nHsrc0xY)ajSKrhmzOA)(J)3X9hGwSS97p(N09hVZ0(JFh2FQAri0axlu4Rr6pI42h6D1fzr5bpKSDFgt1qu6yVa)DlDUCcNYb1tfIwwbv7VZaL3OSVDKSt1zfAGeQU0yiGRIgpxX6me6vjPdq1M3AW9IEPrsemd4zgf8MTUW6stJx2W5omNWSKSyKeswmFMUeUkoJxQ3vTWTrfFFe(hWBqFJfICcnq3vR7N3BCbarHpeapaixcvPx0V7f3PYHSMcer1uInybyJqk7xhVFhT5KiE6HaMr5CNJlPGfOdI7puYaqibqLHRtGtBOKqvICpKOGSAunOOPQeuP4e3RM6EjOErisRmDe450sTYScGVSuoCAEUuagxP341pXF1W8K0G97u78A5enj2Y0TPlTLQMTl9b2omHNzIag6OIfE)Bd9hDZLfTLFaZcEEKZLE(xvWbOLA)m(GU8MIhMZN0LHn6v2V7sPepttvwYI4JTxRHm1fCZhdmTqwf7vLf6eVMzqM6orb0OxiSOoOZQm)i(udktJbtjEyuiI9UaQC7UIwDDbWTApgkyw5dyAI(Ubg80QiuNihpQ2QuI8G756c6L8NCPo7c4EjpHit2aOdDpnjWqFxZ0KGZUyMQCTcq0fG9OE9nuFn0kErZcZFRRR7tTATdxpE6mxGoqRo)dsTkVSIwPcA008BLQ)M59XoWzIIyUFtrmnw8)KqUmtx(XXyrZ6J9IYUxiwhS590gtgsiz4k9r8tGRFhr9nCJGyyFVecGwbpoqmeSFVfawk3HYVvr2eSMzIlhtgDMT(zbQjCQwdwzz07aukePzIiNNsiw3dLfK(Y)Yaw(gWImKhd)pS3G4O7NaEg9DE7YWvirP)QSLz)e8uxW6jqUlvNcHM((anMSMNiNm8QLqfeuB4qzfqylOkJZNSopZ3H4mtOHEg9FeuTB1tByTVFunAMrbgNq1JovuNA3owLKiC6MmjnTNth70t3OMAu1Xwu6NmzZ11TTK)p2WlAdV3gH2VbM5wC(DawTvCYx5oAkAd9QP7sz3wmaZwQ4QXevsNqMzkLnkt2((N9ct1wp8AwglgYNc))SK3W2bptp4AtdeqSfv3Dm3a0xLhHBfEUMkiT2Ow(DqmrVXsQKZt2lSUd3irNslq0MrkPPuNrTBLAp5QWoGelrAfiewDKgAbYOFVBKlCmZc)TD0ct7NzpQO2HnuNIoCY1jLLN6Op0cxTiz4SY(JPL97wFiHSRPla2vNE)XCrHeWK9kiyuJgZINcx4Lk7j1vlSsAWh2sJz5fREbUn8sczZt51hy5lrPk1oGQJR5ZbVFpG7Kg8RAG3EBi4lG6xNJujNm7QEWz3bQ8b2P8aQvKD9guHdwB9l)IgSXORgqkZqZSQlkBzJTjIkncqi0T71NaPBUpCGQFw3J)8M6gfI4yJ1eFS653ZS6pWPN(T3GwQeNP92T0OX4larzq8dy6KZveYAcv2ag7R9ra)u4lAj0jUsvYvb5LjJTGDl14gZaQG6IDTUSravxG6etCnmvN2dpyMJHxGlFaDYlrPQ06rCGNF0iZf9pMmBVzK4uxwdfVku1YUDkaXgQIfgxXoDHrCzRo9ker7dXPPqHAHcDOW6bTLIXe05E41O5glO5357y70NH3bQyhNqacKzBVaTSQ7fYu1(2rQNcupTfezEXI1tsKSknmWBj9lrgaZNrzwHeETjjzWW0YCsQ70aO96wNYHUUY1thi95pSkfC4oJHyHQ3ChiYDMTiSI3jCacrhpvDsX875sfShxFLK6n)(VgkUb)YMFV4Y7mEZUK0QB6Z3vaL3DyrkVvc5NpPfzmpGoSGFddUjmN)dmnIm)tZgD4Z)3mv6hwWVhq)5KTSPs843vj6b2opmqNNyBqJI2kA1k2Gh69ho2MPMyd0GUuifDdIL9SLg4k)vmyDdmSum9QbrvZYiW9dFZOVFcJ(kmCBqClmNJalpeYXjfyk6f0aPQwNocydngAa345DDc(XfZp7tWXtAqKyoDyoYeC8yoIeyvuOAWSo40ocU(jdIamLax0aPYZWaSV7jelXa2XJLENzMkF)ZfMp5Cb4PNBsY5wfKpIGSwusAGx7PDf4NDS)Ovd5)rexouJMsd06xlgyUCHWNFcilh(mGlTLxb5VRt(0IGJs9IKg2j3jwDZpUtW6UubnIgk9Z7Hg81Fmk4r8vMVK5kl0fsk)5UcUJIe7DUu15HOQRVl(tQZXimwhryr4G8eIF91PM)mJBikoLVji1aP8J6kypkzLtRBxi6E6jD8BUVq9BrJaSJ3(lI2M(HLia7OZlbM3z9dlrawpvWI67fWLCKgOHgsxNMJNdarI)Sb4Zq2KWMQtMdp(irKE8ejeaF2X8Z(eCe(eGdY(iUFAt0Xjf3gJOw)eR7aBAmU030MdJNJobikNu7lrnOR(quqFwdq8uUzobXlNE66eyeM1FaQExNIX0WLj8RYJAuSCi5WJr1PXtm4TcyGR4cdadpMwH39f8nkjqji6Fz0aOhadrvdekwBf4GdPvaVVBLNzWBfW9DRSL4DFbFJgOZ5MjgWpjSH4yE)ijNzWBfW9LfSL4DFbpMLavRkDWwGgRCYUOIzkJndBza(uFxcuTk9(RNy4wVIq8q4iI6eKIxT30nYns2kocVJrG4rhkccC7P7lKW8meciYmDskVc6Eyp8s8CT7HKgRJGpdbINlm90fq6zGpgbMNb(yKz6KWhJYJ0d(4Zf3bAwt7nFmhI)9Tz73XvMZHz11fw1vy5Hf)phwyEBY9)(VFybBgsF9WIQlKRAyAKOZJ0kVgkFQbFlaS81(ham1EClX2wau(MbFiTfOMx5JgagCiNrGJd2JM3fN0cEbicqJXgNY0yKr8J0z7Zm4BbGj58mEClX2waum2zmGAEdzsjqJWoFAbooypA2zCsB7yNXhNY0GeqWr3DcIGcEmz96KVgV9jUB)PHSWM(kZReHvLvfHqLZhwLPf(hhVdlEyFE142MiIOGf9H8OxTIpy2Ij8HWSO)gleKfxZ(z(5ebmyeEVH)UofiYPSCKik66zk1pLjH9CxTdVtPpuyfBV649RJKL)Cxb3jil8y1FUZ74h(8VSPYpSBuLs4SQZVNXb)Cs687VpEZpp)EXVp)3MFFXPfG9V(vp(Fw8EZVV(MFD(9Lt18)Z55Z)vF(GA(L7xMYgvAC487Hpesnqu)eXYH24ocTdlE7n2k(WIlyKL2eeWHfohwmq7vmvNwa3cmf)wJTyu1Q1XU5ypSygBFvmZ8X3mVAN9GgsJY5rHtxMGsxqpoonqR6yxY3KfhB253FJlhQtL3GloZ4A7U3GoVLh2XdlUtS20jPGP9Py9JC2fL2zuozHfpRA7O5yXxtvBwcA52IVa(a6cW4KtTFN5YWgZKY(VXbQvg3KpGpCe7JDFhvGEGh4ljeh8qqPHOqNplzCT6GsXXZpHINWAE73EyZst)emRWglo7ZCSYZffTaMHvQ3bhfyI5nUHyStCpS4kMDx2)5sbbf62SRbPQoH0cKsrHPY(NMyLNV8iv0oQoUXYJtHfsBGtubO0PftDC2f59WL5zBRyQHB4m1VWhoS42knei8U1kfqEz3rtfVo1TgbKsDn(sB6EQv)OagWuPigPnhAQv4pSfa7IUbVwn8bTyD4Oi4Bys(EPBPcUdbC(dlQun19mavhz9US8quXuDaOFioB5wXaBeIIT(6Pb(UUO2ao6vqq3jN4gcGo8PnYr43ogyAmQT(7jS(7zv1UUZLntU(nOHqo9McYdHDbqn8YBoG97jHjLbKg8GjGoYktS43uTbhFCdo9A9ErlwYGRme0ZRRcLQEIIk5aBPZh3R)HG4DJIE(T7HGBHBOfWxCeYH62jLqxT3UC8epEcSBbK2YCKQCVIiMmCN0hkssGS)Yx3I18aBUSzJhFOMUki1iqgdLe3W2gTPq3Hc7001cZCQiTlRMP6k6L7FMVKL7243muXVfaDkzue(tPfV0VmsARj9MjvA)vmH4oHvY2Q)L21qqIYpIM5DP0nHIyIpkR7GCPdSh0cfBsZkcP2BfSlyoM6iXnPFXNujm6yWsQYePiWzN8QQAfZXlIO997Qpb8ze(wtXKkI0WMAI1GUzzvOVznP6)KyrH7Ubo7bTmnfFhaQiUvjfzzc3yoPsV2OHbHj3UICc)FrcnFmUr)tbDtzQin4tV4Kvz3o1I28R7i5sTQ4bqHH5D8I62IsW(Cc242fH)4jTmc)XtBve(58NjoBSZRYGR0UwcB6ZIYLIqP87xa)FTEFeS1fvoCqBDGCaLpJV5xt8zkCDliW1F6esFI55ZsXqXszmBSb8peom3UedwOpPZRTs2oGMqXqk9rZpheg(E8HQ3YiJt3bKYPRmZ4K4QFfpzuMthrAR(KlKzmejaYeXvZ8)O63HIsWFb4sMTI9QEm8x3BH4sZ(OeWfC3km3XzP73LRjaG7DnEuwapb1ts4aRS44hSFy4Yjdv57xvhpaXwcUZA9YjXZfYPNGBlosQIbQQyi1)y)dFGXE7eH4h6YZP6X1YnvX6IcXXI3Q4FO9UM2KmF3bTXgOJ0OHXDanPRKfgr1kJ8w(w9o4GwrAi2mKsYavT7UaWsqXCOZXDBfX4I6kZPge(O1Hz5bfDhapKoBEqkshH8NLbXR55sfKpUN5Ft4QN8DJ6pRwtqxjz6(9xRnlKH7f)raV6Zf1GU0(qftOirL4URdk4z4MOnVinD4UqenM3Oh8130kYorrJCA5kRS(65v1lQh(VdfQxtTMRtWuPkgSUTHkynpC)9B(Kx1ycxGvMF8)K4k2VfLGO5kGhEo7G5jBuMQFaYX8bqoWSMWra9luHrb0RWz8EdAzZ9hF7shfH5ctaEvLYmBzLd4HYGD6blvl3d3jl0u0yZztH(bBR5MbnKyhRYpKKITcUpAJKZRAP9qlwJ)j74StLbehz2lW00stpXDFSx8YMIyG)SczDk9qMz1qj9k0IpOGULJU2hATaUeBSxjGYmAV(DGDZNOOM1yJzpcnWgV2SA6VsqWIAApUybz(aFRcl3P9AOInvM6kfA0t)TMAMz1LWZYMaA5bBDeOZkK3v2rTM8OlLyt6f6HOIS0IVJQD)zQ(1CK1Yf2QPkTg6wdswLarIladyh12vJloiwt6NHBlj41SsMCpHxYFZ2nFCaiY8JL03svGz0Q0AuxzR8LtSjNotYSnIeyT1Rz1wVANSAHYUBjNFl6lTOP8A9a8Bz9MP6DG2hKms6yik8S1APs5iO53AjCvpiXaabcKeNyKCqAVYiQIDBaULL(5lbMiefllwCxqTjcJSaPz6M(9HiO7SdsvcjItvBr4yLWI7lQncRHUrfuV)T6lyyo060SQy26aKZIY3298If9sJpgyf(AmY1LE)JWt7KSIvoqQzM2cssRDPYmOel8CwDRM6YvQfsVYfwCyRev0YlSQhy4nj5GZQBTJpaw786cwt0qawrEDX1L9VL21u5CLaXVSn5YUnaTK45GkCciBEzDwjrKdh7kNkm9EFGrcEraep1Da5sFt03cTHW3rws)k1GTMSAFudSJf60ERCVivJSjYcTq5HpGn1td5rNPsKIiQ0bYpfoWpsuvNxRG1(0zoOLSH3Gq9AxNSBjAFTmLnOTHAmtktydbRWB1etLKPpEOQ4Y01pqPRtWd0JoUgt)2XQatZeR1bEenxdeSKt2TEzAjAEg0S5oOOtzR(A5kwvtCvckQUlxh3H4dozC0Y7zQFfPfOeUx8aQ1hRjat7uqn3V5x)xoyQIde7gvKYo7yCFKbtpk5UULmJcG9cPJwVRJ7Bfaj2tM2aFsuBMg5pgWIPc39JojhwT(kui4Qy)cPTejOV42LPnuCEcHFqlArcapKNyjxwW8401w6evvl)PfdeW8yRA3hl(0or50YHFK1Myr7jsu)MjZHoQsRKuAo9pwsurdUZtjLRWBRqYT4sLtWv7)djHHE1lNfWjw6fS(i0uFUu8KJdpmDz4wgPkjLzVNBzlxCs0lUzyN3RoSe6cbP6(wPqYQwZiXnZs1iL7PUnH)ZK0GY3se6sNropLWBuV)GKVIkL1ZOETSOokLLb4cM7rc9cvPVblhAq2RBxgKTob8wdW(60hCDcTcmxNqud7BxZSriSVm1565lZ0i0fQulZUkRPTGV38O)RXLRQ)9g5rQPgxDK2oR9AHzO6(TPTX8Yk(aiLr6anqO1Y2zAARyajK(dy92Fex58qBhjl8t2jue6wlLsH310r03M8ZqMZk9LFF6wxcF2SMpcfmd2QH18F3XJ7AlkxvxU(mqDAVFnMbUW4W6S6RE3x8JcRfEWi1E0472S31MoRCMrEHhyPzQUdkjdilt9ZiHKoijsWDQzZwPWlYXzACutWJdQowlFxJ92tCgSLpfDOEFwh5EZ6YAM9WCAgergOf8tBZinONRtABgR03qi6xvAAA7e2ndLIOrs1mOOCiaK(zAbCDRsl5)Jn8SFjkgKm3julIHBKTL9ijiXswM9QMljeQqF6CDoHsiqrQHTg2eP2dBN3yVwE6Xi6xZECwfLyPLsclrpmE6MdCdLTp8tRCjajH6gYcoDctwQIfnZ8Ls0)Ha(f4FeQkiSEwQZu7UVtwYboXHhT7l6z2GOtYS7RHYEBTfhYczoqnBycqpc9Euj3EhOr2c2GMZSTVz7c(4yZMmrJv1cP8UTuSK3k4S3yM2klEQ(t078FdK6phn)KEmkWXD4RgEp(Pk229mXpA5qKGbcsbfUkiB3dg)ldHrHT6JQULGFg0RqB6K3m801MaTj4vXjJQosiRnodFMrQ6NcvvU(jYBDeNvSYYQyPE5Qrgbwih0mN3CwU7wN)q0kzJDvw2exNlLZxFVVwkMK22ThKDFdXvgvTRbsb2ihzEXAs)ebi53U512Y3ogDRXrwmJuh9Z6N5t8SXgBodSPs7OfTe5s3A87)lTaiuk8Kx5IhcEEJvrOJqcTgrOAsjAUaNVlsPeEFsq6NIglrflR1geP82wvp54paLBwYaiqqezsHyFH776iorjipjyvCjTPQS(qp)w52aSMCcyYetbwjxz9dRLNL7KS53xvVs9pVaqhQk90pu7XwrjYyUQiQpM0FRbdd9WTm)2iUgrYi4yr3dDjaVUOFTHcPqtZKKQf1Ysw9vXWQYeFTE6J)5ny3UOvJ(ACotEKPO7fMVDmfvlFUCleO8MYyL)5NXP2YFZAog6RubuPx0yB81yB8)XGTbS0YhfBJ)3k2gZV)jF3yBq(4Mqx2mRHQD(sKWqb)ZvIfb01rUynYRBL8Md29byjda1LPAJRvPQxWkg(yCe2PKJ9U5MLTVxl(ily1y)AZTIr7jqw9bh0FeJ7AJC1dsBV6PiZSxcQAIVYQhQAI5GEb5Mi5jgPIPVjjnypyJtyhhzCW)vX(K)OBeCRYFFsR4G9ko)dfI1WxwRfTjF1Ga(ILwaiLoJINg0a2saY)p7yUsbX8vOklzrMWeABtlpOwUD8ClB5ghdlyhyBodAFZ6dFv2ixLgl5keeZan4jbE9ANAjTB6ZXCWIKrQhrXUs)p7IWKCFP314e3tM6xlhEEqIlDM7aQYKLYwGtD1oCeefCUU8lEUUw8Q5tU4CI6QTOCSzcgXW88RlFDf0P(kUSU56DubWgnCQtjUvJaQrJDyduzpl6F0zhh0HQdrud4ckY1s3Jy1kff)mpYzzF6mWfLWSl2SBaLKvNIhzC8bAUynk1XxW89rLTEnLdeLB26YX9pblNov)yRRO)mSbPRFbx9DVKwmAJBRxwjT7ZqerDGRPdtC)ggGaz0bUOED73UZIr1)B())p]] )
