@@ -174,7 +174,7 @@ function ns.StartConfiguration( external )
         f.Header:SetFont( path, 18, "OUTLINE" )
     end
     f.Header:SetAllPoints( HekiliNotificationMover )
-    f.Header:SetText( "Notifications" )
+    f.Header:SetText( "通知栏" )
     f.Header:SetJustifyH( "CENTER" )
     f.Header:Show()
 
@@ -195,9 +195,9 @@ function ns.StartConfiguration( external )
         if H.Config then
             Tooltip:SetOwner( self, "ANCHOR_TOPRIGHT" )
 
-            Tooltip:SetText( "Hekili: Notifications" )
-            Tooltip:AddLine( "Left-click and hold to move.", 1, 1, 1 )
-            Tooltip:AddLine( "Right-click to open Notification panel settings.", 1, 1, 1 )
+            Tooltip:SetText( "Hekili:通知栏" )
+            Tooltip:AddLine( "鼠标左键拖动可移动位置。", 1, 1, 1 )
+            Tooltip:AddLine( "鼠标右键点击可打开通知栏设置页面。", 1, 1, 1 )
             Tooltip:Show()
         end
     end )
@@ -276,9 +276,9 @@ function ns.StartConfiguration( external )
                     Tooltip:SetOwner( self, "ANCHOR_TOPRIGHT" )
 
                     Tooltip:SetText( "Hekili: " .. i )
-                    Tooltip:AddLine( "Left-click and hold to move.", 1, 1, 1 )
-                    Tooltip:AddLine( "Right-click to open " .. i .. " display settings.", 1, 1, 1 )
-                    if not H:IsDisplayActive( i, true ) then Tooltip:AddLine( "This display is not currently active.", 0.5, 0.5, 0.5 ) end
+                    Tooltip:AddLine( "鼠标左键拖动可移动位置。", 1, 1, 1 )
+                    Tooltip:AddLine( "鼠标右键点击打开" .. i .. "设置页面。", 1, 1, 1 )
+                    if not H:IsDisplayActive( i, true ) then Tooltip:AddLine( "此显示栏处于未激活状态。", 0.5, 0.5, 0.5 ) end
                     Tooltip:Show()
                 end
             end )
@@ -423,13 +423,13 @@ do
         },
 
         {
-            text = "Enable",
+            text = "启用",
             func = function () Hekili:Toggle() end,
             checked = function () return Hekili.DB.profile.enabled end,
         },
 
         {
-            text = "Pause",
+            text = "暂停",
             func = function () return Hekili:TogglePause() end,
             checked = function () return Hekili.Pause end,
         },
@@ -440,18 +440,18 @@ do
 
         {
             isTitle = 1,
-            text = "Display Mode",
+            text = "显示模式",
             notCheckable = 1,
         },
 
         {
-            text = "Auto",
+            text = "自动",
             func = function () SetDisplayMode( "automatic" ) end,
             checked = function () return IsDisplayMode( p, "automatic" ) end,
         },
 
         {
-            text = "Single",
+            text = "单目标",
             func = function () SetDisplayMode( "single" ) end,
             checked = function () return IsDisplayMode( p, "single" ) end,
         },
@@ -463,13 +463,13 @@ do
         },
 
         {
-            text = "Dual",
+            text = "双显",
             func = function () SetDisplayMode( "dual" ) end,
             checked = function () return IsDisplayMode( p, "dual" ) end,
         },
 
         {
-            text = "Reactive",
+            text = "响应",
             func = function () SetDisplayMode( "reactive" ) end,
             checked = function () return IsDisplayMode( p, "reactive" ) end,
         },
@@ -480,36 +480,36 @@ do
 
         {
             isTitle = 1,
-            text = "Toggles",
+            text = "快捷开关",
             notCheckable = 1,
         },
 
         {
-            text = "Cooldowns",
+            text = "主要爆发",
             func = function() Hekili:FireToggle( "cooldowns" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.cooldowns.value end,
         },
 
         {
-            text = "Minor CDs",
+            text = "次要爆发",
             func = function() Hekili:FireToggle( "essences" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.essences.value end,
         },
 
         {
-            text = "Interrupts",
+            text = "功能/打断",
             func = function() Hekili:FireToggle( "interrupts" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.interrupts.value end,
         },
 
         {
-            text = "Defensives",
+            text = "防御",
             func = function() Hekili:FireToggle( "defensives" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.defensives.value end,
         },
 
         {
-            text = "Potions",
+            text = "药剂",
             func = function() Hekili:FireToggle( "potions" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.potions.value end,
         },
@@ -542,18 +542,18 @@ do
                             hidden = function () return Hekili.State.spec.id ~= i end,
                         } )
                         insert( menuData, {
-                            text = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t Recommend Target Swaps",
-                            tooltipTitle = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t Recommend Target Swaps",
-                            tooltipText = "If checked, the |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t indicator may be displayed which means you should use the ability on a different target.",
+                            text = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t 推荐切换目标",
+                            tooltipTitle = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t 推荐切换目标",
+                            tooltipText = "如果勾选，出现 |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t 提示时，意味着你应该在另外的目标上使用该技能。",
                             tooltipOnButton = true,
                             func = function ()
                                 local spec = rawget( Hekili.DB.profile.specs, i )
                                 if spec then
                                     spec.cycle = not spec.cycle
                                     if Hekili.DB.profile.notifications.enabled then
-                                        Hekili:Notify( "Recommend Target Swaps: " .. ( spec.cycle and "ON" or "OFF" ) )
+                                        Hekili:Notify( "推荐切换目标：" .. ( spec.cycle and "开" or "关" ) )
                                     else
-                                        Hekili:Print( "Recommend Target Swaps: " .. ( spec.cycle and " |cFF00FF00ENABLED|r." or " |cFFFF0000DISABLED|r." ) )
+                                        Hekili:Print( "推荐切换目标：" .. ( spec.cycle and " |cFF00FF00启用|r。" or " |cFFFF0000禁用|r。" ) )
                                     end
                                 end
                             end,
@@ -582,9 +582,9 @@ do
                                             local nm = type( setting.info.name ) == "function" and setting.info.name() or setting.info.name
 
                                             if Hekili.DB.profile.notifications.enabled then
-                                                Hekili:Notify( nm .. ": " .. ( setting.info.get( menu.args ) and "ON" or "OFF" ) )
+                                                Hekili:Notify( nm .. ": " .. ( setting.info.get( menu.args ) and "开" or "关" ) )
                                             else
-                                                Hekili:Print( nm .. ": " .. ( setting.info.get( menu.args ) and " |cFF00FF00ENABLED|r." or " |cFFFF0000DISABLED|r." ) )
+                                                Hekili:Print( nm .. ": " .. ( setting.info.get( menu.args ) and " |cFF00FF00启用|r." or " |cFFFF0000禁用|r." ) )
                                             end
 
                                             submenu.text = nm
@@ -2805,7 +2805,7 @@ do
                 Tooltip:SetBackdropColor( 0, 0, 0, 0.8 )
 
                 Tooltip:SetText( "Hekili: " .. dispID  )
-                Tooltip:AddLine( "Left-click and hold to move.", 1, 1, 1 )
+                Tooltip:AddLine( "长按左键拖拉即可移动。", 1, 1, 1 )
                 Tooltip:Show()
                 self:SetMovable( true )
 
