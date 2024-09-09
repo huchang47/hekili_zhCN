@@ -131,7 +131,7 @@ all:RegisterAbilities( {
         cooldown = 120,
         gcd = "off",
 
-        item = 219318,
+        item = 219298,
         toggle = "cooldowns",
 
         proc = "damage",
