@@ -1064,7 +1064,7 @@ spec:RegisterAbilities( {
 
 spec:RegisterSetting( "experimental_msg", nil, {
     type = "description",
-    name = strformat( "%s %s supports a healing maintenance with the Totemic %s build.  It will recommend using %s and %s, keep %s / %s recharging, and use %s with to enhance particular spells.  Your %s will also be maintained.",
+    name = strformat( "%s %s 支持使用图腾 %s 来构建治疗监控体系。它将推荐使用 %s 和 %s，保持 %s / %s 的重新充能，并使用 %s 来强化特定技能。你的 %s 也将得到监控。",
         select( 7, GetSpecializationInfoByID( spec.id ) ), ( UnitClass( "player" ) ), Hekili:GetSpellLinkWithTexture( spec.abilities.chain_heal.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.healing_rain.id ),
         Hekili:GetSpellLinkWithTexture( spec.abilities.surging_totem.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.riptide.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.healing_stream_totem.id ),
         Hekili:GetSpellLinkWithTexture( spec.abilities.unleash_life.id ), Hekili:GetSpellLinkWithTexture( spec.talents.earth_shield[2] ) ),
@@ -1072,15 +1072,15 @@ spec:RegisterSetting( "experimental_msg", nil, {
 } )
 
 spec:RegisterSetting( "healing_mode", false, {
-    name = "Healing Helper Mode",
-    desc = "If checked, healing abilities may be recommended using the default priority package.",
+    name = "治疗辅助模式",
+    desc = "如果勾选，可能会根据默认优先级推荐使用治疗技能。",
     type = "toggle",
     width = "full",
 } )
 
 spec:RegisterSetting( "second_shield", "earth_shield", {
-    name = strformat( "|T236224:0|t Preferred Second %s", _G.SHIELDSLOT ),
-    desc = strformat( "Specify which %s spell to use after %s when %s is talented.", _G.SHIELDSLOT, Hekili:GetSpellLinkWithTexture( spec.abilities.water_shield.id ),
+    name = strformat( "|T236224:0|t %s 后推荐技能", _G.SHIELDSLOT ),
+    desc = strformat( "当拥有 %s 天赋时，使用 %s 后使用哪个 %s 技能。", _G.SHIELDSLOT, Hekili:GetSpellLinkWithTexture( spec.abilities.water_shield.id ),
         Hekili:GetSpellLinkWithTexture( spec.talents.elemental_orbit[2] ) ),
     type = "select",
     values = function()
@@ -1110,8 +1110,8 @@ spec:RegisterOptions( {
 
     potion = "potion_of_spectral_intellect",
 
-    package = "Restoration Shaman",
+    package = "恢复萨满",
 } )
 
 
-spec:RegisterPack( "Restoration Shaman", 20240916, [[Hekili:vJ1sVnUnq4FlgfWBcsQAKZZTiohAV0nOypuVa9MKOLOTjIKOlfv8gad9BVZq9IKIsRtrxu0ljYCgoV4mFC4e4h8LGvjejn4ZlUAXnx9r)788xCZd(3hSs(2EAWQ9K4xiBHpYjzWF)dAHKlisgpVkA1osgjh55TuojbLvbVued8fSADjlv(P8G1UuWT3ChW7EAmS8D3eSAhljHwZlTioyfY7pE19)41x9ZvrFzhTk6pjc4pm5ogQqbFdlfudjgTKcV9cAmpBnrEXYFIseYDPSxz5Bdpqj7bl9zx8jzj0ysAkvueUTKisCZ2bW4fHf7y00KlzBwUUCZgp9f9k3FHArLITxmLTDNmhTLocp6FHKKsZLE0uAg8FsAixSMj9eK8xoE8SzU0X8cQucYPWBhLKIcmJNqp3TrBRv0Wp77TLFEVjwaMsEsZgxAlj32SUr8FR9Ql(PS1oH6MP9CvzYZDuH1k2Zem5bs6lQ0objMEzghZvx6Jon8TsMEjScjjpM(0Dvp)dFkhccIY9YQi(MQOysHSWtxShykRhml9vfL5H1)kmfe3Lyj8YMShuzoZO0fqRh0VszbnKjPzf6lUoLZtc3ukEZyvWdPIxa5QV6gMGQ4xFr0rlKc40blineczBiFtOuWIFXqNfLITOjl5G1GotZbnjMLekimdRU1)W1rENvhYNp1E2KcrliMYJF5Y43ItPHsIylvwuFqHm(knKMtZy0IhVEUGUrql2rwNAgcfSmUiHb(2bYRgKsjVscxxkGtgmD3uIl9pE0ALfZRZZXTHUpfYWpFEcx6PzREcAg4jfpHjjHswgDEmNNMWpKhkOGe1TGXsJnqqwZtvgiaxNM2ge8I3bAjSJRhxC84SMWPfjDPAr6Bk2N8h7iPTOXGUGd(Sn9(IZM0aGtmCShUQQdqVmpLsk2bAEdgwpEuTAlBi8R5cnr5hx4s6WLIKq86L(StCjV9XYhF4wx7qXhlgoHWcaCdaqYRHBJtQX6O5q2dgMq(CjGHCHcXfN1ry83Do)oiCRSxWpDTfN4inrSXIGUKJrnRlg0Rth1l1UIOPablb0jnnS)CxxHCkAR5EzRDEkxImFeZHMJWfjNpvSaWfPKmnCo8dpJqjAfZQ)Y1Ug7uLThpZrz2Iq41Sgwgc1JfJsimJ8vxYupjqdugtQvW47OH1y9CrrR3F8yNwoaqbfaIz(2(cmOFOo6MEDllxFQvRpDTZiDVw1blACfnWcx0037qQnrTGvVc3fc0ABc(k)GvhiceHRiyLQ)ww2EUaUFFdh6Z9dj0nKYu5hQIe0)QeUYmPkQGNb8rkL8mONiyb4SiholGgb(DwoqY3hAw(x55GYu0)G91BG4KChR3Esa0pZ)RN3lWf)BlW7DlqluFlXArDOWRE(tQOhkYBGqK6COkcXQWOtWk1x4Zt6Apd(XNvp(PM5GvdF1aSwTIc(LajCYPZ9G3oyX81iZ9RSkgA6Jkye8zrdBQTk6IQiNOsDeC0CBv0JqevXYeODvrhpcbQQOznsAGUNdPwoBem68EhwFxOdEZOo4zJPNVN(45MUHbsCv0smxWu29E2akG3D7)Z8oDLALsR5v3niFVV1pR8371zT(vaMCiH3SxNR0vjnE6UDRbQusBiBLp6e2wfMw0BpT07QkDQ52oUu7(HB73Uv3ztxUorByAObgDVnD5H1jGPeNm1BqRA9IQVNUUZ5t(0OxkwT5vdBgwp3NMnni3W4gzRKOh0zuV1ol((iYxmzFnJq04TrYH18Kr687uROM7UA1YW8VYWYkOPB(2wMgu7aSGtVkwX70DnQWNnT3XRdD31OslZWBBNO3XHNH6mO074vHJ1aPYHNQ7sT0YMMOqfnEH6P0PznWZeDBwJ00DL509DQy(63py2tQDPD3QEbPYlVrVWP3khGa30LOle46pdRFfSfWO9iMuM0DA10dNrLAxOKafz3lu)SNo5MGC2VXPbe1ERtli7uxsvdM2fMBhDLftgxl2pkRPUrSF0wtb51nQlx4DTmzo6lNaqDAvFwyVJs)rAoFmq8PlOb0I6ubDeQjKTbUVRs4UOv)WDCa03mdS2AU54dJ6M3gWV(a6AssnlJSMdND4BYo(STHLQ7yW6Ehuw0x7BmPU224gzEDQIWUz2P40CUD9Us)CdvM(7OTo)7hVKCQXWPJloR7uFK3LPzOgZquzap8p1aGOJVDdpDKvIwvw1dtnec0zMMr8zXvNSm6h14ay52ELSFIzxFRwk9uq7RbtTVs0sZyosPChh0WVrFHLYuRf83)]] )
+spec:RegisterPack( "恢复萨满", 20240916, [[Hekili:vJ1sVnUnq4FlgfWBcsQAKZZTiohAV0nOypuVa9MKOLOTjIKOlfv8gad9BVZq9IKIsRtrxu0ljYCgoV4mFC4e4h8LGvjejn4ZlUAXnx9r)788xCZd(3hSs(2EAWQ9K4xiBHpYjzWF)dAHKlisgpVkA1osgjh55TuojbLvbVued8fSADjlv(P8G1UuWT3ChW7EAmS8D3eSAhljHwZlTioyfY7pE19)41x9ZvrFzhTk6pjc4pm5ogQqbFdlfudjgTKcV9cAmpBnrEXYFIseYDPSxz5Bdpqj7bl9zx8jzj0ysAkvueUTKisCZ2bW4fHf7y00KlzBwUUCZgp9f9k3FHArLITxmLTDNmhTLocp6FHKKsZLE0uAg8FsAixSMj9eK8xoE8SzU0X8cQucYPWBhLKIcmJNqp3TrBRv0Wp77TLFEVjwaMsEsZgxAlj32SUr8FR9Ql(PS1oH6MP9CvzYZDuH1k2Zem5bs6lQ0objMEzghZvx6Jon8TsMEjScjjpM(0Dvp)dFkhccIY9YQi(MQOysHSWtxShykRhml9vfL5H1)kmfe3Lyj8YMShuzoZO0fqRh0VszbnKjPzf6lUoLZtc3ukEZyvWdPIxa5QV6gMGQ4xFr0rlKc40blineczBiFtOuWIFXqNfLITOjl5G1GotZbnjMLekimdRU1)W1rENvhYNp1E2KcrliMYJF5Y43ItPHsIylvwuFqHm(knKMtZy0IhVEUGUrql2rwNAgcfSmUiHb(2bYRgKsjVscxxkGtgmD3uIl9pE0ALfZRZZXTHUpfYWpFEcx6PzREcAg4jfpHjjHswgDEmNNMWpKhkOGe1TGXsJnqqwZtvgiaxNM2ge8I3bAjSJRhxC84SMWPfjDPAr6Bk2N8h7iPTOXGUGd(Sn9(IZM0aGtmCShUQQdqVmpLsk2bAEdgwpEuTAlBi8R5cnr5hx4s6WLIKq86L(StCjV9XYhF4wx7qXhlgoHWcaCdaqYRHBJtQX6O5q2dgMq(CjGHCHcXfN1ry83Do)oiCRSxWpDTfN4inrSXIGUKJrnRlg0Rth1l1UIOPablb0jnnS)CxxHCkAR5EzRDEkxImFeZHMJWfjNpvSaWfPKmnCo8dpJqjAfZQ)Y1Ug7uLThpZrz2Iq41Sgwgc1JfJsimJ8vxYupjqdugtQvW47OH1y9CrrR3F8yNwoaqbfaIz(2(cmOFOo6MEDllxFQvRpDTZiDVw1blACfnWcx0037qQnrTGvVc3fc0ABc(k)GvhiceHRiyLQ)ww2EUaUFFdh6Z9dj0nKYu5hQIe0)QeUYmPkQGNb8rkL8mONiyb4SiholGgb(DwoqY3hAw(x55GYu0)G91BG4KChR3Esa0pZ)RN3lWf)BlW7DlqluFlXArDOWRE(tQOhkYBGqK6COkcXQWOtWk1x4Zt6Apd(XNvp(PM5GvdF1aSwTIc(LajCYPZ9G3oyX81iZ9RSkgA6Jkye8zrdBQTk6IQiNOsDeC0CBv0JqevXYeODvrhpcbQQOznsAGUNdPwoBem68EhwFxOdEZOo4zJPNVN(45MUHbsCv0smxWu29E2akG3D7)Z8oDLALsR5v3niFVV1pR8371zT(vaMCiH3SxNR0vjnE6UDRbQusBiBLp6e2wfMw0BpT07QkDQ52oUu7(HB73Uv3ztxUorByAObgDVnD5H1jGPeNm1BqRA9IQVNUUZ5t(0OxkwT5vdBgwp3NMnni3W4gzRKOh0zuV1ol((iYxmzFnJq04TrYH18Kr687uROM7UA1YW8VYWYkOPB(2wMgu7aSGtVkwX70DnQWNnT3XRdD31OslZWBBNO3XHNH6mO074vHJ1aPYHNQ7sT0YMMOqfnEH6P0PznWZeDBwJ00DL509DQy(63py2tQDPD3QEbPYlVrVWP3khGa30LOle46pdRFfSfWO9iMuM0DA10dNrLAxOKafz3lu)SNo5MGC2VXPbe1ERtli7uxsvdM2fMBhDLftgxl2pkRPUrSF0wtb51nQlx4DTmzo6lNaqDAvFwyVJs)rAoFmq8PlOb0I6ubDeQjKTbUVRs4UOv)WDCa03mdS2AU54dJ6M3gWV(a6AssnlJSMdND4BYo(STHLQ7yW6Ehuw0x7BmPU224gzEDQIWUz2P40CUD9Us)CdvM(7OTo)7hVKCQXWPJloR7uFK3LPzOgZquzap8p1aGOJVDdpDKvIwvw1dtnec0zMMr8zXvNSm6h14ay52ELSFIzxFRwk9uq7RbtTVs0sZyosPChh0WVrFHLYuRf83)]] )
