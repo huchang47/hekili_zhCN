@@ -174,7 +174,7 @@ function ns.StartConfiguration( external )
         f.Header:SetFont( path, 18, "OUTLINE" )
     end
     f.Header:SetAllPoints( HekiliNotificationMover )
-    f.Header:SetText( "Notifications" )
+    f.Header:SetText( "通知栏" )
     f.Header:SetJustifyH( "CENTER" )
     f.Header:Show()
 
@@ -195,9 +195,9 @@ function ns.StartConfiguration( external )
         if H.Config then
             Tooltip:SetOwner( self, "ANCHOR_TOPRIGHT" )
 
-            Tooltip:SetText( "Hekili: Notifications" )
-            Tooltip:AddLine( "Left-click and hold to move.", 1, 1, 1 )
-            Tooltip:AddLine( "Right-click to open Notification panel settings.", 1, 1, 1 )
+            Tooltip:SetText( "Hekili:通知栏" )
+            Tooltip:AddLine( "鼠标左键拖动可移动位置。", 1, 1, 1 )
+            Tooltip:AddLine( "鼠标右键点击可打开通知栏设置页面。", 1, 1, 1 )
             Tooltip:Show()
         end
     end )
@@ -276,9 +276,9 @@ function ns.StartConfiguration( external )
                     Tooltip:SetOwner( self, "ANCHOR_TOPRIGHT" )
 
                     Tooltip:SetText( "Hekili: " .. i )
-                    Tooltip:AddLine( "Left-click and hold to move.", 1, 1, 1 )
-                    Tooltip:AddLine( "Right-click to open " .. i .. " display settings.", 1, 1, 1 )
-                    if not H:IsDisplayActive( i, true ) then Tooltip:AddLine( "This display is not currently active.", 0.5, 0.5, 0.5 ) end
+                    Tooltip:AddLine( "鼠标左键拖动可移动位置。", 1, 1, 1 )
+                    Tooltip:AddLine( "鼠标右键点击打开" .. i .. "设置页面。", 1, 1, 1 )
+                    if not H:IsDisplayActive( i, true ) then Tooltip:AddLine( "此显示栏处于未激活状态。", 0.5, 0.5, 0.5 ) end
                     Tooltip:Show()
                 end
             end )
@@ -423,13 +423,13 @@ do
         },
 
         {
-            text = "Enable",
+            text = "启用",
             func = function () Hekili:Toggle() end,
             checked = function () return Hekili.DB.profile.enabled end,
         },
 
         {
-            text = "Pause",
+            text = "暂停",
             func = function () return Hekili:TogglePause() end,
             checked = function () return Hekili.Pause end,
         },
@@ -440,18 +440,18 @@ do
 
         {
             isTitle = 1,
-            text = "Display Mode",
+            text = "显示模式",
             notCheckable = 1,
         },
 
         {
-            text = "Auto",
+            text = "自动",
             func = function () SetDisplayMode( "automatic" ) end,
             checked = function () return IsDisplayMode( p, "automatic" ) end,
         },
 
         {
-            text = "Single",
+            text = "单目标",
             func = function () SetDisplayMode( "single" ) end,
             checked = function () return IsDisplayMode( p, "single" ) end,
         },
@@ -463,13 +463,13 @@ do
         },
 
         {
-            text = "Dual",
+            text = "双显",
             func = function () SetDisplayMode( "dual" ) end,
             checked = function () return IsDisplayMode( p, "dual" ) end,
         },
 
         {
-            text = "Reactive",
+            text = "响应",
             func = function () SetDisplayMode( "reactive" ) end,
             checked = function () return IsDisplayMode( p, "reactive" ) end,
         },
@@ -480,36 +480,36 @@ do
 
         {
             isTitle = 1,
-            text = "Toggles",
+            text = "快捷开关",
             notCheckable = 1,
         },
 
         {
-            text = "Cooldowns",
+            text = "主要爆发",
             func = function() Hekili:FireToggle( "cooldowns" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.cooldowns.value end,
         },
 
         {
-            text = "Minor CDs",
+            text = "次要爆发",
             func = function() Hekili:FireToggle( "essences" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.essences.value end,
         },
 
         {
-            text = "Interrupts",
+            text = "功能/打断",
             func = function() Hekili:FireToggle( "interrupts" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.interrupts.value end,
         },
 
         {
-            text = "Defensives",
+            text = "防御",
             func = function() Hekili:FireToggle( "defensives" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.defensives.value end,
         },
 
         {
-            text = "Potions",
+            text = "药剂",
             func = function() Hekili:FireToggle( "potions" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.potions.value end,
         }
@@ -541,18 +541,18 @@ do
                             hidden = function () return Hekili.State.spec.id ~= i end,
                         } )
                         insert( menuData, {
-                            text = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t Recommend Target Swaps",
-                            tooltipTitle = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t Recommend Target Swaps",
-                            tooltipText = "If checked, the |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t indicator may be displayed which means you should use the ability on a different target.",
+                            text = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t 推荐切换目标",
+                            tooltipTitle = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t 推荐切换目标",
+                            tooltipText = "如果勾选，出现 |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t 提示时，意味着你应该在另外的目标上使用该技能。",
                             tooltipOnButton = true,
                             func = function ()
                                 local spec = rawget( Hekili.DB.profile.specs, i )
                                 if spec then
                                     spec.cycle = not spec.cycle
                                     if Hekili.DB.profile.notifications.enabled then
-                                        Hekili:Notify( "Recommend Target Swaps: " .. ( spec.cycle and "ON" or "OFF" ) )
+                                        Hekili:Notify( "推荐切换目标：" .. ( spec.cycle and "开" or "关" ) )
                                     else
-                                        Hekili:Print( "Recommend Target Swaps: " .. ( spec.cycle and " |cFF00FF00ENABLED|r." or " |cFFFF0000DISABLED|r." ) )
+                                        Hekili:Print( "推荐切换目标：" .. ( spec.cycle and " |cFF00FF00启用|r。" or " |cFFFF0000禁用|r。" ) )
                                     end
                                 end
                             end,
@@ -564,9 +564,9 @@ do
                         } )
 
                         local potionMenu = {
-                            text = "|T967533:0|t Preferred Potion",
-                            tooltipTitle = "|T967533:0|t Preferred Potion",
-                            tooltipText = "Select the potion you would like to use when the |cFFFFD100Potions|r toggle is enabled.",
+                            text = "|T967533:0|t 首选药剂",
+                            tooltipTitle = "|T967533:0|t 首选药剂",
+                            tooltipText = "选择当 |cFFFFD100药剂|r 启用时，你想要使用的药剂。",
                             tooltipOnButton = true,
                             hasArrow = true,
                             menuList = {},
@@ -609,9 +609,9 @@ do
                                             local nm = type( setting.info.name ) == "function" and setting.info.name() or setting.info.name
 
                                             if Hekili.DB.profile.notifications.enabled then
-                                                Hekili:Notify( nm .. ": " .. ( setting.info.get( menu.args ) and "ON" or "OFF" ) )
+                                                Hekili:Notify( nm .. ": " .. ( setting.info.get( menu.args ) and "开" or "关" ) )
                                             else
-                                                Hekili:Print( nm .. ": " .. ( setting.info.get( menu.args ) and " |cFF00FF00ENABLED|r." or " |cFFFF0000DISABLED|r." ) )
+                                                Hekili:Print( nm .. ": " .. ( setting.info.get( menu.args ) and " |cFF00FF00启用|r." or " |cFFFF0000禁用|r." ) )
                                             end
 
                                             submenu.text = nm
@@ -1292,6 +1292,84 @@ do
 
                 local postGlow = debugprofilestop()
 
+                self.rangeTimer = self.rangeTimer - elapsed
+
+                if self.rangeTimer < 0 or self.NewRecommendations then
+                    for i, b in ipairs( self.Buttons ) do
+                        local a = b.Ability
+
+                        if a and a.id then
+                            local outOfRange = false
+
+                            if conf.range.enabled and UnitCanAttack( "player", "target" ) then
+                                if conf.range.type == "melee" then
+                                    outOfRange = ( LRC:GetRange( "target" ) or 10 ) > 7
+                                elseif conf.range.type == "ability" then
+                                    local name = a.rangeSpell or a.itemSpellName or a.actualName or a.name
+                                    if name then outOfRange = LSR.IsSpellInRange( name, "target" ) == 0 end
+                                end
+                            end
+
+                            if outOfRange and not b.outOfRange then
+                                b.Texture:SetDesaturated(true)
+                                b.Texture:SetVertexColor(1.0, 0.0, 0.0, 1.0)
+                                b.outOfRange = true
+                            elseif b.outOfRange and not outOfRange then
+                                b.Texture:SetDesaturated(false)
+                                b.Texture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
+                                b.outOfRange = false
+                            end
+
+                            if not b.outOfRange then
+                                local _, unusable
+
+                                if a.itemCd or a.item then
+                                    unusable = not IsUsableItem( a.itemCd or a.item )
+                                else
+                                    _, unusable = IsUsableSpell( a.actualName or a.name )
+                                end
+
+                                if i == 1 and conf.delays.fade then
+                                    local delay = b.ExactTime and ( b.ExactTime - now ) or 0
+                                    --[[ local start, duration = 0, 0
+
+                                    if a.gcd ~= "off" then
+                                        start, duration = GetSpellCooldown( 61304 )
+                                        if start > 0 then moment = start + duration - now end
+                                    end
+
+                                    local rStart, rDuration
+                                    if a.item then
+                                        rStart, rDuration = GetItemCooldown( a.item )
+                                    else
+                                        rStart, rDuration = GetSpellCooldown( a.id )
+                                    end
+                                    if rStart > 0 then moment = max( moment, rStart + rDuration - now ) end
+
+                                    start, duration = select( 4, UnitCastingInfo( "player" ) )
+                                    if start and start > 0 then moment = max( ( start / 1000 ) + ( duration / 1000 ) - now, moment ) end ]]
+
+                                    if delay > 0.05 then
+                                        unusable = true
+                                    end
+                                end
+
+                                if unusable and not b.unusable then
+                                    b.Texture:SetVertexColor(0.4, 0.4, 0.4, 1.0)
+                                    b.unusable = true
+                                elseif b.unusable and not unusable then
+                                    b.Texture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
+                                    b.unusable = false
+                                end
+                            end
+                        end
+                    end
+
+                    self.rangeTimer = pulseRange
+                end
+
+                local postRange = debugprofilestop()
+
                 if self.flashReady and conf.flash.enabled and LSF and ( InCombatLockdown() or not conf.flash.combat ) then
                     self.flashTimer = self.flashTimer - elapsed
                     self.flashWarnings = self.flashWarnings or {}
@@ -1430,25 +1508,26 @@ do
 
                 local postTargets = debugprofilestop()
 
+                local b = self.Buttons[ 1 ]
+
                 self.delayTimer = self.delayTimer - elapsed
 
-                if self.Buttons[ 1 ].ExactTime and ( self.delayTimer < 0 or self.NewRecommendations ) then
-                    local b = self.Buttons[ 1 ]
+                if b.ExactTime and ( self.delayTimer < 0 or self.NewRecommendations ) then
                     local a = b.Ability
 
                     local delay = b.ExactTime - now
-                    local earliest_time = 0
+                    local moment = 0
 
                     if delay > 0 then
                         local start, duration = 0, 0
 
                         if a.gcd ~= "off" then
                             start, duration = GetSpellCooldown( 61304 )
-                            if start > 0 then earliest_time = start + duration - now end
+                            if start > 0 then moment = start + duration - now end
                         end
 
                         start, duration = select( 4, UnitCastingInfo( "player" ) )
-                        if start and start > 0 then earliest_time = max( ( start / 1000 ) + ( duration / 1000 ) - now, earliest_time ) end
+                        if start and start > 0 then moment = max( ( start / 1000 ) + ( duration / 1000 ) - now, moment ) end
 
                         local rStart, rDuration = 0, 0
                         if a.item then
@@ -1458,7 +1537,7 @@ do
                                 rStart, rDuration = GetSpellCooldown( a.id )
                             end
                         end
-                        if rStart > 0 then earliest_time = max( earliest_time, rStart + rDuration - now ) end
+                        if rStart > 0 then moment = max( moment, rStart + rDuration - now ) end
                     end
 
                     if conf.delays.type == "TEXT" then
@@ -1467,7 +1546,7 @@ do
                             self.delayIconShown = false
                         end
 
-                        if delay > earliest_time + 0.05 then
+                        if delay > moment + 0.05 then
                             b.DelayText:SetText( format( "%.1f", delay ) )
                             self.delayTextShown = true
                         else
@@ -1481,7 +1560,7 @@ do
                             self.delayTextShown = false
                         end
 
-                        if delay > earliest_time + 0.05 then
+                        if delay > moment + 0.05 then
                             b.DelayIcon:Show()
                             b.DelayIcon:SetAlpha( self.alpha )
 
@@ -1510,81 +1589,8 @@ do
                         end
                     end
 
-                    b.EarliestTime = earliest_time
-
                     self.delayTimer = pulseDelay
                 end
-
-                self.rangeTimer = self.rangeTimer - elapsed
-
-                if self.rangeTimer < 0 or self.NewRecommendations then
-                    for i, b in ipairs( self.Buttons ) do
-                        local a = b.Ability
-
-                        if a and a.id then
-                            local outOfRange = false
-                            local desaturated = false
-
-                            if conf.range.enabled and UnitCanAttack( "player", "target" ) then
-                                if conf.range.type == "melee" then
-                                    outOfRange = ( LRC:GetRange( "target" ) or 10 ) > 7
-                                elseif conf.range.type == "ability" then
-                                    local name = a.rangeSpell or a.itemSpellName or a.actualName or a.name
-                                    if name then outOfRange = LSR.IsSpellInRange( name, "target" ) == 0 end
-                                end
-                            end
-
-                            if outOfRange and not b.outOfRange then
-                                b.Texture:SetVertexColor(1.0, 0.0, 0.0, 1.0)
-                                b.outOfRange = true
-                                desaturated = true
-                            elseif b.outOfRange and not outOfRange then
-                                b.Texture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
-                                b.outOfRange = false
-                                desaturated = false
-                            end
-
-                            if not b.outOfRange then
-                                local _, unusable
-
-                                if a.itemCd or a.item then
-                                    unusable = not IsUsableItem( a.itemCd or a.item )
-                                else
-                                    _, unusable = IsUsableSpell( a.actualName or a.name )
-                                end
-
-                                if i == 1 and ( conf.delays.fade or conf.delays.desaturate ) then
-                                    local delay = b.ExactTime and ( b.ExactTime - now ) or 0
-                                    local earliest_time = b.EarliestTime or delay
-                                    if delay > earliest_time + 0.05 then
-                                        if conf.delays.fade then unusable = true end
-                                        if conf.delays.desaturate then desaturate = true end
-                                    end
-                                end
-
-                                if unusable and not b.unusable then
-                                    b.Texture:SetVertexColor(0.4, 0.4, 0.4, 1.0)
-                                    b.unusable = true
-                                elseif b.unusable and not unusable then
-                                    b.Texture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
-                                    b.unusable = false
-                                end
-                            end
-
-                            if desaturated and not b.desaturated then
-                                b.Texture:SetDesaturated(true)
-                                b.desaturated = true
-                            elseif b.desaturated and not desaturated then
-                                b.Texture:SetDesaturated(false)
-                                b.desaturated = false
-                            end
-                        end
-                    end
-
-                    self.rangeTimer = pulseRange
-                end
-
-                local postRange = debugprofilestop()
 
                 self.NewRecommendations = false
 
@@ -2826,7 +2832,7 @@ do
                 Tooltip:SetBackdropColor( 0, 0, 0, 0.8 )
 
                 Tooltip:SetText( "Hekili: " .. dispID  )
-                Tooltip:AddLine( "Left-click and hold to move.", 1, 1, 1 )
+                Tooltip:AddLine( "长按左键拖拉即可移动。", 1, 1, 1 )
                 Tooltip:Show()
                 self:SetMovable( true )
 
