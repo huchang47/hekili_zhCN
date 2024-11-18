@@ -143,7 +143,7 @@ actions.shiv+=/shiv,if=boss&fight_remains<=cooldown.shiv.charges*8
 actions.stealthed+=/variable,name=scent_saturation,value=buff.scent_of_blood.stack>=((spell_targets.fan_of_knives*talent.scent_of_blood.rank*2)>?20)
 actions.stealthed+=/pool_resource,for_next=1
 # Apply Deathstalkers Mark if it has fallen off
-actions.stealthed+=/ambush,if=talent.deathstalkers_mark&(active_dot.deathstalkers_mark=0|buff.darkest_night.down)
+actions.stealthed+=/ambush,if=talent.deathstalkers_mark&!debuff.deathstalkers_mark.up&active_dot.deathstalkers_mark=0&(time=0|buff.darkest_night.down)
 # Make sure to have Shiv up during Kingsbane as a final check
 actions.stealthed+=/shiv,if=talent.kingsbane&(dot.kingsbane.ticking|cooldown.kingsbane.up)&(!debuff.shiv.up&debuff.shiv.remains<1)&buff.envenom.up
 # Envenom to maintain the buff during Subterfuge
