@@ -1845,8 +1845,8 @@ spec:RegisterAbilities( {
 
 
 spec:RegisterSetting( "wog_health", 40, {
-    name = "|T133192:0|t Word of Glory Health Threshold",
-    desc = "When set above zero, the addon may recommend |T133192:0|t Word of Glory when your health falls below this percentage.",
+    name = "|T133192:0|t荣耀圣令生命阈值",
+    desc = "当设置大于0，生命值低于该百分比时，|T133192:0|t荣耀圣令才可能会被推荐。",
     type = "range",
     min = 0,
     max = 100,
@@ -1860,10 +1860,10 @@ end )
 
 
 spec:RegisterSetting( "goak_damage", 40, {
-    name = "|T135919:0|t Guardian of Ancient Kings Damage Threshold",
-    desc = function() return "When set above zero, the addon may recommend |T135919:0|t " .. ( GetSpellInfo( class.abilities.guardian_of_ancient_kings.id ) or "Guardian of Ancient Kings" )
-            .. " when you take this percentage of your maximum health in damage in the past 5 seconds.\n\n"
-            .. "By default, your Defensives toggle must also be enabled."
+    name = "|T135919:0|t远古列王守卫伤害阈值",
+    desc = function() return "如果设置大于0，当你在过去5秒内受到超过该百分比的伤害时，|T135919:0|t " .. ( GetSpellInfo( class.abilities.guardian_of_ancient_kings.id ) or "远古列王守卫" )
+            .. "才会被推荐。\n\n"
+            .. "默认情况下，需要|cFFFFD100【防御】|r 开关处于激活状态。"
         end,
     type = "range",
     min = 0,
@@ -1878,10 +1878,10 @@ end )
 
 
 spec:RegisterSetting( "ds_damage", 60, {
-    name = "|T524354:0|t Divine Shield Damage Threshold",
-    desc = function() return "When set above zero, the addon may recommend |T524354:0|t " .. ( GetSpellInfo( class.abilities.divine_shield.id ) or "Divine Shield" )
-            .. " when you take this percentage of your maximum health in damage in the past 5 seconds.\n\n"
-            .. "By default, your Defensives toggle must also be enabled."
+    name = "|T524354:0|t圣盾术伤害阈值",
+    desc = function() return "如果设置大于0，当你在过去5秒内受到超过该百分比的伤害时，|T524354:0|t " .. ( GetSpellInfo( class.abilities.divine_shield.id ) or "圣盾术" )
+            .. "才会被推荐。\n\n"
+            .. "默认情况下，需要|cFFFFD100【防御】|r 开关处于激活状态。"
         end,
     type = "range",
     min = 0,
@@ -1896,10 +1896,10 @@ end )
 
 
 spec:RegisterSetting( "sentinel_def", false, {
-    name = strformat( "%s: Use Defensively", Hekili:GetSpellLinkWithTexture( 389539 ) ),
+    name = strformat( "%s: 作为防御使用", Hekili:GetSpellLinkWithTexture( 389539 ) ),
     desc = function()
-        return strformat( "When enabled, %s is placed on the Defensives toggle by default (rather than Cooldowns) and is recommended based on your Guardian of Ancient Kings "
-            .. "Damage Threshold setting.", Hekili:GetSpellLinkWithTexture( 389539 ) )
+        return strformat( "启用后，%s 将默认为防御技能（而不是爆发），建议根据你的远古列王守卫者"
+            .. "的伤害值进行设置。", Hekili:GetSpellLinkWithTexture( 389539 ) )
     end,
     type = "toggle",
     width = "full",
@@ -1932,4 +1932,4 @@ spec:RegisterOptions( {
 } )
 
 
-spec:RegisterPack( "Protection Paladin", 20271122, [[Hekili:vVrxVTnoYFlbfWRnUuxl58r7I48WTVSn4qXIZ9W9MLzKOT1gzjVIsn1hm8V9Bgs9bjfPKSt6h7dToXC4WzgoFZjlCw85fZdiz0fFYDI7vooUUJDCN8bNRwmpB)o6I57i(prwd)qmzl8))rAsg1plmj(4Y)GerccJry2hLqcqCXsYt9b42KLTJ9RV7DRdZ2K)4y)KTVJfUnpIGB1pLSkd)D)3Ty(J5HrzFmEXJMje3fZj5zBssxmFE42FdWCyqavaoL5Vyoc(BDM8whNlpUe(0L)PZBDD)1Jl)p7qCEC5Q0KThxIi44dhFGVLjF4TtEpaY)MYYssby2gMfUMiynsblgfYYu2HlGC8ZRk(eXahTlZfhvfWVxqrDsg3(w3PaiFEdS()LKc)hiYqPkE2m(9dDfjpkd(XpXVVee3I5P0hZFcK10yYJr0Gf)ZfzG0dHO(BQa2Nef5j(fpeZc87jUvRzDeftphu4NKefK8CmdXWvNdgYsdJFIMXrW1NdcyzK4asAaGayHDPuqR7rst5wa9ljCmqYtjMeFLagfUEtgZ7pZdwVLgNPb6uzqjP(KyQhOjL2eYRKH0pjMrblaXVPaNoxNSdykAw9E)cjnexf)POC4dhaFPHzu4RReGJZCgVHW8kVroUCWXLARbIQSXK49Eb7y81hEC5fsq5AaQdhuqtj6hhKNwy1C)mfuyaIrc008OkHLZJQkeES9X(ESOe8A9t3CYYixJYi3wKrM4(MYitssfzKrjW9DjeniICojruMSXyPUVKeRwyW2rbZPms6AWSBSM2U460TIAsjHbE0VaRmMeeWgt)k6FsSS(AHcg92RnVC(o72y62GeyBRdJx79miG2yYe0iR9y(QvJv3RYXUlP0BNUVQACa33MqtkDljmg487G4mfCiaAw4wkNRDMWVehvFyBtqwZlzL36OK09Mm1TDPW2esJcWTMTH6LIclAsotC5mvYNw4xc5(FIImzL0LGrWfvAJw5y8qNuFQpsyChPa5XVhXJ(2t6ORqni4EFnIxfcb3Issk8LxfAWG6C5wkGXr7gS0DW4gMkhxcCJtPLDBYLviV5PifUAsLLA3hIRzxSvI7ukjyFLHMnkzKSVH2orqZd)bMKmPLedkGX90KBUFpKBoMD7(DtU5k0(QYROvNPzKi0bxH)S15HbKyF64cyl5KkANUNYTQ3NQ4qPWFlNx2q2ULMwzC5Xz3swQwWio3uAqs(Jz1NxfAkxbyd)N09QxSBDd5A0ioQlSqsRsPuf)QTMGM2UBtRSoNRAjS)g0PitHfwLdNhKPhFjpHpyupBTFW4TKVcBAVFeT0DkE)1DydJmPTlj2gYtuUZ5nuu5Jjfk)oUkSS6ztOB471IIHZ4RnBubKtTyZGeU14BB2TgIz45gqWCGa5216AgaQcYzp5bMaEiu6AgTR2xtz1Sv7H)mruosYByhmgAGJegspLQ1q9yVmAYEmtvdTYyWE7e1cNKQA0v7EQjKEHGEz1D3mjA2MfwPrFnvBjLatXEBZAQV5zar85eOq6Nh9mj9jeUAUBvE6EzVlc43KeT3BxYZ0uUs6uZMIV3Qq)Iops00P(22oCYUG7lxRMDfpQcnfY2NVbKW)q7(q4QP0apcJbUdqTVcQTNeWDLIrRb2mz03qHWzYppKz5zjixo1zpA6Rf152xQZpnNrcaXidc()eLtE)qco50r0PIm9R8Qvy4H(UT0KbeP2Jcet)AMhjDlru0hGhgXhYzW7zkzxsSuMgIiyYlwf9AOXvLdsDt7xe8v7z9h6LxX90uYbc1(RLlHS2(WunKo3idRCDuAWzVWM2JUx7IQ56ncjzWtJJDFKdLdk(YmuMwLLSvwPFECS7y8hf120XJRD3IVIeP7PqKg8)4ARuxj)pgCG4Q72613R60EPk42HNSxxcXWTSDNEVwNVB7xG2AJTUvo)Pmsd3jw9JGtxmf3ik65ajIlpU8Z0T7IWNhGTjjpcsMzxAycWpH)p8Pla3JzW)GnDC5Cupd2j(Gc)Uqtd0aH6K9XI8qi48ht86gyEry76(DGVWu1(nOaoaOXA(36iLAKzTN)8fOR96asQ69ArQCT7MDyfzegVnbQQuRu1bwAej22HI6A65nBrwSvzMRY9b0OWVqt7tnfU29D3mUlpowrASTfDZ9dYrS007vdAnDI5aHQ2QA7r5Xs0vR1GTdFnGegvkv7wqzkfLjU3WmuPCQHDP8PM6GGhxHTHWCTwsjo8Csk)2VQRStvFthDRuvw3U3LxIgZu7LgBxI2glz3SuRcnP0h1Enlen3QOuy9nSYuEmXoAyw8tC3rdQcqA0CCC1d0muUQYXb0vH(HzLxTvXzlsHBxE6UeMqFt6oVLQNTRldbSJG8q35NXLupNS2t8vVmYsk1aJMjTQQ2ICLR6TkmMe5X7DPILISypm2pzlEWbKTeOeLRff8hWk(Is)Fv95nnaFidGfPXGpbvMyDoSCiH3erqtpeHepjMkyfYbX9G6sIhLrN1v2aY62n86bVToH80ptCNv8ICQDFbCIKbov8yWoGJmQVxU)SjakPFKFT7R6VHmM2HI8N9CB08W4i5moIS3ljgIVhhWwu8aVqWegUioSm36mbQuyoK1qmxVzoFusc3Uljfq2QeW7(Vunme)cKJe9VYdtrVbSeSJeK8SKTeEIG(WHSMYgF8H)fWRqiHFfsimjgon(Y)s5JWO(G0aoZsKwnRXYdD(6OEIu53t3cI1aPxiV5t63a5gbPxi3W74BG0nbZ3u03jInmGcgKkNnDFUOVhiUv1VglRqT389hPVq1oBi)vXGXoLFExEFJrFNi(Cnw6jDFUOVhi(SCPE8bdE7l2f70C2709vf)XOA7EQeafz5RhIRqPB3xpMrPbauO1xpeZVC(i)EbX0nQdvkk2XzumzvioQAV5nLlZgxfR(Fm7Dy(byEjmiXKSqOWcXll)qxWtc(ZYxH(btWPmcKMbrFCWmcKAHIMHrUyrZquougxIJjWScrA9KzCjFq(M5Cz4QzMnxgy3L4GHxy3z8HdTyxF)SwCwn6WHlmh54LWIUYSORzwSjxiXIn5)Aw0axCFlSVmhQnqPpuXJOkhFkKL)g9zarWZsJxDNWwEsSUbT0xx3qwogpsKFfxZAQWJxfToGK3pZferMhlYdhA2jY7V96MFnuZGrIr9fWmdJOSdKoff504n1mUlTHre3(qt7VOZz35au9q8TlV3zYOrMXP0RM1uSzPJl3pBQzKPpls2zWdhQ0ATq8ZMor1zP8bfg)LKNOE0Vc1GH9kbpeHQcVtoEHXRYzNHeUA4fTTXcQ7(3lRkwBFaOWImJ7Equj8GoBz2GHn7k1SjhoyUBuJSqjknEcp)6kvVRUpyN2zv89g76Ln6qP8BHCWwBUgukIA2OG7RAT1GlgAP1afuxBTfqLXQAjqXxx1oaB8IvulF)AG4L6WXpsYVSJni12SpuTj9)jHb0oZ)Ei1LBdKMDOZ1YoskJZznqO2iMjzmz5fwgmSYpBZPt8o3coW2KRncZpX4qQwSrLbuvevTJXsD0GlmEKLDo3KSOkUUYBMlYQSy4D4NDZH25UzfdSJr8AqAAN20Lz2NE07CaXGfyuI8z4gXzmeZwzorVZ1iTxVxEAaYdE5SRRVgsSmdOJg0XlZDQNPtHy5rJd559toRdSLyP1kMLFBZH6usu3XaDoBIn9YQj3(uvm7xMutfjd0XWzcjCnOok9DtnsmAV5jsdx0bYZ3nOVJG5G(XpZmtBwE(6klUMpKmqA96eVBAXfxlz4jripQ8K7F)pFT3K)1GaCpjc4BLVu5wfuXvgh4XzxBwfrzyjquOmMfZuMpriUKWbR2inc17y47l9KEJnj1GEumICbug1S1k3tcgPASonlxtXpg01ejEQgGdFPkGthznKyVTc)bqegmfFXuH7jtf2Shp1BXxkLB2V93a3L99U4LEqqAtV54YFkgiVEB0FgPiP739cTX1RpjY1YO5nWqZWMDfKGzVUeG0bG8Q6CGQoR4bYJCxp0Dpf7P(OIAeMgDCPWxGHMLmyyxZqh27U2RTRkQL5jNBMTywAQE9qf5mVdpb5Hzcv5nk4LoxNfS50iuFYIAqkB2masoJ6fMr3YUK)3mAzFO5Pan0(FLPZCgySBRywhQvSn7QjqCG2qLRYBBO(8tLfp24ygH913oshDkmRBxmR7RhZ6O8khVsml)Vco)fF6MB4JvZI))d]] )
+spec:RegisterPack( "防骑Simc", 20271122, [[Hekili:vVrxVTnoYFlbfWRnUuxl58r7I48WTVSn4qXIZ9W9MLzKOT1gzjVIsn1hm8V9Bgs9bjfPKSt6h7dToXC4WzgoFZjlCw85fZdiz0fFYDI7vooUUJDCN8bNRwmpB)o6I57i(prwd)qmzl8))rAsg1plmj(4Y)GerccJry2hLqcqCXsYt9b42KLTJ9RV7DRdZ2K)4y)KTVJfUnpIGB1pLSkd)D)3Ty(J5HrzFmEXJMje3fZj5zBssxmFE42FdWCyqavaoL5Vyoc(BDM8whNlpUe(0L)PZBDD)1Jl)p7qCEC5Q0KThxIi44dhFGVLjF4TtEpaY)MYYssby2gMfUMiynsblgfYYu2HlGC8ZRk(eXahTlZfhvfWVxqrDsg3(w3PaiFEdS()LKc)hiYqPkE2m(9dDfjpkd(XpXVVee3I5P0hZFcK10yYJr0Gf)ZfzG0dHO(BQa2Nef5j(fpeZc87jUvRzDeftphu4NKefK8CmdXWvNdgYsdJFIMXrW1NdcyzK4asAaGayHDPuqR7rst5wa9ljCmqYtjMeFLagfUEtgZ7pZdwVLgNPb6uzqjP(KyQhOjL2eYRKH0pjMrblaXVPaNoxNSdykAw9E)cjnexf)POC4dhaFPHzu4RReGJZCgVHW8kVroUCWXLARbIQSXK49Eb7y81hEC5fsq5AaQdhuqtj6hhKNwy1C)mfuyaIrc008OkHLZJQkeES9X(ESOe8A9t3CYYixJYi3wKrM4(MYitssfzKrjW9DjeniICojruMSXyPUVKeRwyW2rbZPms6AWSBSM2U460TIAsjHbE0VaRmMeeWgt)k6FsSS(AHcg92RnVC(o72y62GeyBRdJx79miG2yYe0iR9y(QvJv3RYXUlP0BNUVQACa33MqtkDljmg487G4mfCiaAw4wkNRDMWVehvFyBtqwZlzL36OK09Mm1TDPW2esJcWTMTH6LIclAsotC5mvYNw4xc5(FIImzL0LGrWfvAJw5y8qNuFQpsyChPa5XVhXJ(2t6ORqni4EFnIxfcb3Issk8LxfAWG6C5wkGXr7gS0DW4gMkhxcCJtPLDBYLviV5PifUAsLLA3hIRzxSvI7ukjyFLHMnkzKSVH2orqZd)bMKmPLedkGX90KBUFpKBoMD7(DtU5k0(QYROvNPzKi0bxH)S15HbKyF64cyl5KkANUNYTQ3NQ4qPWFlNx2q2ULMwzC5Xz3swQwWio3uAqs(Jz1NxfAkxbyd)N09QxSBDd5A0ioQlSqsRsPuf)QTMGM2UBtRSoNRAjS)g0PitHfwLdNhKPhFjpHpyupBTFW4TKVcBAVFeT0DkE)1DydJmPTlj2gYtuUZ5nuu5Jjfk)oUkSS6ztOB471IIHZ4RnBubKtTyZGeU14BB2TgIz45gqWCGa5216AgaQcYzp5bMaEiu6AgTR2xtz1Sv7H)mruosYByhmgAGJegspLQ1q9yVmAYEmtvdTYyWE7e1cNKQA0v7EQjKEHGEz1D3mjA2MfwPrFnvBjLatXEBZAQV5zar85eOq6Nh9mj9jeUAUBvE6EzVlc43KeT3BxYZ0uUs6uZMIV3Qq)Iops00P(22oCYUG7lxRMDfpQcnfY2NVbKW)q7(q4QP0apcJbUdqTVcQTNeWDLIrRb2mz03qHWzYppKz5zjixo1zpA6Rf152xQZpnNrcaXidc()eLtE)qco50r0PIm9R8Qvy4H(UT0KbeP2Jcet)AMhjDlru0hGhgXhYzW7zkzxsSuMgIiyYlwf9AOXvLdsDt7xe8v7z9h6LxX90uYbc1(RLlHS2(WunKo3idRCDuAWzVWM2JUx7IQ56ncjzWtJJDFKdLdk(YmuMwLLSvwPFECS7y8hf120XJRD3IVIeP7PqKg8)4ARuxj)pgCG4Q72613R60EPk42HNSxxcXWTSDNEVwNVB7xG2AJTUvo)Pmsd3jw9JGtxmf3ik65ajIlpU8Z0T7IWNhGTjjpcsMzxAycWpH)p8Pla3JzW)GnDC5Cupd2j(Gc)Uqtd0aH6K9XI8qi48ht86gyEry76(DGVWu1(nOaoaOXA(36iLAKzTN)8fOR96asQ69ArQCT7MDyfzegVnbQQuRu1bwAej22HI6A65nBrwSvzMRY9b0OWVqt7tnfU29D3mUlpowrASTfDZ9dYrS007vdAnDI5aHQ2QA7r5Xs0vR1GTdFnGegvkv7wqzkfLjU3WmuPCQHDP8PM6GGhxHTHWCTwsjo8Csk)2VQRStvFthDRuvw3U3LxIgZu7LgBxI2glz3SuRcnP0h1Enlen3QOuy9nSYuEmXoAyw8tC3rdQcqA0CCC1d0muUQYXb0vH(HzLxTvXzlsHBxE6UeMqFt6oVLQNTRldbSJG8q35NXLupNS2t8vVmYsk1aJMjTQQ2ICLR6TkmMe5X7DPILISypm2pzlEWbKTeOeLRff8hWk(Is)Fv95nnaFidGfPXGpbvMyDoSCiH3erqtpeHepjMkyfYbX9G6sIhLrN1v2aY62n86bVToH80ptCNv8ICQDFbCIKbov8yWoGJmQVxU)SjakPFKFT7R6VHmM2HI8N9CB08W4i5moIS3ljgIVhhWwu8aVqWegUioSm36mbQuyoK1qmxVzoFusc3Uljfq2QeW7(Vunme)cKJe9VYdtrVbSeSJeK8SKTeEIG(WHSMYgF8H)fWRqiHFfsimjgon(Y)s5JWO(G0aoZsKwnRXYdD(6OEIu53t3cI1aPxiV5t63a5gbPxi3W74BG0nbZ3u03jInmGcgKkNnDFUOVhiUv1VglRqT389hPVq1oBi)vXGXoLFExEFJrFNi(Cnw6jDFUOVhi(SCPE8bdE7l2f70C2709vf)XOA7EQeafz5RhIRqPB3xpMrPbauO1xpeZVC(i)EbX0nQdvkk2XzumzvioQAV5nLlZgxfR(Fm7Dy(byEjmiXKSqOWcXll)qxWtc(ZYxH(btWPmcKMbrFCWmcKAHIMHrUyrZquougxIJjWScrA9KzCjFq(M5Cz4QzMnxgy3L4GHxy3z8HdTyxF)SwCwn6WHlmh54LWIUYSORzwSjxiXIn5)Aw0axCFlSVmhQnqPpuXJOkhFkKL)g9zarWZsJxDNWwEsSUbT0xx3qwogpsKFfxZAQWJxfToGK3pZferMhlYdhA2jY7V96MFnuZGrIr9fWmdJOSdKoff504n1mUlTHre3(qt7VOZz35au9q8TlV3zYOrMXP0RM1uSzPJl3pBQzKPpls2zWdhQ0ATq8ZMor1zP8bfg)LKNOE0Vc1GH9kbpeHQcVtoEHXRYzNHeUA4fTTXcQ7(3lRkwBFaOWImJ7Equj8GoBz2GHn7k1SjhoyUBuJSqjknEcp)6kvVRUpyN2zv89g76Ln6qP8BHCWwBUgukIA2OG7RAT1GlgAP1afuxBTfqLXQAjqXxx1oaB8IvulF)AG4L6WXpsYVSJni12SpuTj9)jHb0oZ)Ei1LBdKMDOZ1YoskJZznqO2iMjzmz5fwgmSYpBZPt8o3coW2KRncZpX4qQwSrLbuvevTJXsD0GlmEKLDo3KSOkUUYBMlYQSy4D4NDZH25UzfdSJr8AqAAN20Lz2NE07CaXGfyuI8z4gXzmeZwzorVZ1iTxVxEAaYdE5SRRVgsSmdOJg0XlZDQNPtHy5rJd559toRdSLyP1kMLFBZH6usu3XaDoBIn9YQj3(uvm7xMutfjd0XWzcjCnOok9DtnsmAV5jsdx0bYZ3nOVJG5G(XpZmtBwE(6klUMpKmqA96eVBAXfxlz4jripQ8K7F)pFT3K)1GaCpjc4BLVu5wfuXvgh4XzxBwfrzyjquOmMfZuMpriUKWbR2inc17y47l9KEJnj1GEumICbug1S1k3tcgPASonlxtXpg01ejEQgGdFPkGthznKyVTc)bqegmfFXuH7jtf2Shp1BXxkLB2V93a3L99U4LEqqAtV54YFkgiVEB0FgPiP739cTX1RpjY1YO5nWqZWMDfKGzVUeG0bG8Q6CGQoR4bYJCxp0Dpf7P(OIAeMgDCPWxGHMLmyyxZqh27U2RTRkQL5jNBMTywAQE9qf5mVdpb5Hzcv5nk4LoxNfS50iuFYIAqkB2masoJ6fMr3YUK)3mAzFO5Pan0(FLPZCgySBRywhQvSn7QjqCG2qLRYBBO(8tLfp24ygH913oshDkmRBxmR7RhZ6O8khVsml)Vco)fF6MB4JvZI))d]] )

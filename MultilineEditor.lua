@@ -265,7 +265,7 @@ local function GenerateDiagnosticTooltip( widget, event )
         if script == 'criteria' then
             local result, warning = scripts:CheckScript( scriptID, action )
 
-            Tooltip:AddDoubleLine( "Shown", ns.formatValue( result ), 1, 1, 1, 1, 1, 1 )
+            Tooltip:AddDoubleLine( "显示", ns.formatValue( result ), 1, 1, 1, 1, 1, 1 )
 
             if warning then Tooltip:AddLine( warning, 1, 0, 0 ) end
 
@@ -286,7 +286,7 @@ local function GenerateDiagnosticTooltip( widget, event )
     if has_args then
         if tested then Tooltip:AddLine(" ") end
 
-        Tooltip:AddLine( "Values" )
+        Tooltip:AddLine( "值" )
         for k, v in orderedPairs( arg ) do
           if not key_cache[k]:find( "safebool" ) and not key_cache[k]:find( "safenum" ) and not key_cache[k]:find("floor") and not key_cache[k]:find( "ceil" ) and ( type(v) ~= "string" or not v:find( "function" ) ) then
             Tooltip:AddDoubleLine( key_cache[ k ], ns.formatValue( v ), 1, 1, 1, 1, 1, 1 )
