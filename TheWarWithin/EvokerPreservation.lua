@@ -949,7 +949,7 @@ spec:RegisterAbilities( {
 
 spec:RegisterSetting( "experimental_msg", nil, {
     type = "description",
-    name = "|cFFFF0000WARNING|r:  Healer support in this addon is focused on DPS output only.  This is more useful for solo content or downtime when your healing output is less critical in a group/encounter.  Use at your own risk.",
+    name = "|cFFFF0000警告|r：插件中治疗专精的优先级只用于DPS输出场景。这对你在单人战斗或发呆时间更有用，因为此时你的治疗输出不那么重要。使用时需自行承担风险。",
     width = "full",
 } )
 
@@ -957,22 +957,22 @@ local spellInfo = GetSpellInfo( 357210 )
 local deep_breath = spellInfo and spellInfo.name or "Deep Breath"
 
 spec:RegisterSetting( "use_deep_breath", true, {
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( 357210 ) ),
+    name = strformat( "使用 %s", Hekili:GetSpellLinkWithTexture( 357210 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended, which will force your character to select a destination and move.  By default, %s requires your Cooldowns "
-        .. "toggle to be active.\n\n"
-        .. "If unchecked, |W%s|w will never be recommended, which may result in lost DPS if left unused for an extended period of time.",
+    desc = strformat( "如果勾选，可能会推荐使用 %s，这将迫使你的角色选择一个目的地进行移动。"
+        .. "默认情况下，%s 需要【爆发】开关处于激活状态。\n\n"
+        .. "如果不勾选，|W%s|w 将永远不会被推荐，如果一直不使用，可能会导致DPS损失。",
         Hekili:GetSpellLinkWithTexture( 357210 ), deep_breath, deep_breath ),
     width = "full",
 } )
 
 spellInfo = GetSpellInfo( 368432 )
-local unravel = spellInfo and spellInfo.name or "Unravel"
+local unravel = spellInfo and spellInfo.name or "瓦解"
 
 spec:RegisterSetting( "use_unravel", false, {
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( 368432 ) ),
+    name = strformat( "使用 %s", Hekili:GetSpellLinkWithTexture( 368432 ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended if your target has an absorb shield applied.  By default, %s also requires your Interrupts toggle to be active.",
+    desc = strformat( "如果勾选，若你的目标拥有减伤盾，%s 可能会被推荐。默认情况下，%s 需要【打断】开关处于激活状态。",
         Hekili:GetSpellLinkWithTexture( 368432 ), unravel ),
     width = "full",
 } )
@@ -981,11 +981,11 @@ spec:RegisterSetting( "use_unravel", false, {
 local devastation = class.specs[ 1467 ]
 
 spec:RegisterSetting( "fire_breath_fixed", 0, {
-    name = strformat( "%s: Empowerment", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ) ),
+    name = strformat( "%s: 授权", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ) ),
     type = "range",
-    desc = strformat( "If set to |cffffd1000|r, %s will be recommended at different empowerment levels based on the action priority list.\n\n"
-        .. "To force %s to be used at a specific level, set this to 1, 2, 3 or 4.\n\n"
-        .. "If the selected empowerment level exceeds your maximum, the maximum level will be used instead.", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ),
+    desc = strformat( "如果设置为 |cffffd1000|r，%s 将根据优先级列表推荐不同的授权级别。\n\n"
+        .. "要强制使用特定级别的 %s，请将其设置为 1、2、3 或 4。\n\n"
+        .. "如果所选授权级别超过了您的最大值，则将使用最大值。", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ),
         devastation.abilities.fire_breath.name ),
     min = 0,
     max = 4,
@@ -994,10 +994,10 @@ spec:RegisterSetting( "fire_breath_fixed", 0, {
 } )
 
 spec:RegisterSetting( "spend_essence", false, {
-    name = strformat( "%s: Spend Essence", Hekili:GetSpellLinkWithTexture( devastation.abilities.disintegrate.id ) ),
+    name = strformat( "%s: 消耗精华", Hekili:GetSpellLinkWithTexture( devastation.abilities.disintegrate.id ) ),
     type = "toggle",
-    desc = strformat( "If checked, %s may be recommended when you will otherwise max out on Essence and risk wasting resources.\n\n"
-        .. "Recommendation: Leave disabled in content where you are actively healing and spending Essence on healing spells.", Hekili:GetSpellLinkWithTexture( devastation.abilities.disintegrate.id ) ),
+    desc = strformat( "如果选中该选项，则可能会推荐使用 %s，否则会导致精华耗尽，并有浪费资源的风险。\n\n"
+        .. "建议：在主动治疗和消耗精华于治疗法术的内容中禁用。", Hekili:GetSpellLinkWithTexture( devastation.abilities.disintegrate.id ) ),
     width = "full"
 } )
 
@@ -1021,8 +1021,8 @@ spec:RegisterOptions( {
 
     potion = "tempered_potion",
 
-    package = "Preservation",
+    package = "恩护Simc",
 } )
 
 
-spec:RegisterPack( "Preservation", 20240730, [[Hekili:LAvuVTjpu0Fl9LOw1w(acTnFtR9HP9WwNu1Kys7nJDGlfRsWmBt6AvK)TVRnPjMqs166liZLJpN71(EUcse5hK0cMgi3fhgNeE10WGWzrjHZiP6NAbsAll)b294Ig2c853LGcKlzAUOX(XNQfScljkrNmhbqsN3XR1FTHmF)mFjITfYj3fLCjQsfVOa6bdQCs6xawnin0wjxi5AoOmuMem0p)90Zlf5DkOWqfn1pzU1CRL6ZdV68PHFWq)rfc7NmCZ)KRR428tkk51ywXYTjSkOvc5IfZz6tV()MxdkfV5(mrzMUcYMlfnpdwwxJgX8RoOU2pqoRtds(Z29vwJhj(FSRrYwcdWxaqlYmW0v(HBf2vd2RcY4AyHYpyjxcR39zWIwXJGmtlUo6mE51L87R0zsybJ3OUjk50CMsNP5dtPdWq8ygM9Miy6ycIFteKyjy974HzGhSvRgs8EPTsSeKwowiwI7FY8UYYaxWGcXJntuGwJXvb2dwx8bxlC8Mxd3lXguljUDJTdqtoMfDsLoORDYXh1t(QvESpkRoz1Q17mW(kwCzly)(JB((2ub77BkYwd2pDyp3HvVsl5p4sh7xwczqdSana3e7JTMVCtZNf7Fvo(AIT)dqskUszD5B8VK0hzYgBLqs)kEZj1wRym6pDCBO1CLwfyULK6w5MTaLSUAnU8o3SMEOKuNXIKcnm0gwq(erJ64dyKrBhWt9bV24TdKeFiEgXDGDHpSEJ5oiUCGwVyu3b0vwqBJSbVxJnwv4inSQy2WET4g6ngAuIHEQHU5odzBJDHKgz1y27vJzVMeXwj()3ReXVMetTsef(20y)tjm0vRm0X6FaLtCkhTJYBfP3fyOtm0DCcUyJhNSnT7F1sF8bPFVdyCmFSHEKH(I82AASrEyHzON0dCpJDm0poaPFQpy8JNZWBwORkMEWQy4CP(R7Te5pyXruYbj6nwXB1WF6NtJl(hUrpykRT)YW6)qy0iR9))cdNc4OaNCvjW(JVXQGh41CxuYFc]] )
+spec:RegisterPack( "恩护Simc", 20240730, [[Hekili:LAvuVTjpu0Fl9LOw1w(acTnFtR9HP9WwNu1Kys7nJDGlfRsWmBt6AvK)TVRnPjMqs166liZLJpN71(EUcse5hK0cMgi3fhgNeE10WGWzrjHZiP6NAbsAll)b294Ig2c853LGcKlzAUOX(XNQfScljkrNmhbqsN3XR1FTHmF)mFjITfYj3fLCjQsfVOa6bdQCs6xawnin0wjxi5AoOmuMem0p)90Zlf5DkOWqfn1pzU1CRL6ZdV68PHFWq)rfc7NmCZ)KRR428tkk51ywXYTjSkOvc5IfZz6tV()MxdkfV5(mrzMUcYMlfnpdwwxJgX8RoOU2pqoRtds(Z29vwJhj(FSRrYwcdWxaqlYmW0v(HBf2vd2RcY4AyHYpyjxcR39zWIwXJGmtlUo6mE51L87R0zsybJ3OUjk50CMsNP5dtPdWq8ygM9Miy6ycIFteKyjy974HzGhSvRgs8EPTsSeKwowiwI7FY8UYYaxWGcXJntuGwJXvb2dwx8bxlC8Mxd3lXguljUDJTdqtoMfDsLoORDYXh1t(QvESpkRoz1Q17mW(kwCzly)(JB((2ub77BkYwd2pDyp3HvVsl5p4sh7xwczqdSana3e7JTMVCtZNf7Fvo(AIT)dqskUszD5B8VK0hzYgBLqs)kEZj1wRym6pDCBO1CLwfyULK6w5MTaLSUAnU8o3SMEOKuNXIKcnm0gwq(erJ64dyKrBhWt9bV24TdKeFiEgXDGDHpSEJ5oiUCGwVyu3b0vwqBJSbVxJnwv4inSQy2WET4g6ngAuIHEQHU5odzBJDHKgz1y27vJzVMeXwj()3ReXVMetTsef(20y)tjm0vRm0X6FaLtCkhTJYBfP3fyOtm0DCcUyJhNSnT7F1sF8bPFVdyCmFSHEKH(I82AASrEyHzON0dCpJDm0poaPFQpy8JNZWBwORkMEWQy4CP(R7Te5pyXruYbj6nwXB1WF6NtJl(hUrpykRT)YW6)qy0iR9))cdNc4OaNCvjW(JVXQGh41CxuYFc]] )

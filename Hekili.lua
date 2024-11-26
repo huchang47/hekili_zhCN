@@ -44,10 +44,10 @@ Hekili.GameBuild = buildStr
 
 ns.PTR = buildNum > 110000
 
-ns.Patrons = "|cFFFFD100Current Status|r\n\n"
-    .. "All existing specializations are currently supported, though healer priorities are experimental and focused on rotational DPS only.\n\n"
-    .. "If you find odd recommendations or other issues, please follow the |cFFFFD100Issue Reports|r link below and submit all the necessary information to have your issue investigated.\n\n"
-    .. "Please do not submit tickets for routine priority updates (i.e., from SimulationCraft).  I will routinely update those when they are published.  Thanks!"
+ns.Patrons = "|cFFFFD100目前的状态|r\n\n"
+    .. "目前已经支持所有的专精，但治疗专精的优先级是试验性的，只可用于发呆时打DPS。\n\n"
+    .. "如果你发现奇怪的问题或建议，请前往下方的|cFFFFD100问题报告|r链接提交必要的信息，以便你的问题能够尽快修正。\n\n"
+    .. "请不要提交默认优先级的问题（来自于SimulationCraft），它们将在发布后同步更新。谢谢！"
 
 do
     local cpuProfileDB = {}
@@ -352,8 +352,8 @@ function Hekili:SaveDebugSnapshot( dispName )
             -- TODO: Include # of active displays, number of icons displayed.
 
             if pInfo then
-                performance = string.format( "\n\nPerformance\n"
-                    .. "|| Updates || Updates / sec || Avg. Work || Avg. Time || Avg. Frames || Peak Work || Peak Time || Peak Frames || FPS || Work Cap ||\n"
+                performance = string.format( "\n\n性能\n"
+                    .. "|| 刷新次数 || 刷新次数/秒 || 平均工作量 || 平均时间 || 平均帧数 || 峰值工作量 || 峰值时间 || 峰值帧数 || 帧率 || 工作量上限 ||\n"
                     .. "|| %7d || %13.2f || %9.2f || %9.2f || %11.2f || %9.2f || %9.2f || %11.2f || %3d || %8.2f ||",
                     pInfo.updates, pInfo.updatesPerSec, pInfo.meanWorkTime, pInfo.meanClockTime, pInfo.meanFrames, pInfo.peakWorkTime, pInfo.peakClockTime, pInfo.peakFrames, GetFramerate() or 0, Hekili.maxFrameTime or 0 )
             end
