@@ -416,13 +416,13 @@ do
                                 excluded = maxR ~= nil and maxR > checkPlates
 
                                 if debugging and excluded then
-                                    details = format( "%s\n    - Excluded by range (%d > %d).", details, maxR, checkPlates )
+                                    details = format( "%s\n  - 由于距离限制而被排除 (%d > %d)。", details, maxR, checkPlates )
                                 end
                             end
 
                             if not excluded and showNPs and spec.damageOnScreen and not npUnits[ guid ] then
                                 excluded = true
-                                if debugging then details = format( "%s\n    - Excluded by on-screen nameplate requirement.", details ) end
+                                if debugging then details = format( "%s\n  - 由于屏幕内姓名板限制而被排除。", details ) end
                             end
                         end
 
@@ -456,7 +456,7 @@ do
 
                             local _, range = nil, -1
 
-                            if debugging then details = format( "%s\n - Checking %s [ %s ] %s.", details, unit, guid, UnitName( unit ) ) end
+                            if debugging then details = format( "%s\n - 检测中 %s [ %s ] %s。", details, unit, guid, UnitName( unit ) ) end
 
                             if excluded then
                                 excluded = enemyExclusions[ npcid ]
@@ -466,7 +466,7 @@ do
                                     excluded = FindExclusionAuraByID( unit, excluded )
 
                                     if debugging and excluded then
-                                        details = format( "%s\n    - Excluded by aura.", details )
+                                        details = format( "%s\n  - 由于光环限制而被排除。", details )
                                     end
                                 end
 
@@ -474,7 +474,7 @@ do
                                     excluded = not Hekili:TargetIsNearPet( unit )
 
                                     if debugging and excluded then
-                                        details = format( "%s\n    - Excluded by pet range.", details )
+                                        details = format( "%s\n  - 由于宠物攻击距离而被排除。", details )
                                     end
                                 end
 
@@ -483,13 +483,13 @@ do
                                     excluded = maxR ~= nil and maxR > checkPlates
 
                                     if debugging and excluded then
-                                        details = format( "%s\n    - Excluded by range (%d > %d).", details, maxR, checkPlates )
+                                        details = format( "%s\n  - 由于距离限制而被排除(%d > %d)。", details, maxR, checkPlates )
                                     end
                                 end
 
                                 if not excluded and spec.damageOnScreen and showNPs and not npUnits[ guid ] then
                                     excluded = true
-                                    if debugging then details = format( "%s\n    - Excluded by on-screen nameplate requirement.", details ) end
+                                    if debugging then details = format( "%s\n  - 由于屏幕内姓名板限制而被排除。", details ) end
                                 end
                             end
 
@@ -530,34 +530,34 @@ do
                     if unit and not UnitIsUnit( unit, "target" ) then
                         excluded = enemyExclusions[ npcid ]
 
-                        if debugging then details = format( "%s\n - Checking %s [ %s ] #%s.", details, unit, guid, UnitName( unit ) ) end
+                        if debugging then details = format( "%s\n - 检测中 %s [ %s ] #%s。", details, unit, guid, UnitName( unit ) ) end
 
                         -- If our table has a number, unit is ruled out only if the buff is present.
                         if excluded and type( excluded ) == "number" then
                             excluded = FindExclusionAuraByID( unit, excluded )
 
                             if debugging and excluded then
-                                details = format( "%s\n    - Excluded by aura.", details )
+                                details = format( "%s\n  - 由于光环而被排除。", details )
                             end
                         end
 
                         if not excluded and inGroup and FriendCheck( unit ) then
                             excluded = true
-                            if debugging then details = format( "%s\n    - Excluded by friend check.", details ) end
+                            if debugging then details = format( "%s\n  - 由于友善目标而被排除。", details ) end
                         end
 
                         if not excluded and checkPets then
                             excluded = not Hekili:TargetIsNearPet( unit )
 
                             if debugging and excluded then
-                                details = format( "%s\n    - Excluded by pet range.", details )
+                                details = format( "%s\n  - 由于宠物攻击距离而被排除。", details )
                             end
                         end
                     end
 
                     if not excluded and spec.damageOnScreen and showNPs and not npUnits[ guid ] then
                         excluded = true
-                        if debugging then details = format( "%s\n    - Excluded by on-screen nameplate requirement.", details ) end
+                        if debugging then details = format( "%s\n  - 由于屏幕内姓名板限制而被排除。", details ) end
                     end
 
                     if not excluded then
@@ -670,7 +670,7 @@ end
 
 ns.reportTargets = function()
     for k, v in pairs(targets) do
-        Hekili:Print("Saw " .. k .. " exactly " .. GetTime() - v .. " seconds ago.")
+        Hekili:Print("在 " .. GetTime() - v .. " 秒前侦测到了" .. k .. "。" )
     end
 end
 
