@@ -629,6 +629,15 @@ spec:RegisterHook( "spend", function( amt, resource )
 end )
 
 
+local Shadowcraft = setfenv( function ()
+
+    if buff.shadow_techniques.stack >= combo_points.max then
+        gain( combo_points.max, "combo_points" )
+        removeStack( "shadow_techniques", combo_points.max )
+    end
+
+end, state )
+
 local function st_gain( token )
     local amount = action[ token ].cp_gain
     local st_addl_gain = max( 0, min( combo_points.deficit - amount, buff.shadow_techniques.stack ) )
@@ -974,7 +983,8 @@ spec:RegisterAbilities( {
             if set_bonus.tier29_2pc > 0 then applyBuff( "honed_blades", nil, effective_combo_points ) end
 
             spend( combo_points.current, "combo_points" )
-            
+            if talent.shadowcraft.enabled and buff.symbols_of_death.up then Shadowcraft() end
+   
             if talent.deeper_daggers.enabled or conduit.deeper_daggers.enabled then applyBuff( "deeper_daggers" ) end
         end,
     },
@@ -1062,6 +1072,7 @@ spec:RegisterAbilities( {
             else applyBuff( "slice_and_dice", effective_combo_points * 3 ) end
 
             spend( combo_points.current, "combo_points" )
+            if talent.shadowcraft.enabled and buff.symbols_of_death.up then Shadowcraft() end
 
             if talent.deeper_daggers.enabled or conduit.deeper_daggers.enabled then applyBuff( "deeper_daggers" ) end
         end,
@@ -1229,6 +1240,7 @@ spec:RegisterAbilities( {
             applyBuff( "secret_technique" ) -- fake buff for APL logic.
             if talent.goremaws_bite.enabled and buff.goremaws_bite.up then removeStack( "goremaws_bite" ) end
             spend( combo_points.current, "combo_points" )
+            if talent.shadowcraft.enabled and buff.symbols_of_death.up then Shadowcraft() end
         end,
     },
 

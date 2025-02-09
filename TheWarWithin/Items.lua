@@ -556,7 +556,7 @@ all:RegisterAbilities( {
     mad_queens_mandate = {
         cast = 0,
         cooldown = 120,
-        gcd = "off",
+        gcd = "spell",
 
         item = 212454,
         toggle = "cooldowns",

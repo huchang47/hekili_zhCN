@@ -6,14 +6,14 @@ actions.precombat+=/variable,name=on_use_trinket,op=add,value=(trinket.1.has_pro
 actions.precombat+=/variable,name=on_use_trinket,op=add,value=((trinket.2.has_proc&trinket.2.cooldown.duration|trinket.2.is.spymasters_web|trinket.2.is.signet_of_the_priory)*2&!trinket.2.is.arakara_sacbrood)
 ## Regrowth to stack for Keeper of the Grove...
 actions.precombat+=/regrowth,if=hero_tree.keeper_of_the_grove&!talent.stellar_flare&action.regrowth.time_since<10&active_dot.regrowth=0
-actions.precombat+=/wrath,if=!prev.1.wrath
-actions.precombat+=/wrath,if=prev.1.wrath&!(prev.2.wrath|prev.3.wrath|prev.4.wrath)
+# [edited] This handles the wrath opener based on the state of eclipse
+actions.precombat+=/wrath,if=eclipse.lunar_in
 actions.precombat+=/starfire,if=!talent.stellar_flare&hero_tree.elunes_chosen
 actions.precombat+=/stellar_flare
 
 actions+=/solar_beam
 # [Edited] Trigger Lunar Eclipse if we failed to precast Wrath x2
-actions+=/wrath,if=time<2&eclipse.lunar_in_1&(prev.1.wrath+prev.2.wrath+prev.3.wrath)<2
+actions+=/wrath,if=time<2&eclipse.lunar_in_1
 actions+=/variable,name=passive_asp,value=6%spell_haste+talent.natures_balance+talent.orbit_breaker*dot.moonfire.ticking*(buff.orbit_breaker.stack>(27-2*buff.solstice.up))*24
 actions+=/variable,name=ca_effective_cd,value=cooldown.ca_inc.remains<?cooldown.force_of_nature.remains
 actions+=/variable,name=last_ca_inc,value=boss&fight_remains<cooldown.ca_inc.duration+variable.ca_effective_cd

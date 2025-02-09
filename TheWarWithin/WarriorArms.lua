@@ -1281,7 +1281,7 @@ spec:RegisterAbilities( {
             removeBuff( "battlelord" )
             if set_bonus.tier30_4pc > 0 then removeBuff( "crushing_advance" ) end
             -- Patch 10.1 adds auto Rend to target using MS with talent under 35% HP
-            if target.health.pct < 35 and talent.bloodletting.enabled then
+            if talent.rend.enabled and target.health.pct < 35 and talent.bloodletting.enabled then
                 applyDebuff ( "target", "rend" )
             end
             if talent.dominance_of_the_colossus.enabled and buff.colossal_might.stack == 10 then reduceCooldown( "demolish", 2 ) end
@@ -1293,9 +1293,9 @@ spec:RegisterAbilities( {
     overpower = {
         id = 7384,
         cast = 0,
-        charges = function () return 1 + ( talent.improved_overpower.enabled and 1 or 0 ) end,
+        charges = function () if talent.improved_overpower.enabled then return 2 end end,
         cooldown = 12,
-        recharge = 12,
+        recharge = function () if talent.improved_overpower.enabled then return 12 end end,
         gcd = "spell",
 
         spend = function() return talent.finishing_blows.enabled and target.health_pct < 35 and -8 or 0 end,
@@ -1307,7 +1307,7 @@ spec:RegisterAbilities( {
 
         handler = function ()
             removeBuff( "opportunist" )
-            if talent.martial_prowess.enabled then applyBuff( "overpower" ) end
+            if talent.martial_prowess.enabled then addStack( "overpower" ) end
         end,
     },
 

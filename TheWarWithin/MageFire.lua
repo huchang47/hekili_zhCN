@@ -354,7 +354,7 @@ spec:RegisterAuras( {
     },
     -- Your next Fireball, Flamestrike, or Pyroblast has a 40% reduced cast time.
     flame_accelerant = {
-        id = 203277,
+        id = 453283,
         duration = 3600,
         max_stack = 1
     },
@@ -692,7 +692,7 @@ spec:RegisterAuras( {
     sun_kings_blessing = {
         id = 383882,
         duration = 30,
-        max_stack = 10,
+        max_stack = 9,
         copy = 333314
     },
     -- Talent: Your next non-instant Pyroblast will grant you Combustion.
@@ -935,6 +935,31 @@ end )
 spec:RegisterHook( "advance", function ( time )
     if Hekili.ActiveDebug then Hekili:Debug( "\n*** Hot Streak (Advance) ***\n    Heating Up:  %.2f\n    Hot Streak:  %.2f\n", state.buff.heating_up.remains, state.buff.hot_streak.remains ) end
 end )
+
+
+local ConsumeHotStreak = setfenv( function()
+
+    removeBuff( "hot_streak" )
+    -- Sunfury
+    if talent.spellfire_spheres.enabled then
+        if buff.next_blast_spheres.stacks == 5 then
+            removeBuff( "next_blast_spheres" )
+            addStack( "spellfire_spheres" )
+            applyBuff( "burden_of_power" )
+        else addStack( "next_blast_spheres" )
+        end
+    end
+    -- SKB
+    if talent.sun_kings_blessing.enabled then
+        if buff.sun_kings_blessing.stack == buff.sun_kings_blessing.max_stack then
+            removeBuff( "sun_kings_blessing" )
+            applyBuff( "sun_kings_blessing_ready" )
+        else
+            addStack( "sun_kings_blessing" )
+        end
+    end
+
+end, state )
 
 spec:RegisterStateFunction( "hot_streak", function( willCrit )
     willCrit = willCrit or buff.combustion.up or stat.crit >= 100
@@ -1275,6 +1300,7 @@ spec:RegisterAbilities( {
             if talent.explosivo.enabled then applyBuff( "lit_fuse" ) end
             if talent.spontaneous_combustion.enabled then gainCharges( "fire_blast", min( 3, action.fire_blast.charges ) ) end
             if talent.wildfire.enabled or azerite.wildfire.enabled then applyBuff( "wildfire" ) end
+            if talent.flash_freezeburn.enabled then applyBuff( "frostfire_empowerment" ) end
         end,
     },
 
@@ -1338,7 +1364,7 @@ spec:RegisterAbilities( {
             applyDebuff( "target", "ignite" )
 
             if buff.excess_fire.up then
-                applyDebuff( "target", "living_bomb" )
+                reduceCooldown( "phoenix_flames", 10 )
                 removeBuff( "excess_fire" )
             end
 
@@ -1390,7 +1416,7 @@ spec:RegisterAbilities( {
         spendType = "mana",
 
         startsCombat = false,
-        velocity = 45,
+        velocity = function() return talent.frostfire_bolt.enabled and 40 or 45 end,
 
         usable = function ()
             if moving and settings.prevent_hardcasts and action.fireball.cast_time > buff.ice_floes.remains then return false, "prevent_hardcasts during movement and ice_floes is down" end
@@ -1416,7 +1442,7 @@ spec:RegisterAbilities( {
         impact = function ()
             if hot_streak( firestarter.active or stat.crit + buff.fireball.stack * 10 >= 100 ) then
                 removeBuff( "fireball" )
-                if talent.kindling.enabled then setCooldown( "combustion", max( 0, cooldown.combustion.remains - 1 ) ) end
+                if talent.kindling.enabled then reduceCooldown( "combustion", 1 ) end
             else
                 addStack( "fireball" )
                 if conduit.flame_accretion.enabled then addStack( "flame_accretion" ) end
@@ -1489,6 +1515,10 @@ spec:RegisterAbilities( {
             removeStack( "sparking_cinders" )
             if buff.majesty_of_the_phoenix.up then removeStack( "majesty_of_the_phoenix" ) end
 
+            if buff.burden_of_power.up then -- Has to be processed before handling hotstreak
+                removeBuff( "burden_of_power" )
+                applyBuff( "glorious_incandescence" )
+            end
             if hardcast or cast_time > 0 then
                 removeBuff( "flame_accelerant" )
                 if buff.sun_kings_blessing_ready.up then
@@ -1498,36 +1528,16 @@ spec:RegisterAbilities( {
                     applyBuff( "sun_kings_blessing_ready_expiration_delay" )
                     state:QueueAuraExpiration( "sun_kings_blessing_ready_expiration_delay", ExpireSKB, buff.sun_kings_blessing_ready_expiration_delay.expires )
                 end
-
-            else
-                if buff.expanded_potential.up then removeBuff( "expanded_potential" )
+            else -- instant cast
+                if buff.expanded_potential.up then removeBuff( "expanded_potential" ) -- Legendary
                 else
                     if buff.hot_streak.up then
-                        removeBuff( "hot_streak" )
-                        if talent.spellfire_spheres.enabled then
-                            if buff.next_blast_spheres.stacks == 5 then
-                                removeBuff( "next_blast_spheres" )
-                                addStack( "spellfire_spheres" )
-                                applyBuff( "burden_of_power" )
-                            else addStack( "next_blast_spheres" )
-                            end
-                        end
+                        ConsumeHotStreak( false )
                     end
-                    if buff.majesty_of_the_phoenix.up then removeStack( "majesty_of_the_phoenix" ) end -- Consumed on instant cast?
-                    if talent.sun_kings_blessing.enabled then
-                        addStack( "sun_kings_blessing" )
-                        if buff.sun_kings_blessing.stack == 8 then
-                            removeBuff( "sun_kings_blessing" )
-                            applyBuff( "sun_kings_blessing_ready" )
-                        end
-                    end
+                    if buff.majesty_of_the_phoenix.up then removeStack( "majesty_of_the_phoenix" ) end
                 end
             end
 
-            if buff.burden_of_power.up then 
-                removeBuff( "burden_of_power" )
-                applyBuff( "glorious_incandescence" )
-            end
             if buff.hyperthermia.up then applyBuff( "hot_streak" ) end
             applyDebuff( "target", "ignite" )
             applyDebuff( "target", "flamestrike" )
@@ -1691,6 +1701,7 @@ spec:RegisterAbilities( {
             if buff.excess_frost.up then
                 removeBuff( "excess_frost" )
                 class.abilities.ice_nova.handler()
+                reduceCooldown( "meteor", 10 )
             end
         end,
 
@@ -1774,6 +1785,11 @@ spec:RegisterAbilities( {
         handler = function ()
             removeStack( "sparking_cinders" )
 
+            if buff.burden_of_power.up then -- Process before hot streak
+                removeBuff( "burden_of_power" )
+                applyBuff( "glorious_incandescence" )
+            end
+
             if hardcast or cast_time > 0 then
                 removeBuff( "flame_accelerant" )
                 if buff.sun_kings_blessing_ready.up then
@@ -1782,31 +1798,13 @@ spec:RegisterAbilities( {
                     applyBuff( "sun_kings_blessing_ready_expiration_delay" )
                     state:QueueAuraExpiration( "sun_kings_blessing_ready_expiration_delay", ExpireSKB, buff.sun_kings_blessing_ready_expiration_delay.expires )
                 end
-            else
+            else -- Instant cast
                 if buff.hot_streak.up then
-                    if buff.expanded_potential.up then removeBuff( "expanded_potential" )
-                    else
-                        removeBuff( "hot_streak" )
-                        if talent.spellfire_spheres.enabled then
-                            if buff.next_blast_spheres.stacks == 5 then
-                                removeBuff( "next_blast_spheres" )
-                                addStack( "spellfire_spheres" )
-                                applyBuff( "burden_of_power" )
-                            else addStack( "next_blast_spheres" )
-                            end
-                        end
-                        if talent.sun_kings_blessing.enabled then
-                            if buff.sun_kings_blessing.stack == 9 then
-                                removeBuff( "sun_kings_blessing" )
-                                applyBuff( "sun_kings_blessing_ready" )
-                            else
-                                addStack( "sun_kings_blessing" )
-                            end
-                        end
+                    if buff.expanded_potential.up then removeBuff( "expanded_potential" ) -- Legendary
+                    else ConsumeHotStreak( true )
                     end
                 end
             end
-
             removeBuff( "molten_skyfall_ready" )
 
             if talent.firefall.enabled then
@@ -1818,10 +1816,7 @@ spec:RegisterAbilities( {
             end
 
             if talent.unleashed_inferno.enabled and buff.combustion.up then reduceCooldown( "combustion", 1.25 ) end
-            if buff.burden_of_power.up then 
-                removeBuff( "burden_of_power" )
-                applyBuff( "glorious_incandescence" )
-            end
+            -- Legacy
             if set_bonus.tier30_4pc > 0 and debuff.charring_embers.up then
                 if buff.calefaction.stack == 19 then
                     removeBuff( "calefaction" )
