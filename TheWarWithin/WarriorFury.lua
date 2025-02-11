@@ -34,7 +34,7 @@ spec:RegisterResource( Enum.PowerType.Rage, {
 
         stop = function () return state.time == 0 or state.swings.mainhand == 0 end,
         value = function ()
-            local baseAmt = base_rage_gen * fury_rage_mult * state.talent.war_machine.enabled and 1.2 or 1 -- "static" amount
+            local baseAmt = base_rage_gen * fury_rage_mult * ( state.talent.war_machine.enabled and 1.2 or 1 ) -- "static" amount
             return ( baseAmt * ( state.buff.recklessness.up and 2 or 1 ) * state.swings.mainhand_speed ) -- Dynamic factors
         end
     },
@@ -53,7 +53,8 @@ spec:RegisterResource( Enum.PowerType.Rage, {
 
         stop = function () return state.time == 0 or state.swings.offhand == 0 end,
         value = function ()
-            return ( ( state.talent.war_machine.enabled and 1.2 or 1 ) * base_rage_gen * fury_rage_mult * state.swings.offhand_speed * offhand_mod )
+            local baseAmt = base_rage_gen * fury_rage_mult * ( state.talent.war_machine.enabled and 1.2 or 1 ) -- "static" amount
+            return ( baseAmt * ( state.buff.recklessness.up and 2 or 1 ) * state.swings.offhand_speed * offhand_mod ) -- Dynamic factors
         end,
     },
 

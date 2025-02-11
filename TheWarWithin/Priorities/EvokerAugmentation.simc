@@ -62,7 +62,7 @@ actions.fb+=/fire_breath,empower_to=4,cycle_targets=1,if=fight_remains>4&talent.
 actions.fb+=/fire_breath,empower_to=3,cycle_targets=1,if=fight_remains>8&(buff.ebon_might_self.remains>cast_time&(!talent.molten_embers|cooldown.upheaval.remains<=(20+4*talent.blast_furnace-6*2))|buff.tip_the_scales.up|empowering.fire_breath)
 actions.fb+=/fire_breath,empower_to=2,cycle_targets=1,if=fight_remains>12&(buff.ebon_might_self.remains>cast_time&(!talent.molten_embers|cooldown.upheaval.remains<=(20+4*talent.blast_furnace-6*1))|empowering.fire_breath)
 actions.fb+=/fire_breath,empower_to=1,cycle_targets=1,if=fight_remains>16&(buff.ebon_might_self.remains>cast_time&(!talent.molten_embers|cooldown.upheaval.remains<=(20+4*talent.blast_furnace-6*0))|empowering.fire_breath)
-actions.fb+=/fire_breath,empower_to=4,cycle_targets=1,if=fight_remains>4&talent.font_of_magic&(buff.ebon_might_self.remains>cast_time)|empowering.fire_breath
+actions.fb+=/fire_breath,empower_to=max,cycle_targets=1,if=fight_remains>4&talent.font_of_magic&(buff.ebon_might_self.remains>cast_time)|empowering.fire_breath
 
 actions.filler+=/living_flame,if=(buff.ancient_flame.up|mana>=200000|!talent.dream_of_spring|variable.spam_heal=0)&(active_enemies=1|talent.pupil_of_alexstrasza|buff.leaping_flames.up)
 actions.filler+=/emerald_blossom,if=!buff.ebon_might_self.up&talent.ancient_flame&talent.scarlet_adaptation&!talent.dream_of_spring&!buff.ancient_flame.up&active_enemies=1
