@@ -1,13 +1,10 @@
-actions.precombat+=/summon_pet,if=!talent.lone_wolf
+actions.precombat+=/summon_pet,if=talent.unbreakable_bond
 # Determine the stronger trinket to sync with cooldowns. In descending priority: buff effects > damage effects, longer > shorter cooldowns, longer > shorter cast times. Special case to consider Mirror of Fractured Tomorrows weaker than other buff effects since its power is split between the dmg effect and the buff effect.
 actions.precombat+=/variable,name=trinket_1_stronger,value=!trinket.2.has_cooldown|trinket.1.has_use_buff&(!trinket.2.has_use_buff|!trinket.1.is.mirror_of_fractured_tomorrows&(trinket.2.is.mirror_of_fractured_tomorrows|trinket.2.cooldown.duration<trinket.1.cooldown.duration|trinket.2.cast_time<trinket.1.cast_time|trinket.2.cast_time=trinket.1.cast_time&trinket.2.cooldown.duration=trinket.1.cooldown.duration))|!trinket.1.has_use_buff&(!trinket.2.has_use_buff&(trinket.2.cooldown.duration<trinket.1.cooldown.duration|trinket.2.cast_time<trinket.1.cast_time|trinket.2.cast_time=trinket.1.cast_time&trinket.2.cooldown.duration=trinket.1.cooldown.duration))
 actions.precombat+=/variable,name=trinket_2_stronger,value=!variable.trinket_1_stronger
 actions.precombat+=/hunters_mark,if=(settings.mark_any|target.is_boss)&active_dot.hunters_mark=0&target.time_to_pct_80>20
-actions.precombat+=/salvo,precast_time=10
-# Precast Aimed Shot on one or two targets unless we could cleave it with Volley on two targets.
-actions.precombat+=/aimed_shot,if=active_enemies<3&(!talent.volley|active_enemies<2)
-# Otherwise precast Steady Shot on two targets if we are saving Aimed Shot to cleave with Volley, otherwise on three or more targets.
-actions.precombat+=/steady_shot,if=active_enemies>2|talent.volley&active_enemies=2
+actions.precombat+=/aimed_shot,if=active_enemies=1|active_enemies=2&!talent.volley
+actions.precombat+=/steady_shot
 
 actions+=/counter_shot
 actions+=/tranquilizing_shot
@@ -30,46 +27,34 @@ actions.cds+=/lights_judgment,if=buff.trueshot.down
 actions.cds+=/potion,if=buff.trueshot.up&(buff.bloodlust.up|target.health.pct<20)|boss&fight_remains<31
 actions.cds+=/salvo,if=active_enemies>2|cooldown.volley.remains<10
 
-actions.st+=/black_arrow,if=buff.trueshot.down
-actions.st+=/kill_shot,if=buff.razor_fragments.up
-actions.st+=/steady_shot,if=talent.steady_focus&buff.steady_focus.remains<execute_time&buff.trueshot.down
-actions.st+=/volley,if=active_enemies>1|buff.salvo.up
-actions.st+=/explosive_shot,if=active_enemies>1&buff.trick_shots.down
-# TODO: figure out why this is such a big gain for aoe builds in ST
-actions.st+=/trueshot,if=variable.trueshot_ready&talent.multishot
-# Trigger Salvo if Volley isn't being used to trigger it.
-actions.st+=/multishot,if=buff.salvo.up&!talent.volley
-# As a Dark Ranger with Readiness, Aimed Shot over Rapid Fire in Trueshot to get more Deathblows.
-actions.st+=/aimed_shot,cycle_targets=1,if=talent.black_arrow&talent.readiness&buff.trueshot.up
-# Hold Rapid Fire for up to 8s to proc Lunar Storm. Ignore Lunar Storm if Rapid Fire's cooldown can be reset with Wailing Arrow. Ignore all of this in Trueshot or as a Dark Ranger.
-actions.st+=/rapid_fire,if=!talent.lunar_storm|(!cooldown.lunar_storm.remains|cooldown.lunar_storm.remains>8|(action.wailing_arrow.ready&talent.readiness)|buff.trueshot.up)
-# With Wailing Arrow and Aimed Shot, target enemies without Serpent Sting or the enemy with the lowest remaining Serpent Sting.
-actions.st+=/wailing_arrow,cycle_targets=1
-actions.st+=/aimed_shot,cycle_targets=1
-actions.st+=/black_arrow
-actions.st+=/kill_shot
-actions.st+=/multishot,if=buff.precise_shot.up&active_enemies>1&(talent.symphonic_arsenal|talent.small_game_hunter)
-actions.st+=/arcane_shot,if=buff.precise_shot.up
+actions.st+=/volley,if=!talent.double_tap
+## [Edited by Syrif] - Using lunar_storm_cooldown.down is better for us than lunar_storm_ready.up, prediction-wise
+actions.st+=/rapid_fire,if=hero_tree.sentinel&buff.lunar_storm_cooldown.down|talent.bulletstorm&buff.bulletstorm.down
 actions.st+=/trueshot,if=variable.trueshot_ready
-actions.st+=/volley
-actions.st+=/explosive_shot
+actions.st+=/volley,if=talent.double_tap&buff.double_tap.down
+actions.st+=/black_arrow,if=talent.headshot&buff.precise_shots.up|!talent.headshot&buff.razor_fragments.up
+actions.st+=/kill_shot,if=talent.headshot&buff.precise_shots.up|!talent.headshot&buff.razor_fragments.up
+actions.st+=/arcane_shot,if=buff.precise_shots.up
+actions.st+=/rapid_fire,if=!hero_tree.sentinel|buff.lunar_storm_cooldown.remains>cooldown%3
+actions.st+=/explosive_shot,if=talent.precision_detonation&buff.precise_shots.down
+actions.st+=/aimed_shot,if=buff.precise_shots.down
+actions.st+=/explosive_shot,if=talent.precision_detonation|active_enemies>1|buff.trueshot.down
+actions.st+=/black_arrow,if=!talent.headshot
+actions.st+=/kill_shot,if=!talent.headshot
 actions.st+=/steady_shot
 
-actions.trickshots+=/black_arrow,if=buff.trick_shots.remains>execute_time&buff.razor_fragments.up
-actions.trickshots+=/steady_shot,if=talent.steady_focus&buff.steady_focus.remains<execute_time&buff.trueshot.down
-actions.trickshots+=/explosive_shot
-actions.trickshots+=/volley
-actions.trickshots+=/black_arrow,if=!talent.razor_fragments&buff.trick_shots.remains>execute_time
-actions.trickshots+=/kill_shot,if=buff.razor_fragments.up
+actions.trickshots+=/volley,if=!talent.double_tap
 actions.trickshots+=/trueshot,if=variable.trueshot_ready
-actions.trickshots+=/barrage,if=talent.rapid_fire_barrage&buff.trick_shots.remains>execute_time
-# Hold Rapid Fire for up to 5s to proc Lunar Storm. Ignore Lunar Storm if Rapid Fire's cooldown can be reset with Wailing Arrow. Ignore all of this in Trueshot or as a Dark Ranger.
-actions.trickshots+=/rapid_fire,if=buff.trick_shots.remains>execute_time&(!talent.lunar_storm|(!cooldown.lunar_storm.remains|cooldown.lunar_storm.remains>5|(action.wailing_arrow.ready&talent.readiness)|buff.trueshot.up))
-# With Wailing Arrow and Aimed Shot, target enemies without Serpent Sting or the enemy with the lowest remaining Serpent Sting.
-actions.trickshots+=/wailing_arrow,cycle_targets=1
-actions.trickshots+=/aimed_shot,cycle_targets=1,if=buff.trick_shots.remains>execute_time&buff.precise_shots.down
+actions.trickshots+=/volley,if=talent.double_tap&buff.double_tap.down
+actions.trickshots+=/black_arrow,if=buff.withering_fire.up&buff.trick_shots.up
 actions.trickshots+=/multishot,if=buff.precise_shots.up|buff.trick_shots.down
-actions.trickshots+=/bag_of_tricks,if=buff.trueshot.down
+## [Edited by Syrif] - Using lunar_storm_cooldown.down is better for us than lunar_storm_ready.up, prediction-wise
+actions.trickshots+=/rapid_fire,if=buff.trick_shots.up&(!hero_tree.sentinel|buff.lunar_storm_cooldown.remains>cooldown%3|buff.lunar_storm_cooldown.down)
+actions.trickshots+=/explosive_shot,if=talent.precision_detonation&buff.precise_shots.down&buff.trick_shots.up
+actions.trickshots+=/aimed_shot,if=buff.precise_shots.down&buff.trick_shots.up
+actions.trickshots+=/explosive_shot
+actions.trickshots+=/black_arrow
+actions.trickshots+=/kill_shot
 actions.trickshots+=/steady_shot
 
 # True if effects that are desirable to sync a trinket buff with are ready.

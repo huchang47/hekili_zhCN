@@ -8552,43 +8552,11 @@ do
 
                                 value = {
                                     type = "toggle",
-                                    name = "启用药剂",
-                                    desc = "如果勾选，隶属|cFFFFD100药剂|r 快捷切换的指令可以被推荐。",
-                                    width = 2,
-                                    order = 2,
-                                },
-
-                        funnel = {
-                            type = "group",
-                            name = "",
-                            inline = true,
-                            order = 8,
-                            args = {
-                                key = {
-                                    type = "keybinding",
-                                    name = "漏斗伤害",
-                                    desc = "设置一个按键来开启或关闭漏斗伤害功能，适用于支持该功能的专精。",
-                                    width = 1,
-                                    order = 1,
-                                        },
-
-                                value = {
-                                    type = "toggle",
                                     name = "启用漏斗伤害",
                                     desc = "如果勾选，对于支持漏斗伤害机制的专精，其技能循环可能会轻微调整，以便在范围伤害（AoE）情况下使用针对单个目标的终结技能。\n\n",
                                     width = 2,
                                     order = 2,
-                                        },
-                                    
-                                supportedSpecs = {
-                                    type = "description",
-                                    name = "支持专精：敏锐、奇袭、增强、毁灭",
-                                    desc = "",
-                                    width = "full",
-                                    order = 3,
-                                        },
                                 },
-                        },
 
                                 --[[ potLineBreak1 = {
                                     type = "description",
@@ -8637,7 +8605,39 @@ do
                                 },
                             }
                         },
-                    }
+
+                        funnel = {
+                            type = "group",
+                            name = "",
+                            inline = true,
+                            order = 8,
+                            args = {
+                                key = {
+                                    type = "keybinding",
+                                    name = "漏斗优先级",
+                                    desc = "对于支持此功能的专精，设置一个按键来开启或关闭漏斗优先级。",
+                                    width = 1,
+                                    order = 1,
+                                },
+
+                                value = {
+                                    type = "toggle",
+                                    name = "启用漏斗优先级",
+                                    desc = "如果勾选，漏斗优先级中的推荐技能会稍有调整，以便在群体攻击场景中使用单体输出技能（资源消耗技能）。\n\n",
+                                    width = 2,
+                                    order = 2,
+                                },
+
+                                supportedSpecs = {
+                                    type = "description",
+                                    name = "支持专精：敏锐，奇袭，增强，毁灭",
+                                    desc = "",
+                                    width = "full",
+                                    order = 3,
+                                },
+                            },
+                        },
+                    },
                 },
 
                 interrupts = {
@@ -10953,6 +10953,7 @@ function Hekili:CmdLine( input )
         display     = "mode",
         target_swap = "cycle",
         swap        = "cycle",
+        covenants   = "essences"
     }
     local arg3Aliases = {
         auto = "automatic",
@@ -10984,6 +10985,7 @@ function Hekili:CmdLine( input )
     -- Execute the corresponding command handler or show error message
     if commandHandlers[ command ] then
         commandHandlers[ command ]()
+        self:UpdateDisplayVisibility()
         return true
     elseif command == "help" then
         self:DisplayChatCommandList( "all" )
@@ -12303,7 +12305,7 @@ do
     function Hekili:FireToggle( name, explicitState )
         local toggle = name and self.DB.profile.toggles[ name ]
         if not toggle then return end
-    
+
         -- Handle mode toggle with explicitState if provided
         if name == 'mode' then
             if explicitState then
@@ -12313,11 +12315,11 @@ do
                 local current = toggle.value
                 local c_index = modeIndex[ current ][1]
                 local i = c_index + 1
-    
+
                 while true do
                     if i > #modes then i = i % #modes end
                     if i == c_index then break end
-    
+
                     local newMode = modes[i]
                     if toggle [ newMode ] then
                         toggle.value = newMode
@@ -12331,15 +12333,15 @@ do
                     self:Print( modeIndex[ toggle.value ][2] .. " 模式已启用。" )
                 end
             end
-    
+
         elseif name == 'pause' then
             self:TogglePause()
             return
-    
+
         elseif name == 'snapshot' then
             self:MakeSnapshot()
             return
-    
+
         else
             -- Handle other toggles with explicit state if provided
             if explicitState == "on" then
@@ -12354,16 +12356,16 @@ do
                 self:Print( "指定的状态无效。请使用 'on'（开启）或 'off'（关闭）" )
                 return
             end
-    
+
             if toggle.name then toggles[ name ] = toggle.name end
-    
+
             if self.DB.profile.notifications.enabled then
                 self:Notify( toggles[ name ] .. ": " .. ( toggle.value and "开启" or "关闭" ) )
             else
                 self:Print( toggles[ name ].. ( toggle.value and " |cFF00FF00启用|r。" or " |cFFFF0000禁用|r。" ) )
             end
         end
-    
+
         if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", name, toggle.value ) end
         if ns.UI.Minimap then ns.UI.Minimap:RefreshDataText() end
         self:UpdateDisplayVisibility()

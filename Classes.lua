@@ -1,5 +1,5 @@
 -- Classes.lua
--- July 2024
+-- January 2025
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
@@ -1464,7 +1464,7 @@ all:RegisterAuras( {
     },
 
     bloodlust = {
-        alias = { "ancient_hysteria", "bloodlust_actual", "drums_of_deathly_ferocity", "fury_of_the_aspects", "heroism", "netherwinds", "primal_rage", "time_warp" },
+        alias = { "ancient_hysteria", "bloodlust_actual", "drums_of_deathly_ferocity", "fury_of_the_aspects", "heroism", "netherwinds", "primal_rage", "time_warp", "harriers_cry" },
         aliasMode = "first",
         aliasType = "buff",
         duration = 3600,
@@ -1504,6 +1504,13 @@ all:RegisterAuras( {
         duration = 40,
         max_stack = 1,
         shared = "player",
+    },
+
+    harriers_cry = {
+        id = 466904,
+        duration = 40,
+        max_stack = 1,
+        shared = "player"
     },
 
     mark_of_the_wild = {
@@ -2046,6 +2053,136 @@ all:RegisterAuras( {
         end,
     },
 
+    disoriented = {  -- Disorients (e.g., Polymorph, Dragon’s Breath, Blind)
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = "none", 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event.locType == "CONFUSE"
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+    },
+
+    feared = {
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = "none", 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if ( event.locType == "FEAR" or event.locType == "FEAR_MECHANIC" or event.locType == "HORROR" )
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+    },
+
+    incapacitated = {  -- Effects like Sap, Freezing Trap, Gouge
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = "none", 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event.locType == "STUN"
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+        copy = "sapped"
+    },
+
     rooted = {
         duration = 10,
         generate = function( t )
@@ -2097,6 +2234,50 @@ all:RegisterAuras( {
                     local event = GetActiveLossOfControlData( i )
 
                     if event.locType == "SNARE" and event.startTime and event.startTime > 0 and event.timeRemaining and event.timeRemaining > 0 and event.timeRemaining > remains then
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+        copy = "slowed"
+    },
+
+    stunned = {  -- Shorter stuns (e.g., Kidney Shot, Cheap Shot, Bash)
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = "none", 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event.locType == "STUN_MECHANIC"
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration

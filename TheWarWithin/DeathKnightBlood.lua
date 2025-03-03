@@ -1,5 +1,5 @@
 -- DeathKnightBlood.lua
--- July 2024
+-- January 2025
 
 if UnitClassBase( "player" ) ~= "DEATHKNIGHT" then return end
 
@@ -47,51 +47,42 @@ spec:RegisterResource( Enum.PowerType.Runes, {
 
     reset = function()
         local t = state.runes
-
         for i = 1, 6 do
             local start, duration, ready = GetRuneCooldown( i )
-
             start = start or 0
             duration = duration or ( 10 * state.haste )
-
-            t.expiry[ i ] = ready and 0 or start + duration
+            t.expiry[ i ] = ready and 0 or ( start + duration )
             t.cooldown = duration
         end
-
         table.sort( t.expiry )
-
-        t.actual = nil
+        t.actual = nil -- Reset actual to force recalculation
     end,
 
     gain = function( amount )
         local t = state.runes
-
         for i = 1, amount do
-            t.expiry[ 7 - i ] = 0
+            table.insert( t.expiry, 0 )
+            t.expiry[ 7 ] = nil
         end
         table.sort( t.expiry )
-
         t.actual = nil
     end,
 
     spend = function( amount )
         local t = state.runes
-    
-        -- Consume the specified number of runes.
+
         for i = 1, amount do
             t.expiry[ 1 ] = ( t.expiry[ 4 ] > 0 and t.expiry[ 4 ] or state.query_time ) + t.cooldown
             table.sort( t.expiry )
         end
-    
-        -- Handle Runic Power gain, considering Rampant Transference or Rune of Hysteria.
+
         local rpGainMultiplier = state.buff.rune_of_hysteria.up and 1.2 or 1
         state.gain( amount * 10 * rpGainMultiplier, "runic_power" )
-    
-        -- Handle Rune Strike cooldown reduction if applicable.
+
         if state.talent.rune_strike.enabled then
             state.gainChargeTime( "rune_strike", amount )
         end
-    
+
         -- Handle Eternal Rune Weapon interactions (Dancing Rune Weapon synergy).
         if state.buff.dancing_rune_weapon.up and state.azerite.eternal_rune_weapon.enabled then
             local maxExtension = state.buff.dancing_rune_weapon.duration + 5
@@ -102,8 +93,7 @@ spec:RegisterResource( Enum.PowerType.Runes, {
                 )
             end
         end
-    
-        -- Invalidate the actual rune count to force recalculation.
+
         t.actual = nil
     end,
 
@@ -1078,7 +1068,26 @@ spec:RegisterAuras( {
 } )
 
 
--- TWW
+-- The War Within
+spec:RegisterGear( "tww2", 229253, 229251, 229256, 229254, 229252 )
+spec:RegisterAuras( {
+    -- https://www.wowhead.com/spell=1218601
+    -- Luck of the Draw! Damage increased by 15%. Death Strike costs 10 less Runic Power and strikes 2 additional nearby targets.  
+    luck_of_the_draw = {
+        id = 1218601,
+        duration = function() if set_bonus.tww2 >= 4 then return 12 end
+            return 10
+        end,
+        max_stack = 1,
+    },
+    -- https://www.wowhead.com/spell=1222698
+    -- Murderous Frenzy Your Haste is increased by 12%.  
+    murderous_frenzy = {
+        id = 1222698,
+        duration = 6,
+        max_stack = 1,
+    },
+} )
 spec:RegisterGear( "tww1", 212005, 212003, 212002, 212001, 212000 )
 spec:RegisterAuras( {
     unbreakable = {
@@ -1752,7 +1761,11 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return ( ( talent.ossuary.enabled and buff.bone_shield.stack >= 5 ) and 40 or 45 ) - ( talent.improved_death_strike.enabled and 5 or 0 ) - ( buff.blood_draw.up and 10 or 0 ) end,
+        spend = function () return ( ( talent.ossuary.enabled and buff.bone_shield.stack >= 5 ) and 40 or 45 ) 
+                - ( talent.improved_death_strike.enabled and 5 or 0 )
+                - ( buff.blood_draw.up and 10 or 0 )
+                - ( set_bonus.tww2 >= 4 and buff.luck_of_the_draw.up and 10 or 0 )
+                end,
         spendType = "runic_power",
 
         talent = "death_strike",
