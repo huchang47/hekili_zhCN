@@ -333,11 +333,10 @@ RegisterEvent( "PLAYER_ENTERING_WORLD", function( event, login, reload )
             state.combat = GetTime() - 0.01
         end
 
-        local _, zone, _, _, _, _, _, instanceID = GetInstanceInfo()
+        local _, zone = GetInstanceInfo()
         state.bg = zone == "pvp"
         state.arena = zone == "arena"
         state.torghast = IsInJailersTower()
-        state.instance_id = instanceID or -1
 
         Hekili:BuildUI()
     end
@@ -379,11 +378,10 @@ end
 
 do
     local function UpdateZoneInfo()
-        local _, zone, _, _, _, _, _, instanceID = GetInstanceInfo()
+        local _, zone = GetInstanceInfo()
         state.bg = zone == "pvp"
         state.arena = zone == "arena"
         state.torghast = IsInJailersTower()
-        state.instance_id = instanceID or -1
     end
 
     RegisterEvent( "ZONE_CHANGED", UpdateZoneInfo )
@@ -1194,10 +1192,10 @@ local noClassWarned = false
 -- Need to make caching system.
 RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", "target", function( event, unit, _, spellID )
     if not noClassWarned and not class.initialized then
-        Hekili:Notify( UnitClass( "player" ) .. " does not have any Hekili modules loaded (yet).\nWatch for updates.", 5 )
+        Hekili:Notify( UnitClass( "player" ) .. " 尚未加载任何 Hekili 模块。\n请关注更新。", 5 )
         noClassWarned = true
     elseif not lowLevelWarned and UnitLevel( "player" ) < 70 then
-        Hekili:Notify( "Hekili is designed for current content.\nUse below level 70 at your own risk.", 5 )
+        Hekili:Notify( "Hekili 专为当前版本内容而设计。\n角色70级以下使用，风险自负。", 5 )
         lowLevelWarned = true
     end
 
