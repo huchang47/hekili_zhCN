@@ -1883,7 +1883,6 @@ spec:RegisterAbilities( {
                 applyDebuff( "target", "sinful_brand" )
                 active_dot.sinful_brand = active_enemies
             end
-
         end,
 
         -- We need to alias to spell ID 200166 to catch SPELL_CAST_SUCCESS for Metamorphosis.

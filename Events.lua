@@ -333,10 +333,11 @@ RegisterEvent( "PLAYER_ENTERING_WORLD", function( event, login, reload )
             state.combat = GetTime() - 0.01
         end
 
-        local _, zone = GetInstanceInfo()
+        local _, zone, _, _, _, _, _, instanceID = GetInstanceInfo()
         state.bg = zone == "pvp"
         state.arena = zone == "arena"
         state.torghast = IsInJailersTower()
+        state.instance_id = instanceID or -1
 
         Hekili:BuildUI()
     end
@@ -378,10 +379,11 @@ end
 
 do
     local function UpdateZoneInfo()
-        local _, zone = GetInstanceInfo()
+        local _, zone, _, _, _, _, _, instanceID = GetInstanceInfo()
         state.bg = zone == "pvp"
         state.arena = zone == "arena"
         state.torghast = IsInJailersTower()
+        state.instance_id = instanceID or -1
     end
 
     RegisterEvent( "ZONE_CHANGED", UpdateZoneInfo )

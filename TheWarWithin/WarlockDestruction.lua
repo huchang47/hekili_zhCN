@@ -1838,7 +1838,7 @@ spec:RegisterAbilities( {
             end
         end,
 
-        copy = { 1214467, 5740 }
+        copy = { 5740, 1214467 }
     },
 
     --[[ Begins a ritual that sacrifices a random participant to summon a doomguard. Requires the caster and 4 additional party members to complete the ritual.
