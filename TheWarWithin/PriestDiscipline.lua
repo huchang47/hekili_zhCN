@@ -328,6 +328,26 @@ spec:RegisterAuras( {
         duration = 30,
         max_stack = 5
     },
+    premonition_of_insight = {
+        id = 428993,
+        duration = 20,
+        max_stack = 3
+    },
+    premonition_of_piety = {
+        id = 428930,
+        duration = 15,
+        max_stack = 1
+    },
+    premonition_of_solace = {
+        id = 428934,
+        duration = 20,
+        max_stack = 1
+    },
+    premonition_of_solace_absorb = {
+        id = 443526,
+        duration = 15,
+        max_stack = 1
+    },
     psychic_scream = {
         id = 8122,
         duration = 8,
@@ -537,6 +557,24 @@ local InescapableTorment = setfenv( function ()
     end
 end, state )
 
+
+local insight_value = 7
+
+spec:RegisterHook( "runHandler", function( a )
+    -- Note: setCooldown will have already run in regular ability flow.
+    if buff.premonition_of_insight.up then
+        reduceCooldown( a, insight_value )
+        removeStack( "premonition_of_insight" )
+    end
+end )
+
+local Solace = setfenv( function ()
+    if buff.premonition_of_solace.down then return end
+    applyBuff( "premonition_of_solace_absorb" )
+    removeBuff( "premonition_of_solace" )
+end, state )
+
+
 -- Abilities
 spec:RegisterAbilities( {
     archangel = {
@@ -637,6 +675,7 @@ spec:RegisterAbilities( {
             removeBuff( "from_darkness_comes_light" )
             removeStack( "surge_of_light" )
             if talent.protective_light.enabled then applyBuff( "protective_light" ) end
+            Solace()
             applyBuff( "atonement" )
         end,
     },
@@ -789,16 +828,16 @@ spec:RegisterAbilities( {
             end
             if talent.inescapable_torment.enabled then InescapableTorment() end
             if talent.expiation.enabled then
-                    if debuff.shadow_word_pain.remains <= 6 then
-                        removeDebuff( "shadow_word_pain" )
-                    else
-                        debuff.shadow_word_pain.expires = debuff.shadow_word_pain.expires - 6
-                    end
+                if debuff.shadow_word_pain.remains <= 6 then
+                    removeDebuff( "shadow_word_pain" )
+                else
+                    debuff.shadow_word_pain.expires = debuff.shadow_word_pain.expires - 6
+                end
             end
         end,
     },
 
--- Reduces all damage taken by a friendly target by $s1% for $d. Castable while stunned.
+    -- Reduces all damage taken by a friendly target by $s1% for $d. Castable while stunned.
     pain_suppression = {
         id = 33206,
         cast = 0.0,
@@ -869,8 +908,10 @@ spec:RegisterAbilities( {
                 end
             end
 
+            Solace()
+
             if talent.weal_and_woe.enabled then
-                    addStack( "weal_and_woe", spec.abilities.penance.bolts )
+                addStack( "weal_and_woe", spec.abilities.penance.bolts )
             end
             if talent.void_summoner.enabled then
                 reduceCooldown( "mindbender", 4 )
@@ -880,7 +921,6 @@ spec:RegisterAbilities( {
         copy = { 47540, 186720, 400169, "dark_reprimand" }
 
     },
-
 
     power_infusion = {
         id = 10060,
@@ -982,86 +1022,64 @@ spec:RegisterAbilities( {
         end,
     },
 
-    --[[ power_word_solace = {
-        id = 129250,
+    premonition_of_insight = {
+        id = 428933,
         cast = 0,
-        cooldown = 15,
-        gcd = "spell",
-        school = "holy",
-        damage = 1,
+        charges = 2,
+        cooldown = function() return talent.perfect_vision.enabled and 45 or 60 end,
+        recharge = function() return action.premonition_of_insight.cooldown end,
+        gcd = "off",
 
-        talent = "power_word_solace",
-        startsCombat = true,
-        texture = 612968,
+        talent = "premonition",
 
-        handler = function ()
-            gain( 0.01 * mana.max, "mana" )
-            if talent.train_of_thought.enabled then
-                reduceCooldown( "penance", 0.5 )
-            end
-            if talent.harsh_discipline.enabled then
-                if buff.harsh_discipline.stack == buff.harsh_discipline.max_stack - 1 then
-                    applyBuff( "harsh_discipline_ready" )
-                    removeBuff( "harsh_discipline" )
-                else
-                    addStack( "harsh_discipline" )
-                end
-            end
-            if talent.weal_and_woe.enabled then
-                removeBuff( "weal_and_woe" )
-            end
-            if talent.void_summoner.enabled then
-                reduceCooldown( "mindbender", 2 )
-            end
+        handler = function()
+            applyBuff( "premonition_of_insight", nil, 3 )
         end,
-    }, ]]
+    },
 
-
-    --[[purge_the_wicked = {
-        id = 204197,
+    premonition_of_clairvoyance = {
+        id = 440725,
         cast = 0,
-        cooldown = 0,
-        gcd = "spell",
-        school = "holyfire",
-        damage = 1,
+        cooldown = function() return talent.perfect_vision.enabled and 45 or 60 end,
+        recharge = function() return action.premonition_of_insight.cooldown end,
+        gcd = "off",
+            
+        talent = "premonition",
 
-        spend = 0.02,
-        spendType = "mana",
-
-        talent = "purge_the_wicked",
-        startsCombat = true,
-        texture = 236216,
-        cycle = "purge_the_wicked",
-
-        handler = function ()
-            applyDebuff( "target", "purge_the_wicked" )
+        handler = function()
+            applyBuff( "premonition_of_insight" )
+            applyBuff( "premonition_of_piety" )
+            applyBuff( "premonition_of_solace" )
         end,
-    },--]]
+    },
 
-
-    --[[rapture = {
-        id = 47536,
+    premonition_of_piety = {
+        id = 428930,
         cast = 0,
-        cooldown = 90,
-        gcd = "spell",
-        school = "holy",
+        cooldown = function() return talent.perfect_vision.enabled and 45 or 60 end,
+        recharge = function() return action.premonition_of_insight.cooldown end,
+        gcd = "off",
+            
+        talent = "premonition",
 
-        spend = 0.03,
-        spendType = "mana",
-
-        talent = "rapture",
-        startsCombat = false,
-        texture = 237548,
-
-        toggle = "cooldowns",
-
-        handler = function ()
-            applyBuff( "rapture", nil, 3 )
-            applyBuff( "power_word_shield" )
-            applyBuff( "target", "atonement" )
+        handler = function()
+            applyBuff( "premonition_of_piety" )
         end,
-    },--]]
+    },
 
+    premonition_of_solace = {
+        id = 428934,
+        cast = 0,
+        cooldown = function() return talent.perfect_vision.enabled and 45 or 60 end,
+        recharge = function() return action.premonition_of_insight.cooldown end,
+        gcd = "off",
+            
+        talent = "premonition",
+
+        handler = function()
+            applyBuff( "premonition_of_solace" )
+        end,
+    },
 
     renew = {
         id = 139,
@@ -1079,10 +1097,11 @@ spec:RegisterAbilities( {
 
         handler = function ()
             applyBuff( "renew" )
+            Solace()
+
             applyBuff( "atonement" )
         end,
     },
-
 
     shadow_word_pain = {
         id = 589,
@@ -1129,8 +1148,6 @@ spec:RegisterAbilities( {
             if talent.manipulation.enabled then
                 reduceCooldown( "mindgames", 0.5 * talent.manipulation.rank )
             end
-
-        
 
             if talent.darkening_horizon.enabled and rift_extensions < 3 then
                 buff.entropic_rift.expires = buff.entropic_rift.expires + 1

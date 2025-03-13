@@ -1276,7 +1276,6 @@ ns.isDefault = function( name, category )
     return false
 end
 
-
 function Hekili:NewSpecialization( specID, isRanged, icon )
 
     if not specID or specID < 0 then return end
@@ -1312,6 +1311,7 @@ function Hekili:NewSpecialization( specID, isRanged, icon )
         resources = {},
         resourceAuras = {},
         primaryResource = nil,
+        primaryStat = nil,
 
         talents = {},
         pvptalents = {},
@@ -1362,7 +1362,6 @@ function Hekili:NewSpecialization( specID, isRanged, icon )
     class.specs[ id ] = spec
     return spec
 end
-
 
 function Hekili:GetSpecialization( specID )
     if not specID then return class.specs[ 0 ] end
@@ -4041,7 +4040,7 @@ function Hekili:SpecializationChanged()
     end
 
     for i = 1, 4 do
-        local id, name, _, _, role = GetSpecializationInfo( i )
+        local id, name, _, _, role, primaryStat = GetSpecializationInfo( i )
 
         if not id then break end
 
@@ -4062,6 +4061,14 @@ function Hekili:SpecializationChanged()
                 state.role.tank = true
             else
                 state.role.healer = true
+            end
+
+            if primaryStat == 1 then
+                state.spec.primaryStat = "strength"
+            elseif primaryStat == 2 then
+                state.spec.primaryStat = "agility"
+            else
+                state.spec.primaryStat = "intellect"
             end
 
             state.spec[ state.spec.key ] = true
