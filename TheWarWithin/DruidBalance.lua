@@ -1592,7 +1592,7 @@ spec:RegisterStateTable( "eclipse", setmetatable( {
             if eclipse.wrath_counter == 0 then eclipse.trigger_eclipse( "lunar", 15 ) end
         elseif spell == "starfire" then
             eclipse.starfire_counter = eclipse.starfire_counter - 1
-            if starfire == 0 then eclipse.trigger_eclipse( "solar", 15 ) end
+            if eclipse.starfire_counter == 0 then eclipse.trigger_eclipse( "solar", 15 ) end
         end
 
     end, state ),
@@ -1852,11 +1852,6 @@ spec:RegisterAbilities( {
         toggle = "defensives",
         defensive = true,
 
-        usable = function ()
-            if not tanking then return false, "player is not tanking right now"
-            elseif incoming_damage_3s == 0 then return false, "player has taken no damage in 3s" end
-            return true
-        end,
         handler = function ()
             applyBuff( "barkskin" )
 

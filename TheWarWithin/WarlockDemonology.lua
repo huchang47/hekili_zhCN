@@ -1677,13 +1677,24 @@ spec:RegisterPet( "demonic_tyrant",
     "summon_demonic_tyrant",
     15 )
 
-spec:RegisterTotem( "demonic_tyrant", 135002 )
-spec:RegisterTotem( "vilefiend", 1709931 ) -- Charhound.
-spec:RegisterTotem( "vilefiend", 1709932 ) -- Gloomhound.
-spec:RegisterTotem( "vilefiend", 1616211 )
-spec:RegisterTotem( "grimoire_felguard", 237562 )
-spec:RegisterTotem( "dreadstalker", 1378282 )
+-- Totems (which are sometimes pets)
+spec:RegisterTotems( {
+    demonic_tyrant = {
+        id = 135002
+    },
+    vilefiend = {
+        id = 1616211,
+        copy = { 1709931, 1709932 }
+        --      Charhound, Gloomhound
+    },
+    grimoire_felguard = {
+        id = 237562
+    },
+    dreadstalker = {
+        id = 1378282
+    },
 
+} )
 
 spec:RegisterStateExpr( "extra_shards", function () return 0 end )
 
