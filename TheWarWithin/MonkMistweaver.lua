@@ -644,7 +644,7 @@ spec:RegisterAuras( {
 } )
 
 -- The War Within
-spec:RegisterGear( "tww2", 229298, 212045, 229301, 229299, 229297 )
+spec:RegisterGear( "tww2", 229301, 229299, 229298, 229297, 229296 )
 
 -- Dragonflight
 spec:RegisterGear( "tier31", 207243, 207244, 207245, 207246, 207248, 217188, 217190, 217186, 217187, 217189 )
@@ -670,14 +670,14 @@ spec:RegisterAuras( {
 } )
 
 -- Totems (which are sometimes pets)
-spec:RegisterTotems({
+spec:RegisterTotems( {
     chiji = {
         id = 877514
     },
     yulon = {
         id = 574571
     },
-})
+} )
 
 spec:RegisterStateTable( "gust_of_mist", setmetatable( {}, {
     __index = function( t,  k)

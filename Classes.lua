@@ -364,7 +364,6 @@ local HekiliSpecMixin = {
         end
     end,
 
-
     RegisterPower = function( self, power, id, aura )
         self.powers[ power ] = id
         CommitKey( power )
@@ -553,20 +552,73 @@ local HekiliSpecMixin = {
         end )
     end,
 
-    RegisterGear = function( self, key, ... )
-        local n = select( "#", ... )
+    RegisterGear = function( self, ... )
+        local arg1 = select( 1, ... )
+        if not arg1 then return end
 
-        local gear = self.gear[ key ] or {}
-
-        for i = 1, n do
-            local item = select( i, ... )
-            table.insert( gear, item )
-            gear[ item ] = true
+        -- If the first arg is a table, it's registering multiple items/sets
+        if type( arg1 ) == "table" then
+            for set, data in pairs( arg1 ) do
+                self:RegisterGear( set, data )
+            end
+            return
         end
 
-        self.gear[ key ] = gear
-        CommitKey( key )
+        local arg2 = select( 2, ... )
+        if not arg2 then return end
+
+        -- If the first arg is a string, register it
+        if type( arg1 ) == "string" then
+            local gear = self.gear[ arg1 ] or {}
+            local found = false
+
+            -- If the second arg is a table, it's a tier set with auras
+            if type( arg2 ) == "table" then
+                if arg2.items then
+                    for _, item in ipairs( arg2.items ) do
+                        table.insert( gear, item )
+                        gear[ item ] = true
+                        found = true
+                    end
+                end
+
+                if arg2.auras then
+                    -- Register auras (even if no items are found, can be useful for early patch testing).
+                    self:RegisterAuras( arg2.auras )
+                end
+            end
+
+            -- If the second arg is a number, this is a legacy registration with a single set/item
+            if type( arg2 ) == "number" then
+                local n = select( "#", ... )
+                local i = 2
+                local item = select( i, ... )
+
+                while item do
+                    table.insert( gear, item )
+                    gear[ item ] = true
+                    found = true
+
+                    i = i + 1
+                    item = select( i, ... )
+                end
+            end
+
+            if found then
+                self.gear[ arg1 ] = gear
+                CommitKey( arg1 )
+            else
+                -- No valid items found, remove the set.
+                self.gear[ arg1 ] = nil
+            end
+
+            return
+        end
+
+        -- Debug print if needed
+        -- Hekili:Print( "|cFFFF0000[Hekili]|r Invalid input passed to RegisterGear." )
     end,
+
 
     -- Check for the set bonus based on hidden aura instead of counting the number of equipped items.
     -- This may be useful for tier set items that are crafted so their item ID doesn't match.
@@ -1033,7 +1085,6 @@ local HekiliSpecMixin = {
             end
         end
     end,
-    
 
     RegisterPets = function( self, pets )
         for token, data in pairs( pets ) do
@@ -1051,7 +1102,6 @@ local HekiliSpecMixin = {
             end
         end
     end,
-
 
     RegisterTotem = function( self, token, id, ... )
         -- Register the primary totem.
@@ -1845,20 +1895,21 @@ all:RegisterAuras( {
                     t.v3 = 0
                     t.caster = unit
 
-                    if unit == "target" and Hekili.DB.profile.toggles.interrupts.filterCasts then
+                    if unit ~= "target" then return end
+
+                    if state.target.is_dummy then
+                        -- Pretend that all casts by target dummies are interruptible.
+                        if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' is fake-interruptible", spell ) end
+                        t.v2 = 0
+
+                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts then
                         local filters = class.interruptibleFilters
                         local zone = state.instance_id
                         local npcid = state.target.npcid or -1
 
-                        if filters then
-                            local interruptible = filters[ zone ][ npcid ][ spellID ]
-
-                            if not interruptible then
-                                if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' not interruptible per user preference.", spell ) end
-                                t.v2 = 1
-                            elseif interruptible == "testing" then
-                                t.v2 = 0
-                            end
+                        if filters and not filters[ zone ][ npcid ][ spellID ] then
+                            if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' not interruptible per user preference.", spell ) end
+                            t.v2 = 1
                         end
                     end
 
@@ -1883,20 +1934,24 @@ all:RegisterAuras( {
 
                     if class.abilities[ spellID ] and class.abilities[ spellID ].dontChannel then
                         removeBuff( "casting" )
-                    elseif unit == "target" and Hekili.DB.profile.filterCasts then
-                        local filters = Hekili.DB.profile.castFilters
+                        return
+                    end
+
+                    if unit ~= "target" then return end
+
+                    if state.target.is_dummy then
+                        -- Pretend that all casts by target dummies are interruptible.
+                        if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' is fake-interruptible", spell ) end
+                        t.v2 = 0
+
+                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts then
+                        local filters = class.interruptibleFilters
                         local zone = state.instance_id
                         local npcid = state.target.npcid or -1
 
-                        if filters then
-                            local interruptible = filters[ zone ][ npcid ][ spellID ]
-
-                            if not interruptible then
-                                if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' not interruptible per user preference.", spell ) end
-                                t.v2 = 1
-                            elseif interruptible == "testing" then
-                                t.v2 = 0
-                            end
+                        if filters and not filters[ zone ][ npcid ][ spellID ] then
+                            if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' not interruptible per user preference.", spell ) end
+                            t.v2 = 1
                         end
                     end
 
@@ -2574,7 +2629,7 @@ all:RegisterAuras( {
             local amount = UnitGetTotalAbsorbs( unit )
 
             if amount > 0 then
-                t.name = ABSORB
+                -- t.name = ABSORB
                 t.count = 1
                 t.expires = now + 10
                 t.applied = now - 5

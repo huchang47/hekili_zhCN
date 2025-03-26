@@ -697,7 +697,7 @@ spec:RegisterAuras( {
     -- https://www.wowhead.com/ptr-2/spell=1216552/winning-streak
     -- Mortal Strike and Cleave damage increased by 2%. = {
     winning_streak = {
-        id = 1216562,
+        id = 1216552,
         duration = 30,
         max_stack = 10,
         copy = "winning_streak_arms"
@@ -1565,7 +1565,7 @@ spec:RegisterAbilities( {
             if not t.up then
                 return false, "Target is not casting"
             end
-            if not class.reflectableFilters[ zone ][ npcid ][ t.v1 ] then
+            if not state.target.is_dummy and not class.reflectableFilters[ zone ][ npcid ][ t.v1 ] then
                 return false, "spell[" .. t.v1 .. "] in zone[" .. zone .. "] by npc[" .. npcid .. "] is not reflectable"
             end
             if not UnitIsUnit( "player", t.caster .. "target" ) then
