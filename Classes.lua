@@ -1067,24 +1067,35 @@ local HekiliSpecMixin = {
 
     RegisterPet = function( self, token, id, spell, duration, ... )
         CommitKey( token )
-    
-        -- Register the main pet.
-        self.pets[ token ] = {
+
+        -- Prepare the main model
+        local model = {
             id = type( id ) == "function" and setfenv( id, state ) or id,
             token = token,
             spell = spell,
             duration = type( duration ) == "function" and setfenv( duration, state ) or duration
         }
-    
-        -- Process copies.
+
+        -- Register the main pet token
+        self.pets[ token ] = model
+
+        -- Register copies, but avoid overwriting unrelated registrations
         local n = select( "#", ... )
         if n and n > 0 then
             for i = 1, n do
-                local copy = select( i, ... )
-                self.pets[ copy ] = self.pets[ token ]
+                local alias = select( i, ... )
+
+                if self.pets[ alias ] and self.pets[ alias ] ~= model then
+                    if Hekili.ActiveDebug then
+                        Hekili:Debug( "RegisterPet: Alias '%s' already assigned to a different pet. Skipping for token '%s'.", tostring( alias ), tostring( token ) )
+                    end
+                else
+                    self.pets[ alias ] = model
+                end
             end
         end
     end,
+
 
     RegisterPets = function( self, pets )
         for token, data in pairs( pets ) do

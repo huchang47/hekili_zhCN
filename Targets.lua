@@ -179,35 +179,39 @@ end
 
 -- Excluding enemy by NPC ID (as string).  This keeps the enemy from being counted if they are not your target.
 -- = true           Always Exclude
+-- = number         If table, [1] = de/buff Id per below, [2] = boolean (true = exclude if not present)
 -- = number < 0     Exclude if debuff ID abs( number ) is active on unit.
 -- = number > 0     Exclude if buff ID number is active on unit.
 local enemyExclusions = {
-    [23775]  = true,      -- Head of the Horseman
-    [120651] = true,      -- Explosives
-    [128652] = true,      -- Viq'Goth (Siege of Boralus - untargetable background boss)
-    [156227] = true,      -- Neferset Denizen
-    [160966] = true,      -- Thing from Beyond?
-    [161895] = true,      -- Thing from Beyond?
-    [157452] = true,      -- Nightmare Antigen in Carapace
-    [158041] = 310126,    -- N'Zoth with Psychic Shell
-    [164698] = true,      -- Tor'ghast Junk
-    [177117] = 355790,    -- Ner'zhul: Orb of Torment (Protected by Eternal Torment)
-    [176581] = true,      -- Painsmith:  Spiked Ball
-    [186150] = true,      -- Soul Fragment (Gavel of the First Arbiter)
-    [185685] = true,      -- Season 3 Relics
-    [185680] = true,      -- Season 3 Relics
-    [185683] = true,      -- Season 3 Relics
-    [183501] = 367573,    -- Xy'mox: Genesis Bulwark
-    [166969] = true,      -- Frieda
-    [166970] = true,      -- Stavros
-    [166971] = true,      -- Niklaus
-    [168113] = 329606,    -- Grashaal (when shielded)
-    [168112] = 329636,    -- Kaal (when shielded)
-    [193760] = true,      -- Surging Ruiner (Raszageth) -- gives bad range information.
-    [204560] = true,      -- Incorporeal Being
-    [229296] = true,      -- Orb of Ascendance (TWW S1 Affix)
-    [218884] = true,      -- Silken Court: Scattershell Scarab
-    [235187] = true,      -- Cauldron: Voltaic Image
+    [23775]  = true,             -- Head of the Horseman
+    [120651] = true,             -- Explosives
+    [128652] = true,             -- Viq'Goth (Siege of Boralus - untargetable background boss)
+    [156227] = true,             -- Neferset Denizen
+    [160966] = true,             -- Thing from Beyond?
+    [161895] = true,             -- Thing from Beyond?
+    [157452] = true,             -- Nightmare Antigen in Carapace
+    [158041] = 310126,           -- N'Zoth with Psychic Shell
+    [164698] = true,             -- Tor'ghast Junk
+    [177117] = 355790,           -- Ner'zhul: Orb of Torment (Protected by Eternal Torment)
+    [176581] = true,             -- Painsmith:  Spiked Ball
+    [186150] = true,             -- Soul Fragment (Gavel of the First Arbiter)
+    [185685] = true,             -- Season 3 Relics
+    [185680] = true,             -- Season 3 Relics
+    [185683] = true,             -- Season 3 Relics
+    [183501] = 367573,           -- Xy'mox: Genesis Bulwark
+    [166969] = true,             -- Frieda
+    [166970] = true,             -- Stavros
+    [166971] = true,             -- Niklaus
+    [168113] = 329606,           -- Grashaal (when shielded)
+    [168112] = 329636,           -- Kaal (when shielded)
+    [193760] = true,             -- Surging Ruiner (Raszageth) -- gives bad range information.
+    [204560] = true,             -- Incorporeal Being
+    [229296] = true,             -- Orb of Ascendance (TWW S1 Affix)
+    [218884] = true,             -- Silken Court: Scattershell Scarab
+    [235187] = true,             -- Cauldron: Voltaic Image
+    [231788] = true,             -- Mug'Zee: Unstable Crawler Mine
+    [233474] = true,             -- Mug'Zee: Gallagio Goon (they are within a cage with LoS restrictions)
+    [230312] = { -467454, true } -- Mug'Zee: Volunteer Rocketeer, only attackable with debuff
 }
 
 local requiredForInclusion = {
@@ -336,11 +340,14 @@ do
         return next, counted, nil
     end
 
-    FindExclusionAuraByID = function( unit, spellID )
+    FindExclusionAuraByID = function( unit, spellID, invert )
+        local result
         if spellID < 0 then
-            return FindUnitDebuffByID( unit, -1 * spellID ) ~= nil
+            result = FindUnitDebuffByID( unit, -1 * spellID ) ~= nil
+        else
+            result = FindUnitBuffByID( unit, spellID ) ~= nil
         end
-        return FindUnitBuffByID( unit, spellID ) ~= nil
+        return invert and ( not result ) or result
     end
 
     -- New Nameplate Proximity System
@@ -397,12 +404,19 @@ do
                                 excluded = enemyExclusions[ npcid ]
                             end
 
-                            -- If our table has a number, unit is ruled out only if the buff is present.
+                            -- If our table has a number, unit is ruled out based on aura.
+                            local invert = false
+
+                            if type( excluded ) == "table" then
+                                invert = excluded[ 2 ]
+                                excluded = excluded[ 1 ]
+                            end
+
                             if excluded and type( excluded ) == "number" then
-                                excluded = FindExclusionAuraByID( unit, excluded )
+                                excluded = FindExclusionAuraByID( unit, excluded, invert )
 
                                 if debugging and excluded then
-                                    details = format( "%s\n    - Excluded by aura.", details )
+                                    details = format( "%s\n    - Excluded by %s aura.", details, ( invert and "missing" or "present" ) )
                                 end
                             end
 

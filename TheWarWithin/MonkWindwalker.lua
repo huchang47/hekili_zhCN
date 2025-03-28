@@ -1088,7 +1088,8 @@ do
     }
 
     empowered_cast_time = setfenv( function()
-        return stages[ args.empower_to or ( args.max_empower == 1 and max_empower ) or 1 ] * haste
+        local power_level = args.empower_to or class.abilities[ this_action ].empowerment_default or max_empower
+        return stages[ power_level ] * haste
     end, state )
 end
 
@@ -1747,6 +1748,8 @@ spec:RegisterAbilities( {
         startsCombat = false,
         texture = 1029596,
 
+        empowerment_default = 1,
+        
         handler = function ()
         end,
     },

@@ -887,10 +887,11 @@ do
 
     empowered_cast_time = setfenv( function()
         if buff.tip_the_scales.up then return 0 end
-        local power_level = args.empower_to or max_empower
+        local power_level = args.empower_to or class.abilities[ this_action ].empowerment_default or max_empower
 
+        -- Is this also impacting Eternity Surge?
         if settings.fire_breath_fixed > 0 then
-            power_level = min( settings.fire_breath_fixed, max_empower )
+            power_level = min( settings.fire_breath_fixed, power_level )
         end
 
         return stages[ power_level ] * ( talent.font_of_magic.enabled and 0.8 or 1 ) * ( buff.burning_adrenaline.up and 0.7 or 1 ) * haste
@@ -1178,6 +1179,8 @@ spec:RegisterAbilities( {
         talent = "engulf",
         startsCombat = true,
 
+        velocity = 80,
+
         handler = function()
             -- Assume damage occurs.
             if talent.burning_adrenaline.enabled then addStack( "burning_adrenaline" ) end
@@ -1185,7 +1188,9 @@ spec:RegisterAbilities( {
             if talent.consume_flame.enabled and debuff.fire_breath.up then debuff.fire_breath.expires = debuff.fire_breath.expires - 2 end
         end,
 
-        copy = "engulf_damage"
+        impact = function() end,
+
+        copy = { "engulf_damage", "engulf_healing", 443329, 443330 }
     },
 
     -- Talent: Focus your energies to release a salvo of pure magic, dealing 4,754 Spellfrost damage to an enemy. Damages additional enemies within 12 yds of the target when empowered. I: Damages 1 enemy. II: Damages 2 enemies. III: Damages 3 enemies.
@@ -1195,6 +1200,12 @@ spec:RegisterAbilities( {
         cast = empowered_cast_time,
         -- channeled = true,
         empowered = true,
+        empowerment_default = function()
+            local byCount = min( max_empower, active_enemies / ( talent.eternitys_span.enabled and 2 or 1 ) )
+            local remainder = byCount % 1
+            if remainder > 0 then byCount = byCount - remainder + 1 end
+            return byCount
+        end,
         cooldown = function() return 30 - ( 3 * talent.event_horizon.rank ) end,
         gcd = "off",
         school = "spellfrost",

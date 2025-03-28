@@ -1227,7 +1227,7 @@ local function summonPet( name, duration, spec )
     local model = class.pets[ name ]
 
     if model then
-        state.pet[ name ].id = type( model.id ) == "function" and model.id() or id
+        state.pet[ name ].model = model  -- access id dynamically via metatable
         if ( type( model.duration ) == "function" and model.duration() or model.duration ) == 3600 then
             state.pet.alive = true
         end
@@ -1235,11 +1235,6 @@ local function summonPet( name, duration, spec )
 
     if spec then
         state.pet[ name ].spec = spec
-
-        for k, v in pairs( state.pet ) do
-            if type(v) == "boolean" then state.pet[k] = false end
-        end
-
         state.pet[ spec ] = state.pet[ name ]
     end
 end
@@ -2555,8 +2550,6 @@ local mt_stat = {
 }
 ns.metatables.mt_stat = mt_stat
 
-
-
 -- Table of pet data.
 local mt_default_pet, mt_pets
 do
@@ -2570,6 +2563,7 @@ do
     -- Table of default handlers for specific pets/totems.
     mt_default_pet = {
         __index = function( t, k )
+
             if k == "expires" then
                 local totemIcon = rawget( t, "icon" )
 
@@ -2609,13 +2603,16 @@ do
                 end
 
                 local petGUID = UnitGUID( "pet" )
-                if petGUID and t.id == tonumber( petGUID:match( "%-(%d+)%-[0-9A-F]+$" ) ) then
+                petGUID = petGUID and tonumber( petGUID:match( "%-(%d+)%-[0-9A-F]+$" ) )
+                
+                local id = t.id
+                if petGUID and id == petGUID and UnitHealth( "pet" ) > 0 then
                     t.expires = state.query_time + 3600
-                    return t.expires
+                else
+                    t.expires = 0
                 end
-
-                t.expires = 0
-                return 0
+                return t.expires
+                
 
             elseif k == "remains" then
                 return max( 0, t.expires - ( state.query_time ) )
@@ -2672,16 +2669,46 @@ do
 
     mt_pets = {
         __index = function( t, k )
+            local guid = UnitGUID( "pet" )
+
+            if rawget( t, "__last_pet_guid" ) ~= guid then
+                rawset( t, "__last_pet_guid", guid )
+                rawset( t, "real_pet", nil )
+
+                for alias, petData in pairs( class.pets ) do
+                    local token = petData.token or alias
+                    local entry = rawget( t, token )
+                    if entry and type( entry ) == "table" then
+                        rawset( entry, "expires", 0 )
+                    end
+                end
+            end
+
             if not rawget( t, "real_pet" ) then
                 local key
                 local petID = UnitGUID( "pet" )
 
                 if petID then
                     petID = tonumber( petID:match( "%-(%d+)%-[0-9A-F]+$" ) )
-                    local model = class.pets[ petID ]
+                    local model, token
+                    -- Try direct alias match first
+                    model = class.pets[ petID ]
+                    if model then
+                        token = model.token or petID
+                    else
+                        -- Fall back to checking .id from each registered pet
+                        for k, v in pairs( class.pets ) do
+                            local id = type( v.id ) == "function" and v.id() or v.id
+                            if id == petID then
+                                model = v
+                                token = v.token or k
+                                break
+                            end
+                        end
+                    end
 
                     if model then
-                        key = model.token
+                        key = token
                         local spell = model.spell
                         local ability = spell and class.abilities[ spell ]
                         local lastCast = ability and ability.lastCast or 0
@@ -2693,9 +2720,15 @@ do
                             summonPet( key )
                         end
                     end
+
                 end
 
-                t.real_pet = key or "fake_pet"
+                t.real_pet = key or rawget( t, "real_pet" ) or "fake_pet"
+                if key == nil then
+                    if Hekili.ActiveDebug then
+                        Hekili:Debug( "Failed to resolve pet ID %s to any registered pet.", tostring( petID ) )
+                    end
+                end
             end
 
             if k == "up" or k == "exists" or k == "active" then
@@ -7781,8 +7814,6 @@ function state:IsReadyNow( action )
     return true
 end
 
-
-
 function state:ClashOffset( action )
     local a = class.abilities[ action ]
     if not a then return 0 end
@@ -7795,7 +7826,6 @@ function state:ClashOffset( action )
 
     return ns.callHook( "clash", option.clash, action )
 end
-
 
 for k, v in pairs( state ) do
     ns.commitKey( k )
