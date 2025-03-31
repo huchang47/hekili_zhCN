@@ -47,11 +47,11 @@ local GetNumSpellTabs = C_SpellBook.GetNumSpellBookSkillLines
 local GetSpellTabInfo = function(index)
     local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(index)
     if skillLineInfo then
-        return	skillLineInfo.name, 
-                skillLineInfo.iconID, 
-                skillLineInfo.itemIndexOffset, 
-                skillLineInfo.numSpellBookItems, 
-                skillLineInfo.isGuild, 
+        return	skillLineInfo.name,
+                skillLineInfo.iconID,
+                skillLineInfo.itemIndexOffset,
+                skillLineInfo.numSpellBookItems,
+                skillLineInfo.isGuild,
                 skillLineInfo.offSpecID,
                 skillLineInfo.shouldHide,
                 skillLineInfo.specID
@@ -4173,6 +4173,18 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                 order = 3.2,
             },
 
+            dotCap = {
+                type = "range",
+                name = "最大生效数",
+                desc = "如果设置大于0，当该技能在等于或超过此数量的目标身上生效时，将不会再推荐该技能。如果在当前目标上的该技能可刷新，则不会受到此限制。\n\n" ..
+                       "设置为0则忽略此限制。",
+                width = 1.5,
+                min = 0,
+                max = 100,
+                step = 1,
+                order = 3.25,
+            },
+
             clash = {
                 type = "range",
                 name = "冲突",
@@ -4336,18 +4348,29 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                         order = 2.11,
                     },
 
+                    dotCap = {
+                        type = "range",
+                        name = "最大生效数",
+                        desc = "如果设置大于0，当该技能在等于或超过此数量的目标身上生效时，将不会再推荐该技能。如果在当前目标上的该技能可刷新，则不会受到此限制。\n\n" ..
+                        "设置为0则忽略此限制。",
+                        width = 1.5,
+                        min = 0,
+                        max = 100,
+                        step = 1,
+                        order = 2.19,
+                    },
+
                     clash = {
                         type = "range",
                         name = "冲突",
                         desc = "如果设置大于0，插件将假设" .. k .. "拥有更快的冷却时间。" ..
                             "当某个技能的优先级非常高，并且你希望插件更多地推荐它，而不是其他更快的可能技能时，此项会很有效。",
-                        width = 3,
+                        width = 1.5,
                         min = -1.5,
                         max = 1.5,
                         step = 0.05,
                         order = 2.2,
                     },
-
 
                     lineBreak3 = {
                         type = "description",
@@ -5557,7 +5580,7 @@ found = true end
                                 aoe = {
                                     type = "range",
                                     name = "AOE显示框：最小目标数",
-                                    desc = "当监测到满足该数量的目标数时，将启用AOE显示框进行技能推荐。",
+                                    desc = "当监测到满足该数量的目标数时，将启用AOE显示框进行技能推荐。\n\n这在双显示模式下会很有用，例如，若群体伤害优先级通常在至少有5个目标时才会改变，那么该设置可确保在正常情况下不改变的情况下仍能显示出你的群体伤害优先级。\n设置为5，可以确保在AOE模式下遵循正确的优先级。不同的专精和配装可能对应着不同的最优数值。",
                                     width = "full",
                                     min = 2,
                                     max = 10,
@@ -7974,13 +7997,109 @@ n = tonumber( n ) + 1
                                     name = "导出字符串",
                                     desc = "按CTRL+A全部选中，然后CTRL+C复制。",
                                     get = function( info )
-                                        return SerializeActionPack( pack )
+                                        Hekili.PackExports = Hekili.PackExports or {}
+
+                                        -- Wipe previous output for this pack.
+                                        local exportData = {
+                                            export = "",
+                                            stress = "",
+                                            linked = false,
+                                            unrelated = false
+                                        }
+                                        Hekili.PackExports[ pack ] = exportData
+
+                                        local export = SerializeActionPack( pack )
+                                        exportData.export = export
+
+                                        wipe( Hekili.ErrorDB )
+                                        wipe( Hekili.ErrorKeys )
+
+                                        Hekili.Scripts:LoadScripts()
+                                        local stressTestResults = Hekili:RunStressTest()
+
+                                        local function ColorizeAPLIdentifier( key )
+                                            local spec, list, entry, context = key:match( "^([^:]+):([^:]+):(%d+)%s+(%a+):" )
+                                            if not spec then return key end
+
+                                            return string.format(
+                                                "|cff00ccff%s|r:|cffffd100%s|r:%s |cff888888%s|r:",
+                                                spec, list, entry, context
+                                            )
+                                        end
+
+                                        local output, finalOutput = {}, {}
+                                        local lowerPack = pack:lower()
+                                        local shadowKey   = "error in " .. lowerPack .. ":"
+                                        local shadowLabel = "priority '" .. lowerPack .. "'"
+
+                                        for _, key in ipairs( Hekili.ErrorKeys ) do
+                                            local entry = Hekili.ErrorDB[ key ]
+                                            if entry then
+                                                local body = entry.text or "|cff777777<无可用信息>|r"
+                                                local coloredKey = ColorizeAPLIdentifier( key )
+
+                                                table.insert( output, format(
+                                                    "|cff888888[%s (%dx)]|r %s\n%s",
+                                                    entry.last or "??", entry.n or 1, coloredKey, body
+                                                ))
+
+                                                local k = key:lower()
+                                                if k:find( shadowKey, 1, true ) or k:find( shadowLabel, 1, true ) then
+                                                    exportData.linked = true
+                                                else
+                                                    exportData.unrelated = true
+                                                end
+                                            end
+                                        end
+
+                                        -- 1. Stress Test
+                                        if type( stressTestResults ) == "string" and stressTestResults ~= "" then
+                                            table.insert( finalOutput, "|cffa0a0ff自动压力测试：|r " .. stressTestResults )
+                                        end
+                                        -- 2. Header
+                                        if exportData.linked then
+                                            table.insert( finalOutput, "|cffff0000警告：|r 与此优先级相关的一些错误尚未解决。请在导出前进行检查。" )
+                                        elseif exportData.unrelated then
+                                            table.insert( finalOutput, "|cffffff00注意：|r 自从加载用户界面以来，存在尚未解决的警告信息。这些警告可能与该优先级无关。" )
+                                        end
+                                        -- 3. Error entries
+                                        for _, line in ipairs( output ) do
+                                            table.insert( finalOutput, line )
+                                        end
+                                        if not exportData.linked and not exportData.unrelated and #output == 0 then
+                                            table.insert( finalOutput, "|cff00ff00未检测到任何警告或错误！|r\n" )
+                                        end
+
+                                        exportData.stress = table.concat( finalOutput, "\n\n" )
+                                        return export
                                     end,
-                                    set = function () end,
+                                    set = function() end,
                                     order = 1,
-                                    width = "full"
+                                    width = "full",
+                                },
+                                stressResults = {
+                                    type = "input",
+                                    multiline = 20,
+                                    name = "压力测试结果",
+                                    get = function()
+                                        local info = Hekili.PackExports and Hekili.PackExports[ pack ]
+                                        return info and info.stress or ""
+                                    end,
+                                    set = function() end,
+                                    order = 2,
+                                    width = "full",
+                                    hidden = function()
+                                        local info = Hekili.PackExports and Hekili.PackExports[ pack ]
+                                        return not ( info and info.stress and info.stress ~= "" )
+                                    end
                                 }
-                            }
+                            },
+                            hidden = function()
+                                if Hekili.PackExports then
+                                    Hekili.PackExports[ pack ] = nil
+                                end
+                                return false
+                            end
                         }
                     },
                 }
@@ -8916,34 +9035,34 @@ do
 
     local function CleanTooltip( tooltip )
         if not tooltip then return nil end
-    
+
         -- Remove "X seconds remaining" or "X second remaining"
         tooltip = tooltip:gsub( "%d+ second[s]? remaining", "" )
 
         -- Remove "SpellID IconID" wherever it appears in the string
         tooltip = tooltip:gsub( "%s*SpellID%s*", "" ) -- Matches "SpellID" with optional surrounding whitespace
         tooltip = tooltip:gsub( "%s*IconID%s*", "" )  -- Matches "IconID" with optional surrounding whitespace
-    
+
         -- Trim extra whitespace
         tooltip = tooltip:gsub( "%s+", " " ):trim()
-    
+
         return tooltip
     end
-    
-    
+
+
 
     local function GetBuffTooltip( unit, index, filter )
         -- Create a tooltip for inspection if it doesn’t exist
         local tooltip = HekiliTooltip or CreateFrame( "GameTooltip", "HekiliTooltip", UIParent, "GameTooltipTemplate" )
         tooltip:SetOwner( UIParent, "ANCHOR_NONE" )
-        
+
         -- Set the tooltip to the buff or debuff
         if filter == "HELPFUL" then
             tooltip:SetUnitBuff( unit, index )
         else
             tooltip:SetUnitDebuff( unit, index )
         end
-    
+
         -- Collect tooltip lines
         local tooltipText = {}
         for i = 1, tooltip:NumLines() do
@@ -8952,10 +9071,10 @@ do
                 table.insert( tooltipText, line:GetText() or "" )
             end
         end
-    
+
         return tooltipText
     end
-    
+
 
     local spec = ""
     local specID = 0
@@ -9119,7 +9238,7 @@ do
 
     local function skeletonHandler( self, event, ... )
         local unit = select( 1, ... )
-    
+
         if ( event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" ) or event == "PLAYER_ENTERING_WORLD" then
             -- Reset data structures
             wipe( resources )
@@ -9127,19 +9246,19 @@ do
             wipe( abilities )
             wipe( talents )
             wipe( pvptalents )
-    
+
             -- Fetch player specialization
             local sID, s = GetSpecializationInfo( GetSpecialization() )
             specID = sID
             spec = s
-    
+
             -- Fetch active configuration
             local configID = C_ClassTalents.GetActiveConfigID() or -1
             local configInfo = C_Traits.GetConfigInfo( configID )
-    
+
             -- Fetch active hero tree ID
             local activeHeroTreeID = C_ClassTalents.GetActiveHeroTalentSpec()
-    
+
             -- Fetch valid hero trees for this specialization
             local validHeroTrees = {}
             local heroTreeIDs = C_ClassTalents.GetHeroTalentSpecsForClassSpec( configID, specID )
@@ -9148,13 +9267,13 @@ do
                     validHeroTrees[ treeID ] = true
                 end
             end
-    
+
             -- Process all talent trees
             for _, treeID in ipairs( configInfo.treeIDs ) do
                 local treeCurrencyInfo = C_Traits.GetTreeCurrencyInfo( configID, treeID, false )
                 local classCurrencyID = treeCurrencyInfo[1].traitCurrencyID
                 local specCurrencyID = treeCurrencyInfo[2].traitCurrencyID
-    
+
                 -- Process all nodes in the tree
                 local nodes = C_Traits.GetTreeNodes( treeID )
                 for _, nodeID in ipairs( nodes ) do
@@ -9165,7 +9284,7 @@ do
                         local isSpecTalent = false
                         local isHeroTalent = false
                         local treeName = "Unknown"
-    
+
                         -- Check subtree for classification
                         if node.subTreeID then
                             local subTreeInfo = C_Traits.GetSubTreeInfo( configID, node.subTreeID )
@@ -9182,7 +9301,7 @@ do
                                 end
                             end
                         end
-    
+
                         -- If subtree classification is not definitive, use node costs to classify
                         if not isClassTalent and not isSpecTalent and not isHeroTalent then
                             for _, cost in ipairs( C_Traits.GetNodeCost( configID, nodeID ) or {} ) do
@@ -9195,35 +9314,35 @@ do
                                 end
                             end
                         end
-    
+
                         -- Default to class talent if no specific type identified
                         if not isClassTalent and not isSpecTalent and not isHeroTalent then
                             isClassTalent = true
                             treeName = "Class"
                         end
-    
+
                         -- Ignore nodes from unavailable hero trees
                         if isHeroTalent and not validHeroTrees[ node.subTreeID ] then
                             isHeroTalent = false
                         end
-    
+
                         -- Add talents to appropriate groups
                         for _, entryID in ipairs( node.entryIDs ) do
                             local entryInfo = C_Traits.GetEntryInfo( configID, entryID )
                             if entryInfo and entryInfo.definitionID then
                                 local definitionInfo = C_Traits.GetDefinitionInfo( entryInfo.definitionID )
                                 local spellID = definitionInfo and definitionInfo.spellID
-                        
+
                                 if spellID then
                                     local name = definitionInfo.overrideName or GetSpellInfo( spellID )
                                     local token = key( name )
-                        
+
                                     -- Attempt to fetch the tooltip description
                                     local tooltipDescription = GetSpellDescription( spellID )
                                     if not tooltipDescription or tooltipDescription == "" then
                                         tooltipDescription = "这个技能没有可用的提示。"
                                     end
-                        
+
                                     -- Add talent data
                                     insert( talents, {
                                         name = token,
@@ -9235,7 +9354,7 @@ do
                                         isHero = isHeroTalent,
                                         specName = treeName
                                     } )
-                        
+
                                     -- Embed spell data if not passive
                                     if not IsPassiveSpell( spellID ) then
                                         EmbedSpellData( spellID, token, true )
@@ -9243,11 +9362,11 @@ do
                                 end
                             end
                         end
-                        
+
                     end
                 end
             end
-    
+
             -- Fetch and process PvP talents
             local pvpTalentRow = C_SpecializationInfo.GetPvpTalentSlotInfo( 1 )
             if pvpTalentRow then
@@ -9255,18 +9374,18 @@ do
                     local _, name, _, _, _, sID = GetPvpTalentInfoByID( tID )
                     name = key( name )
                     insert( pvptalents, { name = name, talent = tID, spell = sID } )
-    
+
                     if not IsPassiveSpell( sID ) then
                         EmbedSpellData( sID, name, nil, true )
                     end
                 end
-    
+
                 sort( pvptalents, function( a, b ) return a.name < b.name end )
             end
         elseif event == "SPELLS_CHANGED" then
             for i = 1, GetNumSpellTabs() do
                 local tab, _, offset, n = GetSpellTabInfo( i )
-    
+
                 if i == 2 or tab == spec then
                     for j = offset + 1, offset + n do
                         local name, _, texture, castTime, minRange, maxRange, spellID = GetSpellInfo( j, "spell" )
@@ -9280,38 +9399,38 @@ do
                 for i = 1, 40 do
                     local name, icon, count, debuffType, duration, expirationTime, caster, canStealOrPurge, _, spellID = UnitBuff( unit, i, "PLAYER" )
                     if not name then break end
-    
+
                     local tooltipData = GetBuffTooltip( "player", i, "HELPFUL" )
                     local tooltip = table.concat( tooltipData, " " )
                     tooltip = CleanTooltip( tooltip ) -- Clean the tooltip text
-    
+
                     local token = key( name )
                     local a = auras[ token ] or {}
-    
+
                     a.id = spellID
                     a.duration = duration
                     a.max_stack = max( a.max_stack or 1, count )
                     a.tooltip = tooltip
-    
+
                     auras[ token ] = a
                 end
-    
+
                 -- Process Debuffs
                 for i = 1, 40 do
                     local name, icon, count, debuffType, duration, expirationTime, caster, canStealOrPurge, _, spellID, canApplyAura, _, castByPlayer = UnitDebuff( unit, i, "PLAYER" )
                     if not name then break end
-    
+
                     local token = key( name )
                     local a = auras[ token ] or {}
-    
+
                     -- Set default duration for indefinite auras
                     if duration == 0 then duration = 3600 end
-    
+
                     a.id = spellID
                     a.duration = duration
                     a.type = debuffType or "无"
                     a.max_stack = max( a.max_stack or 1, count )
-    
+
                     auras[ token ] = a
                 end
             end
@@ -9319,20 +9438,20 @@ do
             if UnitIsUnit( "player", unit ) then
                 local spellID = select( 3, ... )
                 local token = spellID and class.abilities[ spellID ] and class.abilities[ spellID ].key
-    
+
                 local now = GetTime()
-    
+
                 if not token then return end
-    
+
                 lastAbility = token
                 lastTime = now
-    
+
                 local a = abilities[ token ]
-    
+
                 if not a then
                     return
                 end
-    
+
                 for k, v in pairs( applications ) do
                     if now - v.t < 0.5 then
                         a.applies = a.applies or {}
@@ -9340,7 +9459,7 @@ do
                     end
                     applications[ k ] = nil
                 end
-    
+
                 for k, v in pairs( removals ) do
                     if now - v.t < 0.5 then
                         a.removes = a.removes or {}
@@ -9353,7 +9472,7 @@ do
             CLEU( event, CombatLogGetCurrentEventInfo() )
         end
     end
-    
+
     function Hekili:StartListeningForSkeleton()
         listener:SetScript( "OnEvent", skeletonHandler )
         skeletonHandler( listener, "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" )
@@ -9436,8 +9555,8 @@ do
                                     insert( specTalents, tal )
                                 end
                                 if ( tal.isSpec == false and tal.isHero == true ) then
-                                    if ( firstHeroSpec == nil ) then 
-                                        firstHeroSpec = tal.specName 
+                                    if ( firstHeroSpec == nil ) then
+                                        firstHeroSpec = tal.specName
                                     end
 
                                     if ( tal.specName == firstHeroSpec ) then
@@ -9469,7 +9588,7 @@ do
                                 local line = format( formatStr, tal.name, tal.talent, tal.spell, tal.ranks or 0, GetSpellDescription( tal.spell ):gsub( "\n", " " ):gsub( "\r", " " ):gsub( "%s%s+", " " ) )
                                 append( line )
                             end
-                            
+
                             -- Write Hero1 Talents
                             append( "" )
                             append( "-- " .. firstHeroSpec )
@@ -9511,12 +9630,12 @@ do
                             append( "-- Auras" )
                             append( "spec:RegisterAuras( {" )
                             increaseIndent()
-                            
+
                             for k, aura in orderedPairs( auras ) do
                                 -- Generate Wowhead link
                                 local wowheadLink = string.format( "-- https://www.wowhead.com/spell=%d", aura.id )
                                 append( wowheadLink )
-                            
+
                                 -- Add cleaned tooltip description
                                 if aura.tooltip then
                                     local cleanedTooltip = CleanTooltip( aura.tooltip )
@@ -9524,7 +9643,7 @@ do
                                         append( "-- " .. cleanedTooltip )
                                     end
                                 end
-                            
+
                                 -- Define the aura
                                 append( k .. " = {" )
                                 increaseIndent()
@@ -9539,10 +9658,10 @@ do
                                 decreaseIndent()
                                 append( "}," )
                             end
-                            
+
                             decreaseIndent()
                             append( "} )" )
-                            
+
 
                             append( "-- Abilities" )
                             append( "spec:RegisterAbilities( {" )
@@ -11238,10 +11357,15 @@ keyNamed = true end
     if count > 0 then
         Hekili:Print( results )
         Hekili:Error( results )
+        return results
     end
 
-    if postErrorCount > preErrorCount then Hekili:Print( "在/hekili > 警告信息中加载了新的警告。" ) end
-    if count == 0 and postErrorCount == preErrorCount then Hekili:Print( "压力测试完成，没有发现问题。" ) end
+
+    if postErrorCount > preErrorCount then Hekili:Print( "新的警告信息已经添加到 /hekili > 警告中。" ) end
+    if count == 0 and postErrorCount == preErrorCount then
+        Hekili:Print( "压力测试已完成；未发现任何问题。" )
+        return "压力测试已完成；未发现任何问题。"
+    end
 
     return true
 end

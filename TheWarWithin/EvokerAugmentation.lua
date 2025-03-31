@@ -64,7 +64,7 @@ spec:RegisterTalents( {
     twin_guardian                   = {  93287, 370888, 1 }, -- Rescue protects you and your ally from harm, absorbing damage equal to 30% of your maximum health for 5.6 sec.
     unravel                         = {  93308, 368432, 1 }, -- Sunder an enemy's protective magic, dealing 174,613 Spellfrost damage to absorb shields.
     verdant_embrace                 = {  93341, 360995, 1 }, -- Fly to an ally and heal them for 116,966, or heal yourself for the same amount.
-    walloping_blow                  = {  93286, 387341, 1 }, -- Wing Buffet and Tail Swipe knock enemies further and daze them, reducing movement speed by 70% for 4 sec. 
+    walloping_blow                  = {  93286, 387341, 1 }, -- Wing Buffet and Tail Swipe knock enemies further and daze them, reducing movement speed by 70% for 4 sec.
     zephyr                          = {  93346, 374227, 1 }, -- Conjure an updraft to lift you and your 4 nearest allies within 20 yds into the air, reducing damage taken from area-of-effect attacks by 20% and increasing movement speed by 30% for 9.0 sec.
 
     -- Augmentation
@@ -153,15 +153,15 @@ spec:RegisterTalents( {
 } )
 
 -- PvP Talents
-spec:RegisterPvpTalents( { 
-    born_in_flame        = 5612, -- (414937) 
+spec:RegisterPvpTalents( {
+    born_in_flame        = 5612, -- (414937)
     chrono_loop          = 5564, -- (383005) Trap the enemy in a time loop for 5 sec. Afterwards, they are returned to their previous location and health. Cannot reduce an enemy's health below 20%.
     divide_and_conquer   = 5557, -- (384689) Breath of Eons forms curtains of fire, preventing line of sight to enemies outside its walls and burning enemies who walk through them for 139,690 Fire damage. Lasts 6 sec.
     dreamwalkers_embrace = 5615, -- (415651) Verdant Embrace tethers you to an ally, increasing movement speed by 40% and slowing and siphoning 24,251 life from enemies who come in contact with the tether. The tether lasts up to 10 sec or until you move more than 30 yards away from your ally.
     nullifying_shroud    = 5558, -- (378464) Wreathe yourself in arcane energy, preventing the next 3 full loss of control effects against you. Lasts 30 sec.
     obsidian_mettle      = 5563, -- (378444) While Obsidian Scales is active you gain immunity to interrupt, silence, and pushback effects.
     scouring_flame       = 5561, -- (378438) Fire Breath burns away 1 beneficial Magic effect per empower level from all targets.
-    seismic_slam         = 5454, -- (408543) 
+    seismic_slam         = 5454, -- (408543)
     swoop_up             = 5562, -- (370388) Grab an enemy and fly with them to the target location.
     time_stop            = 5619, -- (378441) Freeze an ally's timestream for 5 sec. While frozen in time they are invulnerable, cannot act, and auras do not progress. You may reactivate Time Stop to end this effect early.
     unburdened_flight    = 5560, -- (378437) Hover makes you immune to movement speed reduction effects.
@@ -657,8 +657,6 @@ spec:RegisterHook( "runHandler", function( action )
     if talent.power_swell.enabled and ability.empowered then
         applyBuff( "power_swell" ) -- TODO: Modify Essence regen rate.
     end
-
-    empowerment.active = false
 end )
 
 -- TheWarWithin
@@ -1225,7 +1223,7 @@ spec:RegisterSetting( "manage_attunement", false, {
 spec:RegisterSetting( "manage_source_of_magic", false, {
     name = strformat( "管理 %s", Hekili:GetSpellLinkWithTexture( spec.talents.source_of_magic[2] ) ),
     type = "toggle",
-    desc = strformat( "如果勾选，则在您处于队伍中时，且您的所有盟友都没有使用您的光环时，可能会建议您使用 %s。\n\n"
+    desc = strformat( "如果勾选，则在您处于队伍中时，且您的所有盟友都没有使用你的光环时，可能会建议您使用 %s。\n\n"
         .. "这个选项可能会使你分心，因为有些队伍可能没有治疗师。", Hekili:GetSpellLinkWithTexture( spec.talents.source_of_magic[2] ) ),
     width = "full"
 } )
@@ -1242,11 +1240,11 @@ spec:RegisterSetting( "manage_source_of_magic", false, {
 local devastation = class.specs[ 1467 ]
 
 spec:RegisterSetting( "fire_breath_fixed", 0, {
-    name = strformat( "%s: 授权", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ) ),
+    name = strformat( "%s: 蓄力", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ) ),
     type = "range",
-    desc = strformat( "如果设置为 |cffffd1000|r，%s 将根据行动优先级列表推荐不同的授权级别。\n\n"
+    desc = strformat( "如果设置为 |cffffd1000|r，%s 将根据行动优先级列表推荐不同的蓄力等级。\n\n"
         .. "如需要强制使用特定级别的 %s，请将其设置为 1、2、3 或 4。\n\n"
-        .. "如果所选授权级别超过了您的最大值，则将使用最大值。", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ),
+        .. "如果所选蓄力等级超过了你的最大值，则将使用最大值。", Hekili:GetSpellLinkWithTexture( devastation.abilities.fire_breath.id ),
         devastation.abilities.fire_breath.name ),
     min = 0,
     max = 4,
@@ -1255,17 +1253,17 @@ spec:RegisterSetting( "fire_breath_fixed", 0, {
 } )
 
 spec:RegisterSetting( "use_early_chain", false, {
-    name = strformat( "%s: 链接通道", Hekili:GetSpellLinkWithTexture( 356995 ) ),
+    name = strformat( "%s: 持续引导", Hekili:GetSpellLinkWithTexture( 356995 ) ),
     type = "toggle",
-    desc = strformat( "如果勾选，则 %s 可能会在已经导入的情况下被推荐，从而延长导入时间。",
+    desc = strformat( "如果勾选，可能会在正在引导 %s 情况下被推荐，实现持续引导。",
         Hekili:GetSpellLinkWithTexture( 356995 ) ),
     width = "full"
 } )
 
 spec:RegisterSetting( "use_clipping", false, {
-    name = strformat( "%s: 中断通道", Hekili:GetSpellLinkWithTexture( 356995 ) ),
+    name = strformat( "%s: 中断引导", Hekili:GetSpellLinkWithTexture( 356995 ) ),
     type = "toggle",
-    desc = strformat( "如果选中，在 %s 期间可能会推荐其他技能，从而中断通道。", Hekili:GetSpellLinkWithTexture( 356995 ) ),
+    desc = strformat( "如果选中，在 %s 期间可能会推荐其他技能，从而中断引导。", Hekili:GetSpellLinkWithTexture( 356995 ) ),
     width = "full",
 } )
 

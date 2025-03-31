@@ -597,6 +597,17 @@ do
     local disabledReasonCache = {}
 
     function Hekili:IsSpellEnabled( spell )
+        local ability = class.abilities[ spell ]
+        if not ability then return false, "ability not in class table" end
+
+        if ability.id > -100 and ability.id < 0 then
+            return true, "internal function"
+        end
+
+        if state.buff.empowering.up and not state.empowering[ spell ] then
+            return false, "蓄力技能：" .. state.buff.empowering.spell
+        end
+
         local disabled, reason = state:IsDisabled( spell )
         return not disabled, reason
     end
@@ -1332,7 +1343,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         slot.actionName = ability.key
                                                         slot.actionID = ability.id
 
-                                                        slot.caption = not ability.empowered and ( ability.caption or entry.caption )
+                                                        slot.caption = ability.caption or entry.caption
                                                         slot.texture = ability.texture
                                                         slot.indicator = ability.indicator
 
@@ -1355,7 +1366,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         state.selection_time = state.delay
                                                         state.selected_action = rAction
 
-                                                        slot.empower_to = ability.empowered and ( ability.caption or state.args.empower_to or ability.empowerment_default or state.max_empower ) or nil
+                                                        slot.empower_to = ability.empowered and ( state.args.empower_to or ability.empowerment_default or state.max_empower ) or nil
 
                                                         if debug then
                                                             -- scripts:ImplantDebugData( slot )
@@ -1394,6 +1405,10 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
             actID = actID + 1
 
         end
+
+        action = rAction
+        wait = rWait
+        depth = rDepth
 
     else
         if debug then self:Debug( "ListActive: N (%s-%s)", packName, listName ) end
@@ -1623,9 +1638,7 @@ function Hekili.Update()
                 numRecs = 1
             end
 
-            if debug then 
-            Hekili:Debug( "Combat Timer: %.2f", state.time )
-            end
+            if debug then Hekili:Debug( "Combat Timer: %.2f", state.time ) end
 
             for i = 1, numRecs do
                 local chosen_depth = 0
@@ -1929,13 +1942,12 @@ function Hekili.Update()
                 end
 
                 state.delay = wait
-
-                if not action and state.empowerment.active and not state:IsFiltered( state.empowerment.spell ) then
+                if not action and state.buff.empowering.up and not state:IsFiltered( state.buff.empowering.spell ) then
                     state.delay = 0
-                    action = state.empowerment.spell
+                    action = state.buff.empowering.spell
 
                     local ability = class.abilities[ action ]
-                    wait = ability.cast
+                    wait = ability.cast or 0
 
                     slot.scriptType = "simc"
                     slot.script = nil
@@ -1944,7 +1956,7 @@ function Hekili.Update()
                     slot.display = state.display
                     slot.pack = "Fallthrough"
                     slot.list = "Fallthrough"
-                    slot.listName = "Fallthrough"
+                    slot.listName = "Empowerment"
                     slot.action = 1
                     slot.actionName = ability.key
                     slot.actionID = ability.id
@@ -1953,12 +1965,12 @@ function Hekili.Update()
                     slot.texture = ability.texture
                     slot.indicator = ability.indicator
 
-                    slot.wait = state.delay
+                    slot.wait = wait
                     slot.waitSec = nil
 
                     slot.resource = state.GetResourceType( action )
 
-                    slot.empower_to = "*"
+                    slot.empower_to = ability.empowerment_default or state.max_empower
 
                     slot.hook = nil
                     slot.script = nil

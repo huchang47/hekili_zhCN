@@ -183,41 +183,42 @@ end
 -- = number < 0     Exclude if debuff ID abs( number ) is active on unit.
 -- = number > 0     Exclude if buff ID number is active on unit.
 local enemyExclusions = {
-    [23775]  = true,             -- Head of the Horseman
-    [120651] = true,             -- Explosives
-    [128652] = true,             -- Viq'Goth (Siege of Boralus - untargetable background boss)
-    [156227] = true,             -- Neferset Denizen
-    [160966] = true,             -- Thing from Beyond?
-    [161895] = true,             -- Thing from Beyond?
-    [157452] = true,             -- Nightmare Antigen in Carapace
-    [158041] = 310126,           -- N'Zoth with Psychic Shell
-    [164698] = true,             -- Tor'ghast Junk
-    [177117] = 355790,           -- Ner'zhul: Orb of Torment (Protected by Eternal Torment)
-    [176581] = true,             -- Painsmith:  Spiked Ball
-    [186150] = true,             -- Soul Fragment (Gavel of the First Arbiter)
-    [185685] = true,             -- Season 3 Relics
-    [185680] = true,             -- Season 3 Relics
-    [185683] = true,             -- Season 3 Relics
-    [183501] = 367573,           -- Xy'mox: Genesis Bulwark
-    [166969] = true,             -- Frieda
-    [166970] = true,             -- Stavros
-    [166971] = true,             -- Niklaus
-    [168113] = 329606,           -- Grashaal (when shielded)
-    [168112] = 329636,           -- Kaal (when shielded)
-    [193760] = true,             -- Surging Ruiner (Raszageth) -- gives bad range information.
-    [204560] = true,             -- Incorporeal Being
-    [229296] = true,             -- Orb of Ascendance (TWW S1 Affix)
-    [218884] = true,             -- Silken Court: Scattershell Scarab
-    [235187] = true,             -- Cauldron: Voltaic Image
-    [231788] = true,             -- Mug'Zee: Unstable Crawler Mine
-    [233474] = true,             -- Mug'Zee: Gallagio Goon (they are within a cage with LoS restrictions)
-    [230312] = { -467454, true } -- Mug'Zee: Volunteer Rocketeer, only attackable with debuff
+    [23775]  = true,              -- Head of the Horseman
+    [120651] = true,              -- Explosives
+    [128652] = true,              -- Viq'Goth (Siege of Boralus - untargetable background boss)
+    [156227] = true,              -- Neferset Denizen
+    [160966] = true,              -- Thing from Beyond?
+    [161895] = true,              -- Thing from Beyond?
+    [157452] = true,              -- Nightmare Antigen in Carapace
+    [158041] = 310126,            -- N'Zoth with Psychic Shell
+    [164698] = true,              -- Tor'ghast Junk
+    [177117] = 355790,            -- Ner'zhul: Orb of Torment (Protected by Eternal Torment)
+    [176581] = true,              -- Painsmith:  Spiked Ball
+    [186150] = true,              -- Soul Fragment (Gavel of the First Arbiter)
+    [185685] = true,              -- Season 3 Relics
+    [185680] = true,              -- Season 3 Relics
+    [185683] = true,              -- Season 3 Relics
+    [183501] = 367573,            -- Xy'mox: Genesis Bulwark
+    [166969] = true,              -- Frieda
+    [166970] = true,              -- Stavros
+    [166971] = true,              -- Niklaus
+    [168113] = 329606,            -- Grashaal (when shielded)
+    [168112] = 329636,            -- Kaal (when shielded)
+    [193760] = true,              -- Surging Ruiner (Raszageth) -- gives bad range information.
+    [204560] = true,              -- Incorporeal Being
+    [229296] = true,              -- Orb of Ascendance (TWW S1 Affix)
+    [218884] = true,              -- Silken Court: Scattershell Scarab
+    [235187] = true,              -- Cauldron: Voltaic Image
+    [231788] = true,              -- Mug'Zee: Unstable Crawler Mine
+    [233474] = true,              -- Mug'Zee: Gallagio Goon (they are within a cage with LoS restrictions)
+    [231727] = true,              -- Gallywix: 1500-Pound "Dud"
 }
 
 local requiredForInclusion = {
     [131825] = 260805,    -- Focusing Iris (damage on others is wasted)
     [131823] = 260805,    -- Same
     [131824] = 206805,    -- Same
+    [230312] = 467454,    -- Mug'Zee: Volunteer Rocketeer, only attackable with "Charred"
 }
 
 if Hekili.IsDev then
@@ -666,7 +667,7 @@ function ns.updateTarget( id, time, mine )
             end
         end
     else
-        if state.empowerment.start > 0 and state.empowerment.finish > GetTime() then
+        if state.empowerment.start > 0 and state.empowerment.hold > GetTime() then
             -- Don't expire targets mid-empowerment cast.
             return
         end

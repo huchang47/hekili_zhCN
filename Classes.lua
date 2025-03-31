@@ -65,6 +65,7 @@ local specTemplate = {
             clash = 0,
             targetMin = 0,
             targetMax = 0,
+            dotCap = 0,
             boss = false
         }
     },
@@ -797,7 +798,7 @@ local HekiliSpecMixin = {
                     local link = actionItem:GetItemLink()
                     local texture = actionItem:GetItemIcon()
 
-                   
+
                     if name then
                         if not a.name or a.name == a.key then a.name = name end
                         if not a.link or a.link == a.key then a.link = link end
@@ -916,7 +917,7 @@ local HekiliSpecMixin = {
             -- Hekili:ContinueOnSpellLoad( a.id, function( success )
             a.onLoad = function()
                 local spellInfo = GetSpellInfo( a.id )
-                
+
                 if spellInfo == nil then
                     spellInfo = GetItemInfo( a.id )
                 end
@@ -1104,7 +1105,7 @@ local HekiliSpecMixin = {
             local spell = data.spell
             local duration = data.duration
             local copy = data.copy
-    
+
             -- Register the pet and handle the copy field if it exists.
             if copy then
                 self:RegisterPet( token, id, spell, duration, copy )
@@ -1118,7 +1119,7 @@ local HekiliSpecMixin = {
         -- Register the primary totem.
         self.totems[ token ] = id
         self.totems[ id ] = token
-    
+
         -- Handle copies if provided.
         local n = select( "#", ... )
         if n and n > 0 then
@@ -1128,7 +1129,7 @@ local HekiliSpecMixin = {
                 self.totems[ id ] = copy
             end
         end
-    
+
         -- Commit the primary token.
         CommitKey( token )
     end,
@@ -1137,11 +1138,11 @@ local HekiliSpecMixin = {
         for token, data in pairs( totems ) do
             local id = data.id
             local copy = data.copy
-    
+
             -- Register the primary totem.
             self.totems[ token ] = id
             self.totems[ id ] = token
-    
+
             -- Register any copies (aliases).
             if copy then
                 if type( copy ) == "string" then
@@ -1154,7 +1155,7 @@ local HekiliSpecMixin = {
                     end
                 end
             end
-    
+
             CommitKey( token )
         end
     end,
@@ -1884,12 +1885,48 @@ all:RegisterAuras( {
         duration = 3600,
     },
 
+    empowering = {
+        name = "蓄力中",
+        duration = 3600,
+        generate = function( t )
+            local e = state.empowerment
+            local spell = e.spell
+
+            local ability = class.abilities[ spell ]
+
+            t.name = ability and ability.name or "蓄力中"
+            t.count = e.start > 0 and 1 or 0
+            t.expires = e.hold
+            t.applied = e.start
+            t.duration = e.hold - e.start
+            t.v1 = ability and ability.id or 0
+            t.v2 = 0
+            t.v3 = 0
+            t.spell = spell
+            t.caster = "player"
+
+            if t.expires > 0 then
+                local timeDiff = state.now - t.applied
+                state.now = state.now - timeDiff
+
+                if Hekili.ActiveDebug then
+                    Hekili:Debug( "蓄力技能：%s[%.2f], 单位： %s; 回溯时间 %.2f...", t.name, t.remains, t.caster, timeDiff )
+                end
+            end
+        end,
+    },
+
     casting = {
-        name = "Casting",
+        name = "施放中",
         generate = function( t, auraType )
             local unit = auraType == "debuff" and "target" or "player"
 
-            if unit == "player" or UnitCanAttack( "player", "target" ) then
+            if unit == "player" and state.buff.empowering.up then
+                removeBuff( "casting" )
+                return
+            end
+
+            if unit == "player" or UnitCanAttack( "player", unit ) then
                 local spell, _, _, startCast, endCast, _, _, notInterruptible, spellID = UnitCastingInfo( unit )
 
                 if spell then
@@ -1910,7 +1947,7 @@ all:RegisterAuras( {
 
                     if state.target.is_dummy then
                         -- Pretend that all casts by target dummies are interruptible.
-                        if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' is fake-interruptible", spell ) end
+                        if Hekili.ActiveDebug then Hekili:Debug( "施放中的 '%s' 是可以伪中断的", spell ) end
                         t.v2 = 0
 
                     elseif Hekili.DB.profile.toggles.interrupts.filterCasts then
@@ -1919,7 +1956,7 @@ all:RegisterAuras( {
                         local npcid = state.target.npcid or -1
 
                         if filters and not filters[ zone ][ npcid ][ spellID ] then
-                            if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' not interruptible per user preference.", spell ) end
+                            if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，施放中的 '%s' 是不可中断的。", spell ) end
                             t.v2 = 1
                         end
                     end
@@ -1952,7 +1989,7 @@ all:RegisterAuras( {
 
                     if state.target.is_dummy then
                         -- Pretend that all casts by target dummies are interruptible.
-                        if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' is fake-interruptible", spell ) end
+                        if Hekili.ActiveDebug then Hekili:Debug( "引导中的 '%s' 是可以伪中断的。", spell ) end
                         t.v2 = 0
 
                     elseif Hekili.DB.profile.toggles.interrupts.filterCasts then
@@ -1961,7 +1998,7 @@ all:RegisterAuras( {
                         local npcid = state.target.npcid or -1
 
                         if filters and not filters[ zone ][ npcid ][ spellID ] then
-                            if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' not interruptible per user preference.", spell ) end
+                            if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，引导中的 '%s' 是不可中断的。", spell ) end
                             t.v2 = 1
                         end
                     end
@@ -2655,6 +2692,13 @@ all:RegisterAuras( {
         end,
         copy = "unravel_absorb"
     },
+
+    devouring_rift = {
+        id = 440313,
+        duration = 15,
+        shared = "player",
+        max_stack = 1
+    }
 } )
 
 do
@@ -3130,7 +3174,7 @@ all:RegisterAbilities( {
 
     -- INTERNAL HANDLERS
     call_action_list = {
-        name = "跳转技能列表",
+        name = "|cff00ccff[跳转技能列表]|r",
         listName = '|T136243:0|t |cff00ccff[跳转技能列表]|r',
         cast = 0,
         cooldown = 0,
@@ -3139,7 +3183,7 @@ all:RegisterAbilities( {
     },
 
     run_action_list = {
-        name = "执行技能列表",
+        name = "|cff00ccff[执行技能列表]|r",
         listName = '|T136243:0|t |cff00ccff[执行技能列表]|r',
         cast = 0,
         cooldown = 0,
@@ -3148,7 +3192,7 @@ all:RegisterAbilities( {
     },
 
     wait = {
-        name = "等待",
+        name = "|cff00ccff[等待]|r",
         listName = '|T136243:0|t |cff00ccff[等待]|r',
         cast = 0,
         cooldown = 0,
@@ -3157,7 +3201,7 @@ all:RegisterAbilities( {
     },
 
     pool_resource = {
-        name = "资源池",
+        name = "|cff00ccff[资源池]|r",
         listName = "|T136243:0|t |cff00ccff[资源池]|r",
         cast = 0,
         cooldown = 0,
@@ -3165,7 +3209,7 @@ all:RegisterAbilities( {
     },
 
     cancel_action = {
-        name = "取消指令",
+        name = "|cff00ccff[取消指令]|r",
         listName = "|T136243:0|t |cff00ccff[取消指令]|r",
         cast = 0,
         cooldown = 0,
@@ -3183,8 +3227,8 @@ all:RegisterAbilities( {
     },
 
     variable = {
-        name = "变量",
-        listName = '|T136243:0|t |cff00ccff[变量]|r',
+        name = "|cff00ccff[变量]|r",
+        listName = '|T136243:0|t |cff00ccff[Variable]|r',
         cast = 0,
         cooldown = 0,
         gcd = "off",
@@ -3258,7 +3302,7 @@ all:RegisterAbilities( {
     },
 
     cancel_buff = {
-        name = "取消Buff",
+        name = "|cff00ccff[取消Buff]|r",
         listName = '|T136243:0|t |cff00ccff[取消Buff]|r',
         cast = 0,
         gcd = "off",
@@ -3299,7 +3343,7 @@ all:RegisterAbilities( {
     },
 
     null_cooldown = {
-        name = "禁止爆发",
+        name = "|cff00ccff[禁止爆发]|r",
         listName = "|T136243:0|t |cff00ccff[禁止爆发]|r",
         cast = 0,
         cooldown = 0.001,
@@ -3311,7 +3355,7 @@ all:RegisterAbilities( {
     },
 
     trinket1 = {
-        name = "饰品#1",
+        name = "|cff00ccff[饰品#1]|r",
         listName = "|T136243:0|t |cff00ccff[饰品#1]",
         cast = 0,
         cooldown = 600,
@@ -3323,7 +3367,7 @@ all:RegisterAbilities( {
     },
 
     trinket2 = {
-        name = "饰品#2",
+        name = "|cff00ccff[饰品#2]|r",
         listName = "|T136243:0|t |cff00ccff[饰品#2]",
         cast = 0,
         cooldown = 600,
