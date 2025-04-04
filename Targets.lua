@@ -23,6 +23,7 @@ local counted = {}
 local formatKey = ns.formatKey
 local orderedPairs = ns.orderedPairs
 local FeignEvent, RegisterEvent = ns.FeignEvent, ns.RegisterEvent
+local TargetDummies = ns.TargetDummies
 
 local format = string.format
 local insert, remove, wipe = table.insert, table.remove, table.wipe
@@ -389,11 +390,10 @@ do
         if spec then
             if checkPets or checkPlates then
                 for unit, guid in pairs( npGUIDs ) do
-                    if UnitExists( unit ) and not UnitIsDead( unit ) and UnitCanAttack( "player", unit ) and UnitInPhase( unit ) and UnitHealth( unit ) > 1 and ( not inGroup or not FriendCheck( unit ) ) and ( UnitIsPVP( "player" ) or not UnitIsPlayer( unit ) ) then
-                        local excluded = not UnitIsUnit( unit, "target" )
-                        local npcid = guid:match( "(%d+)-%x-$" )
-                        npcid = tonumber( npcid )
+                    local npcid = tonumber( guid:match( "(%d+)-%x-$" ) or 0 )
 
+                    if UnitExists( unit ) and not UnitIsDead( unit ) and UnitCanAttack( "player", unit ) and UnitInPhase( unit ) and ( UnitHealth( unit ) > 1 or TargetDummies[ npcid ] ) and ( not inGroup or not FriendCheck( unit ) ) and ( UnitIsPVP( "player" ) or not UnitIsPlayer( unit ) ) then
+                        local excluded = not UnitIsUnit( unit, "target" )
                         local _, range = nil, -1
 
                         if debugging then details = format( "%s\n - Checking nameplate list for %s [ %s ] %s.", details, unit, guid, UnitName( unit ) ) end
@@ -466,11 +466,10 @@ do
                     local guid = UnitGUID( unit )
 
                     if guid and counted[ guid ] == nil then
-                        if UnitExists( unit ) and not UnitIsDead( unit ) and UnitCanAttack( "player", unit ) and UnitAffectingCombat( unit ) and UnitInPhase( unit ) and UnitHealth( unit ) > 1 and ( not inGroup or not FriendCheck( unit ) ) and ( UnitIsPVP( "player" ) or not UnitIsPlayer( unit ) ) then
-                            local excluded = not UnitIsUnit( unit, "target" )
+                        local npcid = tonumber( guid:match( "(%d+)-%x-$" ) or 0 )
 
-                            local npcid = guid:match( "(%d+)-%x-$" )
-                            npcid = tonumber(npcid)
+                        if UnitExists( unit ) and not UnitIsDead( unit ) and UnitCanAttack( "player", unit ) and UnitAffectingCombat( unit ) and UnitInPhase( unit ) and ( UnitHealth( unit ) > 1 or TargetDummies[ npcid ] ) and ( not inGroup or not FriendCheck( unit ) ) and ( UnitIsPVP( "player" ) or not UnitIsPlayer( unit ) ) then
+                            local excluded = not UnitIsUnit( unit, "target" )
 
                             local _, range = nil, -1
 
@@ -533,14 +532,12 @@ do
         end
 
         if not spec or spec.damage or not checkPets and not checkPlates then
-            local db = spec and (spec.myTargetsOnly and myTargets or targets) or targets
+            local db = spec and ( spec.myTargetsOnly and myTargets or targets ) or targets
 
-            for guid, seen in pairs(db) do
+            for guid, seen in pairs( db ) do
                 if counted[ guid ] == nil then
-                    local npcid = guid:match("(%d+)-%x-$")
-                    npcid = tonumber(npcid)
-
-                    local range
+                    local npcid = guid:match( "(%d+)-%x-$" ) or 0
+                    npcid = tonumber( npcid )
 
                     local unit = Hekili:GetUnitByGUID( guid ) or UnitTokenFromGUID( guid )
                     local excluded = false
@@ -1202,8 +1199,9 @@ do
     end
 
     function Hekili:GetDeathClockByGUID( guid )
-        local time, validUnit = 0, false
+        if state.target.is_dummy then return 180 end
 
+        local time, validUnit = 0, false
         local enemy = db[ guid ]
 
         if enemy then
@@ -1296,6 +1294,8 @@ do
     end
 
     function Hekili:GetGreatestTTD()
+        if state.target.is_dummy then return 180 end
+
         local time, validUnit, now = 0, false, GetTime()
 
         for k, v in pairs( db ) do
@@ -1331,6 +1331,8 @@ do
     end
 
     function Hekili:GetLowestTTD()
+        if state.target.is_dummy then return 180 end
+
         local time, validUnit, now = 3600, false, GetTime()
 
         for k, v in pairs(db) do
@@ -1349,9 +1351,10 @@ do
 
     function Hekili:GetNumTTDsWithin( x )
         local count, now = 0, GetTime()
+        local dummy_override = state.target.is_dummy
 
         for k, v in pairs(db) do
-            if not CheckEnemyExclusion( k ) and max( 0, v.deathTime ) <= x then
+            if dummy_override or not CheckEnemyExclusion( k ) and max( 0, v.deathTime ) <= x then
                 count = count + 1
             end
         end
@@ -1362,10 +1365,10 @@ do
 
     function Hekili:GetNumTTDsAfter( x )
         local count = 0
-        local now = GetTime()
+        local dummy_override = state.target.is_dummy
 
         for k, v in pairs(db) do
-            if CheckEnemyExclusion( k ) and max( 0, v.deathTime ) > x then
+            if dummy_override or CheckEnemyExclusion( k ) and max( 0, v.deathTime ) > x then
                 count = count + 1
             end
         end
@@ -1428,7 +1431,9 @@ do
     local bosses = {}
 
     function Hekili:GetAddWaveTTD()
-        if not UnitExists("boss1") then
+        if state.target.is_dummy then return 180 end
+
+        if not UnitExists( "boss1" ) then
             return self:GetGreatestTTD()
         end
 
@@ -1456,6 +1461,10 @@ do
     function Hekili:GetTTDInfo()
         local output = "targets:"
         local found = false
+
+        if state.target.is_dummy then
+            output = output .. "    目标的预计剩余存活时间已覆盖；目标是训练假人。"
+        end
 
         for k, v in pairs( db ) do
             local unit = ( v.unit or "unknown" )

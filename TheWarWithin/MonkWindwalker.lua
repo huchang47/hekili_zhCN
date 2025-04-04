@@ -1257,7 +1257,15 @@ spec:RegisterAbilities( {
         spend = function () return 20 * ( 1 - ( buff.the_emperors_capacitor.stack * 0.05 ) ) end,
         spendPerSec = function () return 20 * ( 1 - ( buff.the_emperors_capacitor.stack * 0.05 ) ) end,
 
-        toggle = function() if settings.dynamic_crackling_jade_lightning and raid and talent.power_of_the_thunder_king.enabled then return "essences" end end,
+        toggle = function ()
+            if buff.the_emperors_capacitor.up then
+                local dyn = state.settings.cjl_capacitor_toggle
+                if dyn == "none" then return "none" end
+                if dyn == "default" then return nil end
+                return dyn
+            end
+            return "none"
+        end,
 
         startsCombat = false,
 
@@ -2200,15 +2208,32 @@ spec:RegisterSetting( "dynamic_strike_of_the_windlord", false, {
     width = "full"
 } )
 
-spec:RegisterSetting( "dynamic_crackling_jade_lightning", false, {
-    name = strformat( "%s: 团本爆发", Hekili:GetSpellLinkWithTexture( spec.abilities.crackling_jade_lightning.id ) ),
+spec:RegisterSetting( "cjl_capacitor_toggle", "none", {
+    name = strformat( "%s：特别切换", Hekili:GetSpellLinkWithTexture( spec.abilities.crackling_jade_lightning.id ) ),
     desc = strformat(
-        "如果勾选此项，在团队副本中仅当[次要爆发技能]开关处于开启状态时才会被推荐使用%s。\n\n此选项可确保仅在你正主动使用爆发技能的情况下（例如小怪波次出现时、爆发窗口期），才会推荐使用%s 。",
+        "当激活 %s天赋且该不在冷却中，只有在所选的切换开关被激活时，才会推荐使用 %s。\n\n" ..
+        "如果你已在|cFFFFD100技能|r中设置了%s的切换开关，那么此设置将被忽略。\n\n" ..
+        "选择|cFFFFD100不覆盖|r可禁用此功能。",
+        Hekili:GetSpellLinkWithTexture( spec.auras.the_emperors_capacitor.id ),
         Hekili:GetSpellLinkWithTexture( spec.abilities.crackling_jade_lightning.id ),
         Hekili:GetSpellLinkWithTexture( spec.abilities.crackling_jade_lightning.id )
     ),
-    type = "toggle",
-    width = "full"
+    type = "select",
+    width = 2,
+    values = function ()
+        local toggles = {
+            none       = "不覆盖",
+            default    = "默认 |cffffd100(" .. ( spec.abilities.crackling_jade_lightning.toggle or "none" ) .. ")|r",
+            cooldowns  = "主要爆发",
+            essences   = "次要爆发",
+            defensives = "防御",
+            interrupts = "打断",
+            potions    = "药剂",
+            custom1    = spec.custom1Name or "自定义1",
+            custom2    = spec.custom2Name or "自定义2",
+        }
+        return toggles
+    end
 } )
 
 spec:RegisterSetting( "check_wdp_range", false, {

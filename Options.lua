@@ -850,8 +850,6 @@ return end
         local display, category, option = info[ 2 ], info[ 3 ], info[ n ]
         local set = false
 
-        local all = false
-
         if category == "shareDisplays" then
             self:SetDisplayShareOption( info, val, v2, v3, v4 )
             return
@@ -3786,13 +3784,17 @@ do
                 if comment then
                     -- Comments can have the form 'Caption::Description'.
                     -- Any whitespace around the '::' is truncated.
-                    local caption, description= comment:match( "(.+)::(.*)" )
+                    local caption, description = comment:match( "(.+)::(.*)" )
                     if caption and description then
                         -- Truncate whitespace and change commas to semicolons.
                         caption = caption:gsub( "%s+$", "" ):gsub( ",", ";" )
                         description = description:gsub( "^%s+", "" ):gsub( ",", ";" )
                         -- Replace "[<texture-id>]" in the caption with the escape sequence for the texture.
                         caption = caption:gsub( "%[(%d+)%]", "|T%1:0|t" )
+                        -- Replace "[h:<text>]" in the caption with the escape sequence for the texture string.
+                        caption = caption:gsub( "%[h:(.-)%]", "|TInterface\\AddOns\\Hekili\\Textures\\%1:0|t" )
+                        -- Replace "[<text>:<height>:<width>]" in the caption with the escape sequence for the atlas.
+                        caption = caption:gsub( "%[(.-):(%d+):(%d+)%]", "|A:%1:%2:%3|a" )
                         action = action .. ',caption=' .. caption .. ',description=' .. description
                     else
                         -- Change commas to semicolons.
@@ -5995,6 +5997,10 @@ found = true end
         if toggleToNumber[ option ] then val = val and 1 or 0 end
         if type( val ) == 'string' then val = val:trim() end
 
+        if option == "caption" then
+            val = val:gsub( "||", "|" )
+        end
+
         data[ option ] = val
 
         if option == "enable_moving" and not val then
@@ -6807,34 +6813,19 @@ break end
                                     fontSize = "medium",
                                     width = "full",
                                 },
-                                warnings = {
-                                    type = "input",
-                                    name = "导入记录",
-                                    order = 5.3,
-                                    -- fontSize = "medium",
-                                    width = "full",
-                                    multiline = 20,
-                                    hidden = function ()
-                                        local p = rawget( Hekili.DB.profile.packs, pack )
-                                        return not p.warnings or p.warnings == ""
-                                    end,
-                                },
-                                profileconsiderations = {
-                                    type = "description",
-                                    name = "|cFF00CCFF在尝试导入配置文件之前，请考虑以下几点：|r\n\n" ..
-                                    " - SimulationCraft 的指令列表对于个别角色来说通常不会有显著变化。这些配置文件是为了包括所有装备、天赋和其他因素的综合条件而编写的。\n\n" ..
-                                    " - 大多数 SimulationCraft 指令列表需要一些额外的定制才能与插件一起工作。例如，|cFFFFD100target_if|r条件不能直接转换到插件中，需要重新编写。\n\n" ..
-                                    " - 一些 SimulationCraft 动作配置文件被修改以提高插件的效率并减少处理时间。\n\n" ..
-                                    " - 这个功能是为喜欢动手调整和高级用户保留的。\n\n",
-                                    order = 5.2,
-                                    fontSize = "medium",
-                                    width = "full",
-                                },
+
                                 reimport = {
                                     type = "execute",
-                                    name = "导入",
-                                    desc = "从文件信息中重建技能列表。",
+                                    name = function()
+                                        local p = rawget( Hekili.DB.profile.packs, pack )
+                                        if p.spec ~= state.spec.id then
+                                            return "|A:UI-LFG-DeclineMark:16:16|a Import"
+                                        end
+                                        return format( "%s导入", p.spec ~= state.spec.id and "|A:UI-LFG-DeclineMark:16:16|a" or "" )
+                                    end,
+                                    desc = "清除现有的指令列表，并加载上一个优先级。",
                                     order = 5.1,
+                                    width = 0.7,
                                     func = function ()
                                         local p = rawget( Hekili.DB.profile.packs, pack )
                                         local profile = p.profile:gsub( '"', '' )
@@ -6856,6 +6847,54 @@ break end
                                         if not p.lists[ packControl.listName ][ id ] then packControl.actionID = "zzzzzzzzzz" end
 
                                         self:LoadScripts()
+                                    end,
+                                    disabled = function()
+                                        local p = rawget( Hekili.DB.profile.packs, pack )
+                                        return p.spec ~= state.spec.id
+                                    end,
+                                },
+                                importWarningSpace = {
+                                    type = "description",
+                                    name = " ",
+                                    width = 0.1,
+                                    order = 5.11
+                                },
+                                importWarning = {
+                                    type = "description",
+                                    name = function()
+                                        local p = rawget( Hekili.DB.profile.packs, pack )
+                                        return format( "你必须处于 |T%d:0|t |cFFFFD100%s|r 专精下，才能导入此优先级。", class.specs[ p.spec ].texture, class.specs[ p.spec ].name )
+                                    end,
+                                    image = GetAtlasFile( "Ping_Chat_Warning" ),
+                                    imageCoords = GetAtlasCoords( "Ping_Chat_Warning" ),
+                                    fontSize = "medium",
+                                    width = 2.2,
+                                    order = 5.12,
+                                    hidden = function()
+                                        local p = rawget( Hekili.DB.profile.packs, pack )
+                                        return p.spec == state.spec.id
+                                    end
+                                },
+                                profileConsiderations = {
+                                    type = "description",
+                                    name = "\n|cFF00CCFF在尝试导入配置文件前，请检查以下几点：|r\n\n" ..
+                                    " |cFFFFD100•|r SimulationCraft 的指令列表对于单个角色来说通常不会有显著变化。这些配置文件在编写时适配了所有装备、天赋和其他综合因素的条件。\n\n" ..
+                                    " |cFFFFD100•|r 大多数 SimulationCraft 的指令列表需要进行一些额外的自定义设置才能与该插件配合使用。例如，|cFFFFD100target_if|r 不能直接转换到插件中，必须重新编写。\n\n" ..
+                                    " |cFFFFD100•|r 为了使某些 SimulationCraft的指令列表更加高效，已经对其进行修正。\n\n" ..
+                                    " |cFFFFD100•|r 此功能是为喜欢钻研和高级用户保留的。\n\n",
+                                    order = 5,
+                                    fontSize = "medium",
+                                    width = "full",
+                                },
+                                warnings = {
+                                    type = "input",
+                                    name = "导入记录",
+                                    order = 5.3,
+                                    width = "full",
+                                    multiline = 20,
+                                    hidden = function ()
+                                        local p = rawget( Hekili.DB.profile.packs, pack )
+                                        return not p.warnings or p.warnings == ""
                                     end,
                                 },
                             }
@@ -7422,7 +7461,8 @@ packControl.actionID = format( "%04d", id ) end
                                                     width = 1.5,
                                                     validate = function( info, val )
                                                         val = val:trim()
-                                                        if val:len() > 20 then return "Captions should be 20 characters or less." end
+                                                        val = val:gsub( "||", "|" ):gsub( "|T.-:0|t", "" ) -- Don't count icons.
+                                                        if val:len() > 20 then return "Caption text should be 20 characters or less." end
                                                         return true
                                                     end,
                                                     hidden = function()
@@ -11758,7 +11798,7 @@ do
         { "hyperthread_wristwraps%.([%w_]+)%.count"         , "hyperthread_wristwraps.%1"               },
         { "cooldown"                                        , "action_cooldown"                         },
         { "covenant%.([%w_]+)%.enabled"                     , "covenant.%1"                             },
-        { "talent%.([%w_]+)"                                , "talent.%1.enabled"                       },
+        { "talent%.([%w_]+)"                                , "talent.%1.enabled",                      true },
         { "legendary%.([%w_]+)"                             , "legendary.%1.enabled"                    },
         { "runeforge%.([%w_]+)"                             , "runeforge.%1.enabled"                    },
         { "rune_word%.([%w_]+)"                             , "buff.rune_word_%1.up"                    },
@@ -11864,6 +11904,7 @@ do
             if token and token:len() > 0 then
                 pre = token
                 for _, subs in ipairs( expressions ) do
+                    local ignore = type( subs[3] ) == "boolean" and subs[3]
                     if subs[2] then
                         times = 0
                         local s1, s2, s3, s4, s5 = token:match( "^" .. subs[1] .. "$" )
