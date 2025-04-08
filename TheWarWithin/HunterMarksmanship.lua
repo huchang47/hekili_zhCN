@@ -969,14 +969,16 @@ spec:RegisterAbilities( {
             removeDebuff( "target", "spotters_mark" )
             removeBuff ( "moving_target" )
             if talent.precise_shots.enabled then addStack( "precise_shots", nil, 1 + talent.windrunner_quiver.rank ) end
-            if debuff.explosive_shot.up and talent.precision_detonation.enabled then removeDebuff( "target", "explosive_shot" ) end
             if debuff.spotters_mark.up then SpottersMarkConsumer( action.aimed_shot.max_targets ) end
 
             if buff.lock_and_load.up then
                 removeBuff( "lock_and_load" )
                 if talent.magnetic_gunpowder.enabled then reduceCooldown( "explosive_shot", 8 ) end
                 if set_bonus.tww2 >= 4 then spec.abilities.explosive_shot.handler() end
+            else
+                removeBuff( "streamline" )
             end
+            if debuff.explosive_shot.up and talent.precision_detonation.enabled then removeDebuff( "target", "explosive_shot" ) end
 
             if buff.double_tap.up then
                 removeBuff( "double_tap" )
@@ -986,10 +988,8 @@ spec:RegisterAbilities( {
             if talent.bullet_hell.enabled then reduceCooldown( "volley", 0.5 * action.aimed_shot.max_targets ) end
 
             -- Trick Shots
-            if buff.trick_shots.up then
-                if buff.volley.down then
-                    removeBuff( "trick_shots" )
-                    end
+            if buff.trick_shots.up and buff.volley.down then
+                removeBuff( "trick_shots" )
             end
 
             --- Legacy / PvP stuff
@@ -1264,7 +1264,8 @@ spec:RegisterAbilities( {
         startsCombat = true,
 
         handler = function ()
-            applyDebuff( "target", "explosive_shot" )
+            -- It does technically trigger the explosion, but we just need to model the debuff presence
+            applyDebuff( "target", "explosive_shot", debuff.explosive_shot.remains + spec.auras.explosive_shot.duration )
             if talent.precision_detonation.enabled then addStack( "streamline" ) end
         end,
     },
@@ -1552,9 +1553,15 @@ spec:RegisterAbilities( {
             applyBuff( "volley" )
             applyBuff( "trick_shots", 6 )
             if talent.double_tap.enabled then applyBuff( "double_tap" ) end
+
+            -- There are weird situations where it doesn't do the below .. but this is usually what happens
             if talent.salvo.enabled then
-                applyDebuff( "target", "explosive_shot" )
-                if active_enemies > 1 and active_dot.explosive_shot < active_enemies then active_dot.explosive_shot = active_dot.explosive_shot + 1 end
+                if active_enemies < 3 then
+                    spec.abilities.explosive_shot.handler()
+                    if active_enemies > 1 then active_dot.explosive_shot = min( true_active_enemies, active_dot.explosive_shot + 1 ) end
+                else
+                   active_dot.explosive_shot = min( true_active_enemies, active_dot.explosive_shot + 2 )
+                end
             end
 
             if pvptalent.rangers_finesse.enabled then

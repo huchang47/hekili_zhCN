@@ -1958,15 +1958,9 @@ all:RegisterAuras( {
                         if Hekili.ActiveDebug then Hekili:Debug( "施放中的 '%s' 是可以伪中断的", spell ) end
                         t.v2 = 0
 
-                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts then
-                        local filters = class.interruptibleFilters
-                        local zone = state.instance_id
-                        local npcid = state.target.npcid or -1
-
-                        if filters and not filters[ zone ][ npcid ][ spellID ] then
-                            if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，施放中的 '%s' 是不可中断的。", spell ) end
-                            t.v2 = 1
-                        end
+                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
+                        if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，施放中的 '%s' 是不可中断的。", spell ) end
+                        t.v2 = 1
                     end
 
                     return
@@ -2001,15 +1995,9 @@ all:RegisterAuras( {
                         if Hekili.ActiveDebug then Hekili:Debug( "引导中的 '%s' 是可以伪中断的。", spell ) end
                         t.v2 = 0
 
-                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts then
-                        local filters = class.interruptibleFilters
-                        local zone = state.instance_id
-                        local npcid = state.target.npcid or -1
-
-                        if filters and not filters[ zone ][ npcid ][ spellID ] then
-                            if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，引导中的 '%s' 是不可中断的。", spell ) end
-                            t.v2 = 1
-                        end
+                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
+                        if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，引导中的 '%s' 是不可中断的。", spell ) end
+                        t.v2 = 1
                     end
 
                     return

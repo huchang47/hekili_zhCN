@@ -2628,8 +2628,7 @@ return "位置" end,
                             position = {
                                 type = "group",
                                 inline = true,
-                                name = function( info ) rangeIcon( info )
-return "位置" end,
+                                name = function( info ) rangeIcon( info ); return "位置" end,
                                 order = 3,
                                 args = {
                                     anchor = {
@@ -2696,7 +2695,8 @@ return "位置" end,
                         desc = "授权期间会在推荐图标上显示提示文字，并在达到所需的阶段时发光。",
                         order = 9.1,
                         hidden = function()
-                            return class.file ~= "EVOKER"
+                            local spec = class.specs[ state.spec.id ]
+                            return not spec or not spec.can_empower
                         end,
                         args = {
                             enabled = {
@@ -6802,6 +6802,8 @@ break end
                                     desc = "如果此优先级配置的技能列表是来自于SimulationCraft文件的，那么该文件就在这里。",
                                     order = 4,
                                     multiline = 10,
+                                    confirm = true,
+                                    confirmText = "“直到点击导入按钮，更改才会被应用",
                                     width = "full",
                                 },
 

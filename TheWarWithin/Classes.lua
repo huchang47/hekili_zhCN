@@ -6,565 +6,1316 @@ local class = Hekili.Class
 
 if Hekili.CurrentBuild < 110000 then return end
 
--- interruptibleFilters[ instanceID ][ npcID ][ spellID ] = ...
-local interruptibleFilters = {
-    -- Grim Batol
+-- spellFilters[ instanceID ][ npcID ][ spellID ] = { name = ..., interrupt = true, ... }
+local spellFilters = {
     [ 670 ] = {
+        name = "Grim Batol",
         [ 40167 ] = {
-            desc = "Grim Batol - Twilight Beguiler",
-            [ 76369 ] = "Sear Mind",
+            name = "Twilight Beguiler",
+            [ 76369 ] = {
+                name = "Sear Mind",
+                interrupt = true,
+            },
+        },
+        [ 40166 ] = {
+            name = "Molten Giant",
+            [ 451971 ] = {
+                name = "Lava Fist",
+                spell_reflection = true,
+            },
+        },
+        [ 40167 ] = {
+            name = "Twilight Beguiler",
+            [ 76369 ] = {
+                name = "Shadowflame Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 40319 ] = {
+            name = "Drahga Shadowburner",
+            [ 447966 ] = {
+                name = "Shadowflame Bolt",
+                spell_reflection = true,
+            },
         },
         [ 224219 ] = {
-            desc = "Grim Batol - Twilight Earthcaller",
-            [ 451871 ] = "Mass Tremor",
+            name = "Twilight Earthcaller",
+            [ 451871 ] = {
+                name = "Mass Tremor",
+                interrupt = true,
+            },
+        },
+        [ 224240 ] = {
+            name = "Twilight Flamerender",
+            [ 451241 ] = {
+                name = "Shadowflame Slash",
+                spell_reflection = true,
+            },
+        },
+        [ 224271 ] = {
+            name = "Twilight Warlock",
+            [ 76369 ] = {
+                name = "Shadowflame Bolt",
+                spell_reflection = true,
+            },
         },
     },
 
-    -- Siege of Boralus
+    [ 1594 ] = {
+        name = "The MOTHERLODE!!",
+        [ 130661 ] = {
+            name = "Venture Co. Earthshaper",
+            [ 263202 ] = {
+                name = "Rock Lance",
+                spell_reflection = true,
+            },
+            [ 271579 ] = {
+                name = "Rock Lance",
+                spell_reflection = true,
+            },
+        },
+        [ 136139 ] = {
+            name = "Mechanized Peacekeeper",
+            [ 263628 ] = {
+                name = "Charged Shield",
+                spell_reflection = true,
+            },
+        },
+        [ 136934 ] = {
+            name = "Weapons Tester",
+            [ 268846 ] = {
+                name = "Echo Blade",
+                spell_reflection = true,
+            },
+        },
+        [ 136470 ] = {
+            name = "Refreshment Vendor",
+            [ 280604 ] = {
+                name = "Iced Spritzer",
+                spell_reflection = true,
+            },
+        },
+    },
+
     [ 1822 ] = {
+        name = "Siege of Boralus",
         [ 129367 ] = {
-            desc = "Siege of Boralus - Bilge Rat Tempest",
-            [ 272571 ] = "Choking Waters",
+            name = "Bilge Rat Tempest",
+            [ 272571 ] = {
+                name = "Choking Waters",
+                interrupt = true,
+            },
         },
         [ 128969 ] = {
-            desc = "Siege of Boralus - Ashvane Commander",
-            [ 275826 ] = "Bolstering Shout",
+            name = "Ashvane Commander",
+            [ 275826 ] = {
+                name = "Bolstering Shout",
+                interrupt = true,
+            },
+        },
+        [ 129367 ] = {
+            name = "Bilge Rat Tempest",
+            [ 272581 ] = {
+                name = "Water Bolt",
+                spell_reflection = true,
+            },
         },
         [ 129370 ] = {
-            desc = "Siege of Boralus - Irontide Waveshaper",
-            [ 256957 ] = "Watertight Shell",
+            name = "Irontide Waveshaper",
+            [ 256957 ] = {
+                name = "Watertight Shell",
+                interrupt = true,
+            },
+            [ 257063 ] = {
+                name = "Brackish Bolt",
+                spell_reflection = true,
+            },
         },
         [ 135241 ] = {
-            desc = "Siege of Boralus - Bilge Rat Pillager",
-            [ 454440 ] = "Stinky Vomit",
+            name = "Bilge Rat Pillager",
+            [ 454440 ] = {
+                name = "Stinky Vomit",
+                interrupt = true,
+            },
+        },
+        [ 135258 ] = {
+            name = "Irontide Curseblade",
+            [ 257168 ] = {
+                name = "Cursed Slash",
+                spell_reflection = true,
+            },
+        },
+        [ 138247 ] = {
+            name = "Irontide Curseblade",
+            [ 257168 ] = {
+                name = "Cursed Slash",
+                spell_reflection = true,
+            },
         },
         [ 141284 ] = {
-            desc = "Siege of Boralus - Kul Tiran Wavetender",
-            [ 256957 ] = "Watertight Shell",
+            name = "Kul Tiran Wavetender",
+            [ 256957 ] = {
+                name = "Watertight Shell",
+                interrupt = true,
+            },
         },
         [ 144071 ] = {
-            desc = "Siege of Boralus - Irontide Waveshaper",
-            [ 256957 ] = "Watertight Shell",
+            name = "Irontide Waveshaper",
+            [ 256957 ] = {
+                name = "Watertight Shell",
+                interrupt = true,
+            },
+            [ 257063 ] = {
+                name = "Brackish Bolt",
+                spell_reflection = true,
+            },
         },
     },
 
-    -- The Necrotic Wake
+    [ 2097 ] = {
+        name = "Operation: Mechagon",
+        [ 144294 ] = {
+            name = "Mechagon Tinkerer",
+            [ 293827 ] = {
+                name = "Giga-Wallop",
+                spell_reflection = true,
+            },
+        },
+        [ 144298 ] = {
+            name = "Defense Bot Mk III",
+            [ 294195 ] = {
+                name = "Arcing Zap",
+                spell_reflection = true,
+            },
+        },
+        [ 150396 ] = {
+            name = "Aerial Unit R-21/X",
+            [ 291878 ] = {
+                name = "Pulse Blast",
+                spell_reflection = true,
+            },
+        },
+        [ 151649 ] = {
+            name = "Defense Bot Mk I",
+            [ 294195 ] = {
+                name = "Arcing Zap",
+                spell_reflection = true,
+            },
+        },
+        [ 152033 ] = {
+            name = "Inconspicuous Plant",
+            [ 294855 ] = {
+                name = "Blossom Blast",
+                spell_reflection = true,
+            },
+        },
+    },
+
     [ 2286 ] = {
+        name = "The Necrotic Wake",
+        [ 162693 ] = {
+            name = "Nalthor the Rimebinder",
+            [ 323730 ] = {
+                name = "Frozen Binds",
+                spell_reflection = true,
+            },
+            [ 320788 ] = {
+                name = "Frozen Binds",
+                spell_reflection = true,
+            },
+        },
+        [ 163126 ] = {
+            name = "Brittlebone Mage",
+            [ 320336 ] = {
+                name = "Frostbolt",
+                spell_reflection = true,
+            },
+        },
+        [ 163128 ] = {
+            name = "Zolramus Sorcerer",
+            [ 320462 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
+            [ 333479 ] = {
+                name = "Spew Disease",
+                spell_reflection = true,
+            },
+            [ 333482 ] = {
+                name = "Disease Cloud",
+                spell_reflection = true,
+            },
+            [ 333485 ] = {
+                name = "Disease Cloud",
+                spell_reflection = true,
+            },
+        },
+        [ 163618 ] = {
+            name = "Zolramus Necromancer",
+            [ 320462 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 164815 ] = {
+            name = "Zolramus Siphoner",
+            [ 322274 ] = {
+                name = "Enfeeble",
+                spell_reflection = true,
+            },
+        },
+        [ 165137 ] = {
+            name = "Zolramus Gatekeeper",
+            [ 320462 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
+            [ 323347 ] = {
+                name = "Clinging Darkness",
+                spell_reflection = true,
+            },
+        },
         [ 165222 ] = {
-            desc = "The Necrotic Wake - Zolramus Bonemender",
-            [ 335143 ] = "Bonemend",
+            name = "Zolramus Bonemender",
+            [ 335143 ] = {
+                name = "Bonemend",
+                interrupt = true,
+            },
+        },
+        [ 165824 ] = {
+            name = "Nar'zudah",
+            [ 320462 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
         },
         [ 165872 ] = {
-            desc = "The Necrotic Wake - Flesh Crafter",
-            [ 327130 ] = "Repair Flesh",
+            name = "Flesh Crafter",
+            [ 327130 ] = {
+                name = "Repair Flesh",
+                interrupt = true,
+            },
         },
         [ 165919 ] = {
-            desc = "The Necrotic Wake - Skeletal Marauder",
-            [ 324293 ] = "Rasping Scream",
+            name = "Skeletal Marauder",
+            [ 324293 ] = {
+                name = "Rasping Scream",
+                interrupt = true,
+            },
         },
         [ 166302 ] = {
-            desc = "The Necrotic Wake - Corpse Harvester",
-            [ 334748 ] = "Drain Fluids",
+            name = "Corpse Harvester",
+            [ 334748 ] = {
+                name = "Drain Fluids",
+                interrupt = true,
+                spell_reflection = true,
+            },
         },
         [ 171095 ] = {
-            desc = "The Necrotic Wake - Grisly Colossus",
-            [ 324293 ] = "Rasping Scream",
+            name = "Grisly Colossus",
+            [ 324293 ] = {
+                name = "Rasping Scream",
+                interrupt = true,
+            },
         },
         [ 173016 ] = {
-            desc = "The Necrotic Wake - Corpse Collector",
-            [ 334748 ] = "Drain Fluids",
-            [ 338353 ] = "Goresplatter",
+            name = "Corpse Collector",
+            [ 334748 ] = {
+                name = "Drain Fluids",
+                interrupt = true,
+            },
+            [ 338353 ] = {
+                name = "Goresplatter",
+                interrupt = true,
+            },
         },
         [ 173044 ] = {
-            desc = "The Necrotic Wake - Stitching Assistant",
-            [ 334748 ] = "Drain Fluids",
+            name = "Stitching Assistant",
+            [ 334748 ] = {
+                name = "Drain Fluids",
+                interrupt = true,
+            },
         },
+
     },
 
-    -- Mists of Tirna Scithe
     [ 2290 ] = {
+        name = "Mists of Tirna Scithe",
         [ 164517 ] = {
-            desc = "Mists of Tirna Scithe - Tred'ova",
-            [ 322450 ] = "Consumption",
-            [ 337235 ] = "Parasitic Pacification",
+            name = "Tred'ova",
+            [ 322450 ] = {
+                name = "Consumption",
+                interrupt = true,
+            },
+            [ 337235 ] = {
+                name = "Parasitic Pacification",
+                interrupt = true,
+            },
+        },
+        [ 164567 ] = {
+            name = "Ingra Maloch",
+            [ 323057 ] = {
+                name = "Spirit Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 164920 ] = {
+            name = "Drust Soulcleaver",
+            [ 322557 ] = {
+                name = "Soul Split",
+                spell_reflection = true,
+            },
         },
         [ 164921 ] = {
-            desc = "Mists of Tirna Scithe - Drust Harvester",
-            [ 322938 ] = "Harvest Essence",
+            name = "Drust Harvester",
+            [ 322767 ] = {
+                name = "Spirit Bolt",
+                spell_reflection = true,
+            },
+            [ 322938 ] = {
+                name = "Harvest Essence",
+                interrupt = true,
+            },
+            [ 326319 ] = {
+                name = "Spirit Bolt",
+                spell_reflection = true,
+            },
         },
         [ 164926 ] = {
-            desc = "Mists of Tirna Scithe - Drust Boughbreaker",
-            [ 324923 ] = "Bramble Burst",
+            name = "Drust Boughbreaker",
+            [ 324923 ] = {
+                name = "Bramble Burst",
+                interrupt = true,
+                spell_reflection = true,
+            },
+        },
+        [ 164929 ] = {
+            name = "Tirnenn Villager",
+            [ 322486 ] = {
+                name = "Overgrowth",
+                spell_reflection = true,
+            },
         },
         [ 166275 ] = {
-            desc = "Mists of Tirna Scithe - Mistveil Shaper",
-            [ 324776 ] = "Bramblethorn Coat",
+            name = "Mistveil Shaper",
+            [ 324776 ] = {
+                name = "Bramblethorn Coat",
+                interrupt = true,
+            },
+        },
+        [ 166276 ] = {
+            name = "Mistveil Guardian",
+            [ 463217 ] = {
+                name = "Anima Slash",
+                spell_reflection = true,
+            },
         },
         [ 166299 ] = {
-            desc = "Mists of Tirna Scithe - Mistveil Tender",
-            [ 324914 ] = "Nourish the Forest",
+            name = "Mistveil Tender",
+            [ 324914 ] = {
+                name = "Nourish the Forest",
+                interrupt = true,
+            },
+        },
+        [ 166304 ] = {
+            name = "Mistveil Stinger",
+            [ 325223 ] = {
+                name = "Anima Injection",
+                spell_reflection = true,
+            },
         },
         [ 167111 ] = {
-            desc = "Mists of Tirna Scithe - Spinemaw Staghorn",
-            [ 326046 ] = "Stimulate Resistance",
-            [ 340544 ] = "Stimulate Regeneration",
+            name = "Spinemaw Staghorn",
+            [ 326046 ] = {
+                name = "Stimulate Resistance",
+                interrupt = true,
+            },
+            [ 340544 ] = {
+                name = "Stimulate Regeneration",
+                interrupt = true,
+            },
+        },
+        [ 172991 ] = {
+            name = "Drust Soulcleaver",
+            [ 322557 ] = {
+                name = "Soul Split",
+                spell_reflection = true,
+            },
         },
     },
 
-    -- Khaz Algar Surface
-    [ 2552 ] = {
-        [ 225977 ] = {
-            desc = "Dornogal - Dungeoneer's Training Dummy",
-            [ 167385 ] = "testing", -- Uber Strike
-        },
-    },
-
-    -- Khaz Algar Underground
-    [ 2601 ] = {
-        [ 223469 ] = {
-            desc = "The Ringing Deeps - Voidtouched Speaker",
-            [ 429545 ] = "Censoring Gear",
-        },
-    },
-
-    -- The Rookery
-    [ 2648 ] = {
-        [ 214421 ] = {
-            desc = "The Rookery - Coalescing Void Diffuser",
-            [ 430805 ] = "Arcing Void",
-        },
-        [ 212793 ] = {
-            desc = "The Rookery - Void Ascendant",
-            [ 432959 ] = "Void Volley",
-        },
-    },
-
-    -- Priory of the Sacred Flame
-    [ 2649 ] = {
-        [ 206697 ] = {
-            desc = "Priory of the Sacred Flame - Devout Priest",
-            [ 427356 ] = "Greater Heal",
-        },
-        [ 207939 ] = {
-            desc = "Priory of the Sacred Flame - Baron Braunpyke",
-            [ 423051 ] = "Burning Light",
-        },
-        [ 207946 ] = {
-            desc = "Priory of the Sacred Flame - Captain Dailcry",
-            [ 424419 ] = "Battle Cry",
-        },
-        [ 211289 ] = {
-            desc = "Priory of the Sacred Flame - Taener Duelmal",
-            [ 424420 ] = "Cinderblast",
-        },
-        [ 221760 ] = {
-            desc = "Priory of the Sacred Flame - Risen Mage",
-            [ 444743 ] = "Fireball Volley",
-        },
-    },
-
-    -- Darkflame Cleft
-    [ 2651 ] = {
-        [ 208745 ] = {
-            desc = "Darkflame Cleft - The Candle King",
-            [ 426145 ] = "Paranoid Mind",
-        },
-        [ 212412 ] = {
-            desc = "Darkflame Cleft - Sootsnout",
-            [ 426295 ] = "Flaming Tether",
-        },
-        [ 208747 ] = {
-            desc = "Darkflame Cleft - The Darkness",
-            [ 427157 ] = "Call Darkspawn",
-        },
-    },
-
-    -- The Stonevault
-    [ 2652 ] = {
-        [ 212389 ] = {
-            desc = "The Stonevault - Cursedheart Invader",
-            [ 426283 ] = "Arcing Void",
-        },
-        [ 212403 ] = {
-            desc = "The Stonevault - Cursedheart Invader",
-            [ 426283 ] = "Arcing Void",
-        },
-        [ 212453 ] = {
-            desc = "The Stonevault - Ghastly Voidsoul",
-            [ 449455 ] = "Howling Fear",
-        },
-        [ 213338 ] = {
-            desc = "The Stonevault - Forgebound Mender",
-            [ 429109 ] = "Restoring Metals",
-        },
-        [ 214350 ] = {
-            desc = "The Stonevault - Turned Speaker",
-            [ 429545 ] = "Censoring Gear",
-        },
-        [ 221979 ] = {
-            desc = "The Stonevault - Void Bound Howler",
-            [ 445207 ] = "Piercing Wail",
-        },
-        [ 224962 ] = {
-            desc = "The Stonevault - Cursedforge Mender",
-            [ 429109 ] = "Restoring Metals",
-        },
-    },
-
-    -- Nerub-ar Palace
-    [ 2657 ] = {
-        [ 201792 ] = {
-            desc = "Nerub'ar Palace - Nexus-Princess Ky'veza",
-            [ 437839 ] = "Nether Rift",
-            [ 436787 ] = "Regicide",
-            [ 436996 ] = "Stalking Shadows",
-        },
-        [ 201793 ] = {
-            desc = "Nerub'ar Palace - The Silken Court",
-            [ 438200 ] = "Poison Bolt",
-            [ 441772 ] = "Void Bolt"
-        },
-        [ 201794 ] = {
-            desc = "Nerub'ar Palace - Queen Ansurek",
-            [ 451600 ] = "Expulsion Beam",
-            [ 439865 ] = "Silken Tomb",
-        },
-        [ 203669 ] = {
-            desc = "Nerub'ar Palace - Rasha'nan",
-            [ 436996 ] = "Stalking Shadows"
-        },
-    },
-
-    -- Ara-Kara, City of Echoes
-    [ 2660 ] = {
-        [ 216293 ] = {
-            desc = "Ara-Kara, City of Echoes - Trilling Attendant",
-            [ 434793 ] = "Resonant Barrage",
-        },
-        [ 216364 ] = {
-            desc = "Ara-Kara, City of Echoes - Blood Overseer",
-            [ 433841 ] = "Venom Volley",
-        },
-        [ 217531 ] = {
-            desc = "Ara-Kara, City of Echoes - Ixin",
-            [ 434802 ] = "Horrifying Shrill",
-        },
-        [ 217533 ] = {
-            desc = "Ara-Kara, City of Echoes - Atik",
-            [ 436322 ] = "Poison Bolt",
-        },
-        [ 220599 ] = {
-            desc = "Ara-Kara, City of Echoes - Bloodstained Webmage",
-            [ 442210 ] = "Silken Restraints",
-        },
-        [ 223253 ] = {
-            desc = "Ara-Kara, City of Echoes - Bloodstained Webmage",
-            [ 448248 ] = "Revolting Volley",
-        },
-    },
-
-    -- Cinderbrew Meadery
-    [ 2661 ] = {
-        [ 218671 ] = {
-            desc = "Cinderbrew Meadery - Venture Co. Pyromaniac",
-            [ 437721 ] = "Boiling Flames",
-        },
-        [ 220141 ] = {
-            desc = "Cinderbrew Meadery - Royal Jelly Purveyor",
-            [ 440687 ] = "Honey Volley",
-        },
-        [ 214673 ] = {
-            desc = "Cinderbrew Meadery - Flavor Scientist",
-            [ 441627 ] = "Rejuvenating Honey",
-        },
-        [ 222964 ] = {
-            desc = "Cinderbrew Meadery - Flavor Scientist",
-            [ 441627 ] = "Rejuvenating Honey",
-        },
-    },
-
-    -- The Dawnbreaker
-    [ 2662 ] = {
-        [ 213892 ] = {
-            desc = "The Dawnbreaker - Nightfall Shadowmage",
-            [ 431309 ] = "Ensnaring Shadows",
-        },
-        [ 213893 ] = {
-            desc = "The Dawnbreaker - Nightfall Darkcaster",
-            [ 431333 ] = "Tormenting Beam",
-        },
-        [ 225605 ] = {
-            desc = "The Dawnbreaker - Nightfall Darkcaster",
-            [ 431333 ] = "Tormenting Beam",
-        },
-        [ 213932 ] = {
-            desc = "The Dawnbreaker - Sureki Militant",
-            [ 451097 ] = "Silken Shell",
-        },
-        [ 214762 ] = {
-            desc = "The Dawnbreaker - Nightfall Commander",
-            [ 450756 ] = "Abyssal Howl",
-        },
-        [ 228539 ] = {
-            desc = "The Dawnbreaker - Nightfall Darkcaster",
-            [ 431333 ] = "Tormenting Beam",
-        },
-        [ 228540 ] = {
-            desc = "The Dawnbreaker - Nightfall Shadowmage",
-            [ 431309 ] = "Ensnaring Shadows",
-        },
-    },
-
-    -- City of Threads
-    [ 2669 ] = {
-        [ 220195 ] = {
-            desc = "City of Threads - Sureki Silkbinder",
-            [ 443430 ] = "Silk Binding",
-        },
-        [ 220196 ] = {
-            desc = "City of Threads - Herald of Ansurek",
-            [ 443433 ] = "Twist Thoughts",
-        },
-        [ 220401 ] = {
-            desc = "City of Threads - Pale Priest",
-            [ 448047 ] = "Web Wrap",
-        },
-        [ 223844 ] = {
-            desc = "City of Threads - Covert Webmancer",
-            [ 442536 ] = "Grimweave Blast",
-            [ 452162 ] = "Mending Web",
-        },
-        [ 224732 ] = {
-            desc = "City of Threads - Covert Webmancer",
-            [ 442536 ] = "Grimweave Blast",
-            [ 452162 ] = "Mending Web",
-        },
-    },
-    [ 2648 ] = {
-        [ 207199 ] = {
-            desc = "被诅咒的雷鸫看护者",
-            [ 427260 ] = "闪电涌动",
-        },
-        [ 207198 ] = {
-            desc = "被诅咒的雷霆使",
-            [ 430109 ] = "闪电箭",
-        },
-        [ 212793 ] = {
-            desc = "虚空晋升者",
-            [ 430238 ] = "虚空箭",
-        },
-        [ 214439 ] = {
-            desc = "被腐化的先知",
-            [ 430238 ] = "虚空箭",
-        },
-    },
-		--车间
-    [ 2097 ] = {
-        [ 151657 ] = {
-            desc = "炸弹坦克",
-            [ 301088 ] = "引爆",
-        },
-        [ 144294 ] = {
-            desc = "麦卡贡工匠",
-            [ 293827 ] = "超荷冲击波",
-        },
-        [ 144295 ] = {
-            desc = "麦卡贡机械师",
-            [ 293729 ] = "调校",
-        },
-    },
-		--剧场
     [ 2293 ] = {
-        [ 174197 ] = {
-            desc = "战场祭师",
-            [ 330784 ] = "通灵箭",
-            [ 341902 ] = "不洁热情",
+        name = "Theater of Pain",
+        [ 160495] = {
+            name = "Maniacal Soulbinder",
+            [ 330784 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
         },
-        [ 164506 ] = {
-		    desc = "上古队长",
-            [ 330562 ] = "挫志怒吼",
+        [ 162309 ] = {
+            name = "Kul'tharok",
+            [  319669 ] = {
+                name = "Spectral Reach",
+                spell_reflection = true,
+            },
+            [ 1216475 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 164461 ] = {
+            name = "Sathel the Accursed",
+            [ 1217138 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 165946 ] = {
+            name = "Mordretha, the Endless Empress",
+            [ 323608 ] = {
+                name = "Dark Devastation",
+                spell_reflection = true,
+            },
+        },
+        [ 166524 ] = {
+            name = "Deathwalker",
+            [ 324589 ] = {
+                name = "Death Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 169875 ] = {
+            name = "Shackled Soul",
+            [ 330810 ] = {
+                name = "Bind Soul",
+                spell_reflection = true,
+            },
+        },
+        [ 169893 ] = {
+            name = "Nefarious Darkspeaker",
+            [ 330875 ] = {
+                name = "Spirit Frost",
+                spell_reflection = true,
+            },
         },
         [ 170690 ] = {
-            desc = "染病恐魔",
-            [ 341977 ] = "血肉之盾",
-            [ 319290 ] = "血肉之盾",
+            name = "Diseased Horror",
+            [ 330697 ] = {
+                name = "Decaying Strike",
+                spell_reflection = true,
+            },
+        },
+        [ 174197 ] = {
+            name = "Battlefield Ritualist",
+            [ 330784 ] = {
+                name = "Necrotic Bolt",
+                spell_reflection = true,
+            },
         },
         [ 174210 ] = {
-            desc = "凋零淤泥喷射者",
-            [ 341969 ] = "凋零释放",
-        },
-        [ 160495 ] = {
-            desc = "狂热的缚魂者",
-            [ 330784 ] = "通灵箭",
-            [ 330868 ] = "通灵箭雨",
-        },
-        [ 170882 ] = {
-            desc = "白骨魔导师",
-            [ 342675 ] = "骨矛",
+            name = "Blighted Sludge-Spewer",
+            [ 341969 ] = {
+                name = "Withering Discharge",
+                spell_reflection = true,
+            },
         },
     },
-		--暴富
-    [ 1594 ] = {
-        [ 136470 ] = {
-            desc = "零食商贩",
-            [ 280604 ] = "冰镇汽水",
-        },
-        [ 134232 ] = {
-            desc = "雇来的刺客",
-            [ 269302 ] = "淬毒之刃",
-        },
-        [ 130661 ] = {
-            desc = "风险投资公司塑地者",
-            [ 263202 ] = "石枪",
-            [ 271579 ] = "石枪",
-        },
-        [ 130635 ] = {
-            desc = "巨石之怒",
-            [ 263215 ] = "地壳屏障",
-            [ 268702 ] = "狂怒地震",
-        },
-        [ 133432 ] = {
-            desc = "风险投资公司炼金师",
-            [ 262268 ] = "腐蚀性化合物",
-            [ 268797 ] = "转化：敌人变黏液",
+
+    [ 2552 ] = {
+        name = "Khaz Algar Surface",
+        [ 225977 ] = {
+            name = "Dungeoneer's Training Dummy",
+            [ 167385 ] = {
+                name = "Uber Strike",
+                spell_reflection = true, -- for testing
+            },
         },
     },
-		--酒庄
-    [ 2661 ] = {
-        [ 218671 ] = {
-            desc = "风险投资公司纵火狂",
-            [ 437721 ] = "沸燃烈焰",
-            [ 453909 ] = "沸燃烈焰",
-            [ 453989 ] = "沸燃烈焰",
-            [ 454318 ] = "沸燃烈焰",
-            [ 454319 ] = "沸燃烈焰",
-        },
-        [ 214673 ] = {
-            desc = "风味科学家",
-            [ 441627 ] = "疗愈蜂蜜",
-        },
-        [ 210264 ] = {
-            desc = "驯蜂者",
-            [ 441351 ] = "狂蜂怒火",
-        },
-        [ 220141 ] = {
-            desc = "蜂王浆供应商",
-            [ 440687 ] = "蜂蜜齐射",
+
+    [ 2601 ] = {
+        name = "Khaz Algar Underground",
+        [ 223469 ] = {
+            name = "Voidtouched Speaker",
+            [ 429545 ] = {
+                name = "Censoring Gear",
+                interrupt = true,
+            },
         },
     },
-		--暴富
-    [ 2651 ] = {
-        [ 210812 ] = {
-            desc = "皇家点芯者",
-            [ 2423479 ] = "点芯箭",
+
+    [ 2648 ] = {
+        name = "The Rookery",
+        [ 207202 ] = {
+            name = "Void Fragment",
+            [ 430238 ] = {
+                name = "Void Bolt",
+                spell_reflection = true,
+            },
         },
-        [ 210818 ] = {
-            desc = "低贱的鼹鼠倌",
-            [ 425536 ] = "鼹鼠狂暴",
+        [ 207198 ] = {
+            name = "Cursed Thunderer",
+            [ 430109 ] = {
+                name = "Lightning Bolt",
+                spell_reflection = true,
+            },
         },
-        [ 220815 ] = {
-            desc = "炽焰魔",
-            [ 424322 ] = "爆炸烈焰",
+        [ 212793 ] = {
+            name = "Void Ascendant",
+            [ 432959 ] = {
+                name = "Void Volley",
+                interrupt = true,
+            },
         },
-        [ 212412 ] = {
-            desc = "灰鼻",
-            [ 426295 ] = "烈焰系链",
-            [ 426677 ] = "烛焰箭",
+        [ 214421 ] = {
+            name = "Coalescing Void Diffuser",
+            [ 430805 ] = {
+                name = "Arcing Void",
+                interrupt = true,
+                spell_reflection = true,
+            },
         },
-        [ 208745 ] = {
-            desc = "蜡烛之王",
-            [ 426145 ] = "偏执失心",
-        },
-        [ 208456 ] = {
-            desc = "残步恐魔",
-            [ 422541 ] = "吸取光明",
-            [ 422692 ] = "吸取光明",
-        },
-        [ 208747 ] = {
-            desc = "黑暗之主",
-            [ 427157 ] = "召唤暗嗣",
-        },
-        [ 213008 ] = {
-            desc = "蠕动暗嗣",
-            [ 427176 ] = "吸取光明",
+        [ 214439 ] = {
+            name = "Corrupted Oracle",
+            [ 430179 ] = {
+                name = "Seeping Corruption",
+                spell_reflection = true,
+            },
         },
     },
-		--修道院(11.1,S2)
+
     [ 2649 ] = {
+        name = "Priory of the Sacred Flame",
         [ 206697 ] = {
-            desc = "虔诚的牧师",
-            [ 427356 ] = "强效治疗术",
+            name = "Devout Priest",
+            [ 427356 ] = {
+                name = "Greater Heal",
+                interrupt = true,
+            },
+            [ 427357 ] = {
+                name = "Holy Smite",
+                spell_reflection = true,
+            },
         },
         [ 206698 ] = {
-            desc = "狂热的咒术师",
-            [ 427469 ] = "火球术",
+            name = "Fanatical Conjuror",
+            [ 427469 ] = {
+                name = "Fireball",
+                spell_reflection = true,
+            },
         },
-        [ 212827 ] = {
-            desc = "高阶牧师艾姆雅",
-            [ 427357 ] = "神圣惩击",
-        },
-        [ 239834 ] = {
-            desc = "泰纳·杜尔玛",
-            [ 424420 ] = "余烬冲击",
-            [ 424421 ] = "火球术",
-        },
-        [ 221760 ] = {
-            desc = "亡灵法师",
-            [ 444743 ] = "连珠火球",
-            [ 427469 ] = "火球术",
+        [ 207939 ] = {
+            name = "Baron Braunpyke",
+            [ 423015 ] = {
+                name = "Castigator's Shield",
+                spell_reflection = true,
+            },
+            [ 423051 ] = {
+                name = "Burning Light",
+                interrupt = true,
+            },
         },
         [ 207940 ] = {
-            desc = "隐修院长穆普雷",
-            [ 423588 ] = "圣光屏障",
+            name = "Prioress Murrpray",
+            [ 423536 ] = {
+                name = "Holy Smite",
+                spell_reflection = true,
+            },
+        },
+        [ 207946 ] = {
+            name = "Captain Dailcry",
+            [ 424419 ] = {
+                name = "Battle Cry",
+                interrupt = true,
+            },
+        },
+        [ 211289 ] = {
+            name = "Taener Duelmal",
+            [ 424420 ] = {
+                name = "Cinderblast",
+                interrupt = true,
+                spell_reflection = true,
+            },
+            [ 424421 ] = {
+                name = "Fireball",
+                spell_reflection = true,
+            },
+        },
+        [ 221760 ] = {
+            name = "Risen Mage",
+            [ 427469 ] = {
+                name = "Fireball",
+                spell_reflection = true,
+            },
+            [ 444743 ] = {
+                name = "Fireball Volley",
+                interrupt = true,
+            },
+        },
+        [ 212827 ] = {
+            name = "High Priest Aemya",
+            [ 427357 ] = {
+                name = "Holy Smite",
+                spell_reflection = true,
+            },
         },
     },
-		--水闸行动(11.1,S2)
-    [ 2773 ] = {
-        [ 229686 ] = {
-            desc = "风险投资公司勘探员",
-            [ 462771 ] = "勘测光束",
+
+    [ 2651 ] = {
+        name = "Darkflame Cleft",
+        [ 208743 ] = {
+            name = "Blazikon",
+            [ 421638 ] = {
+                name = "Wicklighter Barrage",
+                spell_reflection = true,
+            },
+            [ 421817 ] = {
+                name = "Wicklighter Barrage",
+                spell_reflection = true,
+            },
         },
-        [ 229252 ] = {
-            desc = "暗索土狼",
-            [ 463058 ] = "嗜血狞笑",
+        [ 208745 ] = {
+            name = "The Candle King",
+            [ 426145 ] = {
+                name = "Paranoid Mind",
+                interrupt = true,
+            },
+        },
+        [ 208747 ] = {
+            name = "The Darkness",
+            [ 427157 ] = {
+                name = "Call Darkspawn",
+                interrupt = true,
+            },
+        },
+        [ 210812 ] = {
+            name = "Royal Wicklighter",
+            [ 423479 ] = {
+                name = "Wicklighter Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 212412 ] = {
+            name = "Sootsnout",
+            [ 426295 ] = {
+                name = "Flaming Tether",
+                interrupt = true,
+            },
+            [ 426677 ] = {
+                name = "Candleflame Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 213913 ] = {
+            name = "Kobold Flametender",
+            [ 428563 ] = {
+                name = "Flame Bolt",
+                spell_reflection = true,
+            },
+        },
+    },
+
+    [ 2652 ] = {
+        name = "The Stonevault",
+        [ 212389 ] = {
+            name = "Cursedheart Invader",
+            [ 426283 ] = {
+                name = "Arcing Void",
+                interrupt = true,
+                spell_reflection = true,
+            },
+        },
+        [ 212403 ] = {
+            name = "Cursedheart Invader",
+            [ 426283 ] = {
+                name = "Arcing Void",
+                interrupt = true,
+                spell_reflection = true,
+            },
+        },
+        [ 212453 ] = {
+            name = "Ghastly Voidsoul",
+            [ 449455 ] = {
+                name = "Howling Fear",
+                interrupt = true,
+            },
+        },
+        [ 212765 ] = {
+            name = "Void Bound Despoiler",
+            [ 459210 ] = {
+                name = "Shadow Claw",
+                spell_reflection = true,
+            },
+        },
+        [ 213217 ] = {
+            name = "Speaker Brokk",
+            [ 428161 ] = {
+                name = "Molten Metal",
+                spell_reflection = true,
+            },
+        },
+        [ 213338 ] = {
+            name = "Forgebound Mender",
+            [ 429109 ] = {
+                name = "Restoring Metals",
+                interrupt = true,
+            },
+            [ 429110 ] = {
+                name = "Alloy Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 214066 ] = {
+            name = "Cursedforge Stoneshaper",
+            [ 429422 ] = {
+                name = "Stone Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 214350 ] = {
+            name = "Turned Speaker",
+            [ 429545 ] = {
+                name = "Censoring Gear",
+                interrupt = true,
+                spell_reflection = true,
+            },
+        },
+        [ 221979 ] = {
+            name = "Void Bound Howler",
+            [ 445207 ] = {
+                name = "Piercing Wail",
+                interrupt = true,
+            },
+        },
+        [ 224962 ] = {
+            name = "Cursedforge Mender",
+            [ 429109 ] = {
+                name = "Restoring Metals",
+                interrupt = true,
+            },
+        },
+    },
+
+    [ 2657 ] = {
+        name = "Nerub-ar Palace",
+        [ 201792 ] = {
+            name = "Nexus-Princess Ky'veza",
+            [ 437839 ] = {
+                name = "Nether Rift",
+                interrupt = true,
+            },
+            [ 436787 ] = {
+                name = "Regicide",
+                interrupt = true,
+            },
+            [ 436996 ] = {
+                name = "Stalking Shadows",
+                interrupt = true,
+            },
+        },
+        [ 201793 ] = {
+            name = "The Silken Court",
+            [ 438200 ] = {
+                name = "Poison Bolt",
+                interrupt = true,
+            },
+            [ 441772 ] = {
+                name = "Void Bolt",
+                interrupt = true,
+            },
+        },
+        [ 201794 ] = {
+            name = "Queen Ansurek",
+            [ 451600 ] = {
+                name = "Expulsion Beam",
+                interrupt = true,
+            },
+            [ 439865 ] = {
+                name = "Silken Tomb",
+                interrupt = true,
+            },
+        },
+        [ 203669 ] = {
+            name = "Rasha'nan",
+            [ 436996 ] = {
+                name = "Stalking Shadows",
+                interrupt = true,
+            },
+        },
+        [ 455123 ] = {
+            name = "Nerub-ar Palace - General Crixis",
+            [ 451568 ] = {
+                name = "Void Slash",
+                spell_reflection = true,
+            },
+        },
+        [ 455124 ] = {
+            name = "Nerub-ar Palace - Arbitra's Fury",
+            [ 451199 ] = {
+                name = "Celestial Blast",
+                spell_reflection = true,
+            },
+        },
+        [ 455125 ] = {
+            name = "Nerub-ar Palace - Netherblade Executioner",
+            [ 450551 ] = {
+                name = "Shadow Rend",
+                spell_reflection = true,
+            },
+        },
+        [ 455126 ] = {
+            name = "Nerub-ar Palace - Frostbinder's Wrath",
+            [ 444264 ] = {
+                name = "Ice Shard",
+                spell_reflection = true,
+            },
+        },
+        [ 455127 ] = {
+            name = "Nerub-ar Palace - Abyssal Devourer",
+            [ 445619 ] = {
+                name = "Devour Essence",
+                spell_reflection = true,
+            },
+        },
+        [ 455128 ] = {
+            name = "Nerub-ar Palace - Sun King's Fury",
+            [ 451895 ] = {
+                name = "Blazing Inferno",
+                spell_reflection = true,
+            },
+        },
+        [ 455129 ] = {
+            name = "Nerub-ar Palace - Starcaller Supreme",
+            [ 451845 ] = {
+                name = "Cosmic Burst",
+                spell_reflection = true,
+            },
+        },
+        [ 455130 ] = {
+            name = "Nerub-ar Palace - Enraged Earthshaker",
+            [ 444264 ] = {
+                name = "Earthquake",
+                spell_reflection = true,
+            },
+        },
+        [ 455131 ] = {
+            name = "Nerub-ar Palace - Mindshatter Lurker",
+            [ 451678 ] = {
+                name = "Mind Flay",
+                spell_reflection = true,
+            },
+        },
+        [ 455132 ] = {
+            name = "Nerub-ar Palace - Spectral Overseer",
+            [ 450551 ] = {
+                name = "Wail of Suffering",
+                spell_reflection = true,
+            },
+        },
+        [ 455133 ] = {
+            name = "Nerub-ar Palace - Necrotic Abomination",
+            [ 450551 ] = {
+                name = "Necrotic Burst",
+                spell_reflection = true,
+            },
+        },
+        [ 455134 ] = {
+            name = "Nerub-ar Palace - Crimson Seeker",
+            [ 444264 ] = {
+                name = "Blood Lance",
+                spell_reflection = true,
+            },
+        },
+    },
+
+    [ 2660 ] = {
+        name = "Ara-Kara, City of Echoes",
+        [ 216293 ] = {
+            name = "Ara-Kara, City of Echoes - Trilling Attendant",
+            [ 434786 ] = {
+                name = "Web Bolt",
+                spell_reflection = true,
+            },
+            [ 434793 ] = {
+                name = "Resonant Barrage",
+                interrupt = true,
+            },
+        },
+        [ 216364 ] = {
+            name = "Ara-Kara, City of Echoes - Blood Overseer",
+            [ 433841 ] = {
+                name = "Venom Volley",
+                interrupt = true,
+            },
+        },
+        [ 217531 ] = {
+            name = "Ara-Kara, City of Echoes - Ixin",
+            [ 434786 ] = {
+                name = "Web Bolt",
+                spell_reflection = true,
+            },
+            [ 434802 ] = {
+                name = "Horrifying Shrill",
+                interrupt = true,
+            },
+        },
+        [ 217533 ] = {
+            name = "Ara-Kara, City of Echoes - Atik",
+            [ 436322 ] = {
+                name = "Poison Bolt",
+                interrupt = true,
+                spell_reflection = true,
+            },
+        },
+        [ 218324 ] = {
+            name = "Ara-Kara, City of Echoes - Nakt",
+            [ 434786 ] = {
+                name = "Web Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 220599 ] = {
+            name = "Ara-Kara, City of Echoes - Bloodstained Webmage",
+            [ 442210 ] = {
+                name = "Silken Restraints",
+                interrupt = true,
+            },
+        },
+        [ 223253 ] = {
+            name = "Ara-Kara, City of Echoes - Bloodstained Webmage",
+            [ 434786 ] = {
+                name = "Web Bolt",
+                spell_reflection = true,
+            },
+            [ 448248 ] = {
+                name = "Revolting Volley",
+                interrupt = true,
+            },
+        },
+    },
+
+    [ 2661 ] = {
+        name = "Cinderbrew Meadery",
+        [ 214661 ] = {
+            name = "Goldie Baronbottom",
+            [ 436640 ] = {
+                name = "Burning Ricochet",
+                spell_reflection = true,
+            },
+        },
+        [ 218671 ] = {
+            name = "Venture Co. Pyromaniac",
+            [ 437733 ] = {
+                name = "Boiling Flames",
+                interrupt = true,
+                spell_reflection = true,
+            },
+        },
+        [ 214673 ] = {
+            name = "Flavor Scientist",
+            [ 441627 ] = {
+                name = "Rejuvenating Honey",
+                interrupt = true,
+            },
+        },
+        [ 220141 ] = {
+            name = "Royal Jelly Purveyor",
+            [ 440687 ] = {
+                name = "Honey Volley",
+                interrupt = true,
+            },
+        },
+        [ 222964 ] = {
+            name = "Flavor Scientist",
+            [ 441627 ] = {
+                name = "Rejuvenating Honey",
+                interrupt = true,
+            },
+        },
+    },
+
+    [ 2662 ] = {
+        name = "The Dawnbreaker",
+        [ 210966 ] = {
+            name = "Sureki Webmage",
+            [ 451113 ] = {
+                name = "Web Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 213892 ] = {
+            name = "Nightfall Shadowmage",
+            [ 431303 ] = {
+                name = "Night Bolt",
+                spell_reflection = true,
+            },
+            [ 431309 ] = {
+                name = "Ensnaring Shadows",
+                interrupt = true,
+            },
+        },
+        [ 213893 ] = {
+            name = "Nightfall Darkcaster",
+            [ 431333 ] = {
+                name = "Tormenting Beam",
+                interrupt = true,
+            },
+        },
+        [ 213905 ] = {
+            name = "Animated Darkness",
+            [ 451114 ] = {
+                name = "Congealed Shadow",
+                spell_reflection = true,
+            },
+        },
+        [ 213932 ] = {
+            name = "Sureki Militant",
+            [ 451097 ] = {
+                name = "Silken Shell",
+                interrupt = true,
+            },
+        },
+        [ 213934 ] = {
+            name = "Nightfall Tactician",
+            [ 431494 ] = {
+                name = "Blade Edge",
+                spell_reflection = true,
+            },
+        },
+        [ 214761 ] = {
+            name = "Nightfall Ritualist",
+            [ 432448 ] = {
+                name = "Stygian Seed",
+                spell_reflection = true,
+            },
+        },
+        [ 214762 ] = {
+            name = "Nightfall Commander",
+            [ 450756 ] = {
+                name = "Abyssal Howl",
+                interrupt = true,
+            },
+        },
+        [ 223994 ] = {
+            name = "Nightfall Shadowmage",
+            [ 431303 ] = {
+                name = "Night Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 225605 ] = {
+            name = "Nightfall Darkcaster",
+            [ 431333 ] = {
+                name = "Tormenting Beam",
+                interrupt = true,
+            },
+        },
+        [ 228539 ] = {
+            name = "Nightfall Darkcaster",
+            [ 431333 ] = {
+                name = "Tormenting Beam",
+                interrupt = true,
+            },
+        },
+        [ 228540 ] = {
+            name = "Nightfall Shadowmage",
+            [ 431303 ] = {
+                name = "Night Bolt",
+                spell_reflection = true,
+            },
+            [ 431309 ] = {
+                name = "Ensnaring Shadows",
+                interrupt = true,
+            },
+        },
+    },
+
+    [ 2669 ] = {
+        name = "City of Threads",
+        [ 216658 ] = {
+            name = "Izo, the Grand Splicer",
+            [ 438860 ] = {
+                name = "Umbral Weave",
+                spell_reflection = true,
+            },
+            [ 439341 ] = {
+                name = "Splice",
+                spell_reflection = true,
+            },
+            [ 439814 ] = {
+                name = "Silken Tomb",
+                spell_reflection = true,
+            },
+        },
+        [ 220003 ] = {
+            name = "Eye of the Queen",
+            [ 451222 ] = {
+                name = "Void Rush",
+                spell_reflection = true,
+            },
+            [ 441772 ] = {
+                name = "Void Bolt",
+                spell_reflection = true,
+            },
+            [ 451600 ] = {
+                name = "Expulsion Beam",
+                spell_reflection = true,
+            },
+            [ 448660 ] = {
+                name = "Acid Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 220195 ] = {
+            name = "Sureki Silkbinder",
+            [ 443427 ] = {
+                name = "Web Bolt",
+                spell_reflection = true,
+            },
+            [ 443430 ] = {
+                name = "Silk Binding",
+                interrupt = true,
+            },
+        },
+        [ 220196 ] = {
+            name = "Herald of Ansurek",
+            [ 443433 ] = {
+                name = "Twist Thoughts",
+                interrupt = true,
+            },
+        },
+        [ 220401 ] = {
+            name = "Pale Priest",
+            [ 448047 ] = {
+                name = "Web Wrap",
+                interrupt = true,
+            },
+        },
+        [ 221102 ] = {
+            name = "Elder Shadeweaver",
+            [ 446717 ] = {
+                name = "Umbral Weave",
+                spell_reflection = true,
+            },
+            [ 443427 ] = {
+                name = "Web Bolt",
+                spell_reflection = true,
+            },
+        },
+        [ 223844 ] = {
+            name = "Covert Webmancer",
+            [ 442536 ] = {
+                name = "Grimweave Blast",
+                interrupt = true,
+                spell_reflection = true,
+            },
+            [ 452162 ] = {
+                name = "Mending Web",
+                interrupt = true,
+            },
+        },
+        [ 224732 ] = {
+            name = "Covert Webmancer",
+            [ 442536 ] = {
+                name = "Grimweave Blast",
+                interrupt = true,
+                spell_reflection = true,
+            },
+            [ 452162 ] = {
+                name = "Mending Web",
+                interrupt = true,
+            },
+        },
+    },
+
+    [ 2769 ] = {
+        name = "Liberation of Undermine",
+        [ 231839 ] = {
+            name = "Scrapmaster",
+            [ 1219384 ] = {
+                name = "Scrap Rockets",
+                spell_reflection = true,
+            },
+        },
+        [ 234211 ] = {
+            name = "Reel Assistant",
+            [ 460847 ] = {
+                name = "Electric Blast",
+                spell_reflection = true,
+            },
+        },
+    },
+
+    [ 2773 ] = {
+        name = "Operation: Floodgate",
+        [ 226396 ] = {
+            name = "Swampface",
+            [ 473114 ] = {
+                name = "Mudslide",
+                spell_reflection = true,
+            },
         },
         [ 229069 ] = {
-            desc = "无人机狙击手",
-            [ 1214468 ] = "特技射击",
+            name = "Mechadrone Sniper",
+            [ 1214468 ] = {
+                name = "Trickshot",
+                spell_reflection = true,
+            },
+        },
+        [ 229686 ] = {
+            name = "Venture Co. Surveyor",
+            [ 462771 ] = {
+                name = "Surveying Beam",
+                spell_reflection = true,
+            },
+        },
+        [ 230740 ] = {
+            name = "Shreddinator 3000",
+            [ 465754 ] = {
+                name = "Flamethrower",
+                spell_reflection = true,
+            },
         },
         [ 230748 ] = {
-            desc = "暗索扭血者",
-            [ 465871 ] = "鲜血冲击",
+            name = "Darkfuse Bloodwarper",
+            [ 465871 ] = {
+                name = "Blood Bolt",
+                spell_reflection = true,
+            },
         },
-        [ 231496 ] = {
-            desc = "风险管理公司潜水员",
-            [ 468631 ] = "鱼叉",
-        },
-        [ 231223 ] = {
-            desc = "被惊扰的海藻",
-            [ 471733 ] = "回春水藻",
+        [ 231197 ] = {
+            name = "Bubbles",
+            [ 469721 ] = {
+                name = "Backwash",
+                spell_reflection = true,
+            },
         },
         [ 231312 ] = {
-            desc = "风险投资公司电工",
-            [ 465595 ] = "闪电箭",
+            name = "Venture Co. Electrician",
+            [ 465595 ] = {
+                name = "Lightning Bolt",
+                spell_reflection = true,
+            },
         },
     },
 }
 
+class.spellFilters = spellFilters
+
 do
-    -- Make interruptibleFilters[ instanceID ][ npcID ][ spellID ] always be valid.
+    local interruptibleFilters = {}
 
-    local emptyNPC = {}
-    local mt_instance = { __index = function( t, k ) return emptyNPC end }
-
-    local emptyInstance = setmetatable( {}, mt_instance )
-    local mt_filter = { __index = function( t, k ) return emptyInstance end }
-
-    for instanceID, instanceData in pairs( interruptibleFilters ) do
-        setmetatable( instanceData, mt_instance )
+    for zoneID, zoneData in pairs( spellFilters ) do
+        for npcID, npcData in pairs( zoneData ) do
+            if npcID ~= "name" then
+                for spellID, spellData in pairs( npcData ) do
+                    if spellID ~= "name" and spellData.interrupt then
+                        interruptibleFilters[ spellID ] = true
+                    end
+                end
+            end
+        end
     end
 
-    setmetatable( interruptibleFilters, mt_filter )
+    class.interruptibleFilters = interruptibleFilters
 end
-
-class.interruptibleFilters = interruptibleFilters
