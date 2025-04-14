@@ -2379,7 +2379,7 @@ return "位置" end,
                                 order = 4,
                                 values = {
                                     default = "使用默认颜色",
-                                    class = "使用系统颜色",
+                                    class = format( "职业 |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s", ClassColor.r * 255, ClassColor.g * 255, ClassColor.b * 255, ClassColor:GenerateHexColor():sub( 3, 8 ) ),
                                     custom = "设置自定义颜色"
                                 },
                                 disabled = function() return data.glow.enabled == false end,
@@ -9867,11 +9867,11 @@ do
     end
 end
 
-
 function Hekili:GenerateProfile()
     local s = state
 
     local spec = s.spec.key
+    local heroTree = state.hero_tree.current or "none"
 
     local talents = self:GetLoadoutExportString()
 
@@ -10008,7 +10008,8 @@ break end
     "build: %s\n" ..
     "level: %d (%d)\n" ..
     "class: %s\n" ..
-    "spec: %s\n\n" ..
+    "spec: %s\n" ..
+    "hero tree: %s\n\n" ..
 
     "### Talents ###\n\n" ..
     "In-Game Import: %s\n" ..
@@ -10038,6 +10039,7 @@ break end
     UnitLevel( 'player' ) or 0, UnitEffectiveLevel( 'player' ) or 0,
     class.file or "NONE",
     spec or "none",
+    heroTree or "none",
     talents or "none",
     pvptalents or "none",
     covenant or "none",
@@ -10054,7 +10056,6 @@ break end
 )
 
 end
-
 
 do
     local Options = {

@@ -39,10 +39,11 @@ Hekili.IsDragonflight = function()
     return buildNum >= 100000
 end
 
-Hekili.BuiltFor = 110000
+Hekili.BuiltFor = 110100
 Hekili.GameBuild = buildStr
 
-ns.PTR = buildNum > 110000
+ns.PTR = buildNum > 110100
+Hekili.IsPTR = ns.PTR
 
 ns.Patrons = "|cFFFFD100目前的状态|r\n\n"
     .. "目前已经支持所有的专精，但治疗专精的优先级是试验性的，只可用于发呆时打DPS。\n\n"
@@ -57,7 +58,6 @@ do
     end
 
 	ns.cpuProfile = cpuProfileDB
-
 
 	local frameProfileDB = {}
 

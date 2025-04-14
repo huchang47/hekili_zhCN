@@ -20,12 +20,12 @@ actions+=/variable,name=regen_saturated,value=energy.regen_combined>30
 # Pooling Setup, check for cooldowns
 actions+=/variable,name=single_target,value=active_enemies=1
 actions+=/variable,name=in_cooldowns,value=dot.kingsbane.ticking|debuff.shiv.up
-## actions+=/variable,name=upper_limit_energy,value=70-30*talent.sanguine_blades-10*talent.vicious_venoms.rank
-actions+=/variable,name=upper_limit_energy,value=energy.pct>=(80-10*talent.vicious_venoms.rank-30*talent.amplifying_poison)
+## [Syrif] - This variable is flattened into variable.not_pooling to ensure timeliness
+## actions+=/variable,name=upper_limit_energy,value=energy.pct>=(80-10*talent.vicious_venoms.rank-30*talent.amplifying_poison)
 # Checking for cooldowns soon
 actions+=/variable,name=cd_soon,value=talent.kingsbane&cooldown.kingsbane.remains<3&!cooldown.kingsbane.ready
-# Pooling Condition all together
-actions+=/variable,name=not_pooling,value=variable.in_cooldowns|buff.darkest_night.up|variable.upper_limit_energy|(charges_fractional>1.8|boss)&fight_remains<=20
+# Pooling Condition all together - [Syrif] - This is where upper_limit_energy is written out
+actions+=/variable,name=not_pooling,value=variable.in_cooldowns|buff.darkest_night.up|(energy.pct>=(80-10*talent.vicious_venoms.rank-30*talent.amplifying_poison))|(charges_fractional>1.8|boss)&fight_remains<=20
 ## Check what the maximum Scent of Blood stacks is currently
 ## actions+=/variable,name=scent_effective_max_stacks,value=(spell_targets.fan_of_knives*talent.scent_of_blood.rank*2)>?20
 # We are Scent Saturated when our stack count is hitting the maximum

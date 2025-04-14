@@ -1,5 +1,5 @@
 ## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/rogue_outlaw.simc
-## Up to date with SimC: April 7 2025 - 0e2878b
+## Up to date with SimC: April 12 2025 - a606b60 (technically d935a4a which is a non-change)
 
 actions.precombat+=/apply_poison
 actions.precombat+=/use_item,name=imperfect_ascendancy_serum
@@ -28,8 +28,8 @@ actions+=/bag_of_tricks
 
 # Builders   High priority Ambush for Hidden Opportunity builds.
 actions.build+=/ambush,if=talent.hidden_opportunity&buff.audacity.up
-# Trickster builds without HO should prioritize Sinister Strike during Disorienting Strikes.
-actions.build+=/sinister_strike,if=!talent.hidden_opportunity&buff.disorienting_strikes.up&!stealthed.all&(buff.escalating_blade.stack>2&buff.opportunity.stack<buff.opportunity.max_stack|!talent.hidden_opportunity)&buff.escalating_blade.stack<4
+# Trickster builds should prioritize Sinister Strike during Disorienting Strikes. HO builds prefer to do this only at 3 Escalating Blade stacks and not at max Opportunity stacks.
+actions.build+=/sinister_strike,if=buff.disorienting_strikes.up&!stealthed.all&(buff.escalating_blade.stack>2&buff.opportunity.stack<buff.opportunity.max_stack|!talent.hidden_opportunity)&buff.escalating_blade.stack<4
 # With Audacity + Hidden Opportunity + Fan the Hammer, consume Opportunity to proc Audacity any time Ambush is not available.
 actions.build+=/pistol_shot,if=talent.fan_the_hammer&talent.audacity&talent.hidden_opportunity&buff.opportunity.up&!buff.audacity.up
 # With 2 ranks in Fan the Hammer, consume Opportunity as a higher priority if at max stacks or if it will expire.
@@ -47,8 +47,8 @@ actions.build+=/sinister_strike
 
 # Cooldowns  Maintain Adrenaline Rush if it is not active. Use at low CPs with Improved AR.
 actions.cds+=/adrenaline_rush,if=!buff.adrenaline_rush.up&(!variable.finish_condition|!talent.improved_adrenaline_rush)
-# If using Improved AR, recast AR if it is already active at low CPs. Trickster builds should avoid recasting it during Disorienting Strikes with 0-3 stacks of Escalating Blade, unless stealth is active.
-actions.cds+=/adrenaline_rush,if=buff.adrenaline_rush.up&talent.improved_adrenaline_rush&combo_points<=2&(!buff.disorienting_strikes.up|stealthed.all|buff.escalating_blade.stack>=4)
+# If using Improved AR, recast AR if it is already active at low CPs.
+actions.cds+=/adrenaline_rush,if=buff.adrenaline_rush.up&talent.improved_adrenaline_rush&combo_points<=2
 # High priority Ghostly Strike as it is off-gcd. 1 FTH builds prefer to not use it at max CPs.
 actions.cds+=/ghostly_strike,if=combo_points<cp_max_spend|talent.fan_the_hammer.rank>1
 # Sprint to further benefit from Scroll of Momentum trinket.
@@ -57,8 +57,8 @@ actions.cds+=/sprint,if=(trinket.1.is.scroll_of_momentum|trinket.2.is.scroll_of_
 actions.cds+=/blade_flurry,if=spell_targets>=2&buff.blade_flurry.remains<gcd
 # With Deft Maneuvers, build CPs with Blade Flurry at 5+ targets. Trickster builds should avoid this during Disorienting Strikes with 0-3 stacks of Escalating Blade, unless stealth is active.
 actions.cds+=/blade_flurry,if=talent.deft_maneuvers&!variable.finish_condition&spell_targets>=5&(!buff.disorienting_strikes.up|stealthed.all|buff.escalating_blade.stack>=4)
-# With a natural 5 buff roll, use Keep it Rolling when you obtain the remaining buff from Count the Odds and all buffs are within 30s remaining.
-actions.cds+=/keep_it_rolling,if=rtb_buffs.normal>=5&rtb_buffs=6&rtb_buffs.max_remains<=30
+# With a natural 5 buff roll, use Keep it Rolling when you obtain the remaining buff from Count the Odds.
+actions.cds+=/keep_it_rolling,if=rtb_buffs.normal>=5&rtb_buffs=6
 # Without a natural 5 buff roll, use Keep it Rolling at any 4+ buffs.
 actions.cds+=/keep_it_rolling,if=rtb_buffs>=4&rtb_buffs.normal<=2
 # Without a natural 5 buff roll, use Keep it Rolling at 3 buffs if you have the combination of Ruthless Precision + Broadside + True Bearing.
@@ -80,11 +80,11 @@ actions.cds+=/use_item,name=mad_queens_mandate,if=!stealthed.all|boss&fight_rema
 actions.cds+=/vanish,if=talent.underhanded_upper_hand&talent.subterfuge&buff.adrenaline_rush.up&!stealthed.all&buff.adrenaline_rush.remains<2&cooldown.adrenaline_rush.remains>30
 # If not at risk of losing Adrenaline Rush, run finishers to use Killing Spree or Coup de Grace as a higher priority than Vanish.
 actions.cds+=/run_action_list,name=finish,if=!stealthed.all&(cooldown.killing_spree.ready&talent.killing_spree|buff.escalating_blade.stack>=4)&variable.finish_condition
-# If not at risk of losing Adrenaline Rush, call flexible Vanish rules to be used at finisher CPs. Trickster builds attempt to hold Vanish if at 3 stacks of Escalating Blades with Disorienting Strikes active.
-actions.cds+=/call_action_list,name=vanish_usage,if=!stealthed.all&talent.crackshot&talent.underhanded_upper_hand&talent.subterfuge&buff.adrenaline_rush.up&variable.finish_condition&(buff.escalating_blade.stack!=3|!buff.disorienting_strikes.up)
+# If not at risk of losing Adrenaline Rush, call flexible Vanish rules to be used at finisher CPs.
+actions.cds+=/call_action_list,name=vanish_usage,if=!stealthed.all&talent.crackshot&talent.underhanded_upper_hand&talent.subterfuge&buff.adrenaline_rush.up&variable.finish_condition
 actions.cds+=/call_action_list,name=vanish_usage_off_meta,if=!stealthed.all&(!talent.underhanded_upper_hand|!talent.crackshot|!talent.subterfuge)
 # Generic catch-all for Shadowmeld. Technically, usage in DungeonSlice or DungeonRoute sims could mirror Vanish usage on packs.
-actions.cds+=/shadowmeld,if=variable.finish_condition&!cooldown.vanish.ready
+actions.cds+=/shadowmeld,if=variable.finish_condition&!cooldown.vanish.ready&!stealthed.all
 # Use Blade Rush at minimal energy outside of stealth.
 actions.cds+=/blade_rush,if=energy.base_time_to_max>4&!stealthed.all
 actions.cds+=/potion,if=buff.bloodlust.up|boss&fight_remains<30|buff.adrenaline_rush.up
@@ -104,8 +104,6 @@ actions.finish+=/killing_spree
 actions.finish+=/coup_de_grace
 # Use Between the Eyes outside of Stealth to maintain the buff, or with Ruthless Precision active, or to proc Greenskins Wickers if not active. Trickster builds can also send BtE on cooldown.
 actions.finish+=/between_the_eyes,if=(buff.ruthless_precision.up|buff.between_the_eyes.remains<4|!talent.mean_streak)&(!buff.greenskins_wickers.up|!talent.greenskins_wickers)
-# Crackshot builds use Between the Eyes outside of Stealth to refresh the Between the Eyes crit buff or on cd with the Ruthless Precision buff
-actions.finish+=/between_the_eyes,if=talent.crackshot&(buff.ruthless_precision.up|buff.between_the_eyes.remains<4|!talent.keep_it_rolling|!talent.mean_streak)
 actions.finish+=/cold_blood
 actions.finish+=/dispatch
 

@@ -15,9 +15,7 @@ local ResetDisabledGearAndSpells = ns.ResetDisabledGearAndSpells
 local RegisterEvent = ns.RegisterEvent
 local RegisterUnitEvent = ns.RegisterUnitEvent
 
-local formatKey = ns.formatKey
 local getSpecializationKey = ns.getSpecializationKey
-local tableCopy = ns.tableCopy
 
 local LSR = LibStub( "SpellRange-1.0" )
 
@@ -275,6 +273,24 @@ local HekiliSpecMixin = {
             end
 
             class.knownAuraAttributes[ element ] = true
+        end
+
+        if data.tick_time and not data.tick_fixed then
+            if a.funcs.tick_time then
+                local original = a.funcs.tick_time
+                a.funcs.tick_time = setfenv( function( ... )
+                    local val = original( ... )
+                    return ( val or 3 ) * haste
+                end, state )
+                a.funcs.base_tick_time = original
+            else
+                local original = a.tick_time
+                a.funcs.tick_time = setfenv( function( ... )
+                    return ( original or 3 ) * haste
+                end, state )
+                a.base_tick_time = original
+                a.tick_time = nil
+            end
         end
 
         self.auras[ aura ] = a
@@ -1898,28 +1914,26 @@ all:RegisterAuras( {
         duration = 3600,
         generate = function( t )
             local e = state.empowerment
-            local spell = e.spell
-
-            local ability = class.abilities[ spell ]
+            local ability = class.abilities[ e.spell ]
+            local spell = ability and ability.key or e.spell
 
             t.name = ability and ability.name or "蓄力中"
             t.count = e.start > 0 and 1 or 0
             t.expires = e.hold
-            t.applied = e.start
-            t.duration = e.hold - e.start
+            t.applied = e.start - 0.1
+            t.duration = e.hold - t.applied
             t.v1 = ability and ability.id or 0
             t.v2 = 0
             t.v3 = 0
             t.spell = spell
             t.caster = "player"
 
-            if t.expires > 0 then
-                local timeDiff = state.now - t.applied
-                state.now = state.now - timeDiff
-
+            if t.remains > 0 then
+                local timeDiff = state.now - e.start - 0.1
                 if Hekili.ActiveDebug then
                     Hekili:Debug( "蓄力技能：%s[%.2f], 单位： %s; 回溯时间 %.2f...", t.name, t.remains, t.caster, timeDiff )
                 end
+                state.now = state.now - timeDiff
             end
         end,
     },
@@ -1958,7 +1972,7 @@ all:RegisterAuras( {
                         if Hekili.ActiveDebug then Hekili:Debug( "施放中的 '%s' 是可以伪中断的", spell ) end
                         t.v2 = 0
 
-                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
+                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
                         if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，施放中的 '%s' 是不可中断的。", spell ) end
                         t.v2 = 1
                     end
@@ -1995,7 +2009,7 @@ all:RegisterAuras( {
                         if Hekili.ActiveDebug then Hekili:Debug( "引导中的 '%s' 是可以伪中断的。", spell ) end
                         t.v2 = 0
 
-                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
+                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
                         if Hekili.ActiveDebug then Hekili:Debug( "根据用户偏好，引导中的 '%s' 是不可中断的。", spell ) end
                         t.v2 = 1
                     end
