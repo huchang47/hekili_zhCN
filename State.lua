@@ -694,6 +694,7 @@ state.remove = table.remove
 state.tonumber = tonumber
 state.tostring = tostring
 state.type = type
+state.unpack = unpack
 
 state.safenum = function( val )
     if type( val ) == "number" then return val end
@@ -1257,7 +1258,6 @@ state.dismissPet = dismissPet
 
 
 local function summonTotem( name, elem, duration )
-
     if elem then
         state.totem[ elem ] = rawget( state.totem, elem ) or {}
         state.totem[ elem ].name = name
@@ -1410,7 +1410,7 @@ do
             -- Adjust timeout based on rune cooldowns and regen models for Frost DK
             timeout = max( timeout, 0.01 + state.runes.expiry[ 6 ] - state.query_time )
         elseif state.spec.assassination then
-            timeout = 15.01
+            timeout = max( timeout, 0.01 + state.energy.max / max( 0.001, state.energy.regen_combined ) )
         end
 
         timeout = timeout + state.gcd.remains
@@ -1463,9 +1463,11 @@ do
         local finish = now + timeout
         local prev = now
         local iter = 0
-        local regen = r.regen > 0.001 and r.regen or 0
 
-        while ( #events > 0 and now <= finish and iter < 20 ) do
+        local regen = r.regen_combined and r.regen_combined or r.regen or 0
+        regen = regen > 0.001 and regen or 0
+
+        while ( #events > 0 and now <= finish and iter < 30 ) do
             local e = events[ 1 ]
             iter = iter + 1
 
@@ -1541,6 +1543,7 @@ do
                 r.forecast[ idx ] = r.forecast[ idx ] or {}
                 r.forecast[ idx ].t = finish
                 r.forecast[ idx ].v = min( r.max, val + ( v * regen ) )
+                r.forecast[ idx ].e = "to_max"
                 r.fcount = idx
             end
         end
@@ -1636,13 +1639,27 @@ do
         end
     end
 
+    local recurseRechecks
+    recurseRechecks = function( script, seen )
+        if not seen then seen = {}
+        else seen[ script.ID ] = script.Recheck or true end
 
-    local function channelInfo( ability )
-        if state.system.packName and scripts.Channels[ state.system.packName ] then
-            return scripts.Channels[ state.system.packName ][ state.channel ], class.auras[ state.channel ]
+        if script.Variables then
+            for _, var in ipairs( script.Variables ) do
+                local varIDs = state:GetVariableIDs( var )
+                if varIDs then
+                    for _, entry in ipairs( varIDs ) do
+                        if not seen[ entry.id ] then
+                            local subscript = scripts.DB[ entry.id ]
+                            if subscript then recurseRechecks( subscript, seen ) end
+                        end
+                    end
+                end
+            end
         end
-    end
 
+        return seen
+    end
 
     function state.recheck( ability, script, stack, block )
         local times = state.recheckTimes
@@ -1656,21 +1673,17 @@ do
                 recheckHelper( workTable, script.Recheck() )
             end
 
-            -- This can be CPU intensive but is needed for some APLs (i.e., Unholy).
             if script.Variables then
-                -- if Hekili.ActiveDebug then table.insert( steps, debugprofilestop() ) end
-                for i, var in ipairs( script.Variables ) do
-                    local varIDs = state:GetVariableIDs( var )
+                if not script.AllRechecks then
+                    script.AllRechecks = recurseRechecks( script )
 
-                    if varIDs then
-                        for _, entry in ipairs( varIDs ) do
-                            local vr = scripts.DB[ entry.id ].VarRecheck
-                            if vr then
-                                recheckHelper( workTable, vr() )
-                            end
-                        end
+                    for id, func in pairs( script.AllRechecks ) do
+                        if type( func ) ~= "function" then script.AllRechecks[ id ] = nil end
                     end
-                    -- if Hekili.ActiveDebug then table.insert( steps, debugprofilestop() ) end
+                end
+
+                for id, func in pairs( script.AllRechecks ) do
+                    recheckHelper( workTable, func() )
                 end
             end
         end
@@ -1699,6 +1712,20 @@ do
 
                 if callScript and callScript.Recheck then
                     recheckHelper( workTable, callScript.Recheck() )
+
+                    if callScript.Variables then
+                        if not callScript.AllRechecks then
+                            callScript.AllRechecks = recurseRechecks( callScript )
+
+                            for id, func in pairs( callScript.AllRechecks ) do
+                                if type( func ) ~= "function" then callScript.AllRechecks[ id ] = nil end
+                            end
+                        end
+
+                        for id, func in pairs( callScript.AllRechecks ) do
+                            recheckHelper( workTable, func() )
+                        end
+                    end
                 end
             end
         end
@@ -1711,45 +1738,26 @@ do
                 if callScript and callScript.Recheck then
                     recheckHelper( workTable, callScript.Recheck() )
                 end
-            end
-        end
 
-        -- if Hekili.ActiveDebug then table.insert( steps, debugprofilestop() ) end
+                if callScript and callScript.Recheck then
+                    recheckHelper( workTable, callScript.Recheck() )
 
-        --[[ if state.channeling then
-            local aura = class.auras[ state.channel ]
-            local remains = state.channel_remains
+                    if callScript.Variables then
+                        if not callScript.AllRechecks then
+                            callScript.AllRechecks = recurseRechecks( callScript )
 
-            if aura and aura.tick_time then
-                -- Put tick times into recheck.
-                local i = 1
-                while ( true ) do
-                    if remains - ( i * aura.tick_time ) > 0 then
-                        workTable[ roundUp( remains - ( i * aura.tick_time ), 3 ) ] = true
-                    else break end
-                    i = i + 1
-                end
+                            for id, func in pairs( callScript.AllRechecks ) do
+                                if type( func ) ~= "function" then callScript.AllRechecks[ id ] = nil end
+                            end
+                        end
 
-                for time in pairs( workTable ) do
-                    if ( ( remains - time ) / aura.tick_time ) % 1 <= 0.5 then
-                        workTable[ time ] = nil
+                        for id, func in pairs( callScript.AllRechecks ) do
+                            recheckHelper( workTable, func() )
+                        end
                     end
                 end
             end
-
-            workTable[ remains ] = true
-        end ]]
-
-        --[[ if #steps > 0 then
-            -- table.insert( steps, debugprofilestop() )
-            local str = string.format( "RECHECK: %.2f", steps[#steps] - steps[1] )
-
-            for i = 2, #steps do
-                str = string.format( "%s, %.2f ", str, steps[i] - steps[i-1] )
-            end
-
-            print( str )
-        end ]]
+        end
 
         wipe( times )
 
@@ -2264,6 +2272,9 @@ do
             local ability = class.abilities[ action ]
             local cooldown = t.cooldown[ action ]
 
+            -- Empowerment oddity.
+            if k == "duration" and action and model and model.empowered then return max( t.gcd.max, model.cast_time ) end -- Still ugh.
+
             if k == "action_cooldown" then return ability and ability.cooldown or 0
             elseif k == "cast_delay" then return 0
             elseif k == "cast_regen" then
@@ -2306,6 +2317,7 @@ do
                 return c or 0
 
             elseif k == "crit_pct_current" or k == "crit_percent_current" then return ability and ability.critical or t.stat.crit
+
             elseif k == "execute_remains" then
                 -- TODO:  Check out if this is functioning as expected.
                 -- Should buff.casting already suffice for a cast?  A queued cast should already trigger a casting buff.
@@ -2566,7 +2578,6 @@ do
     -- Table of default handlers for specific pets/totems.
     mt_default_pet = {
         __index = function( t, k )
-
             if k == "expires" then
                 local totemIcon = rawget( t, "icon" )
 
@@ -2616,7 +2627,6 @@ do
                 end
                 return t.expires
 
-
             elseif k == "remains" then
                 return max( 0, t.expires - ( state.query_time ) )
 
@@ -2629,7 +2639,6 @@ do
             elseif k == "id" then
                 local id = t.model and t.model.id
                 if type( id ) == "function" then id = id() end
-
                 return id
 
             elseif k == "spec" then
@@ -2682,7 +2691,7 @@ do
                     local token = petData.token or alias
                     local entry = rawget( t, token )
                     if entry and type( entry ) == "table" then
-                        rawset( entry, "expires", 0 )
+                        t.expires = 0
                     end
                 end
             end
@@ -2981,6 +2990,7 @@ do
             elseif k == "moving" then t[k] = GetUnitSpeed( "target" ) > 0
             elseif k == "real_ttd" or k == "true_ttd" then
                 t[k] = Hekili:GetTTD( "target" )
+
             elseif k == "time_to_die" then
                 if state.IsCycling() then return state.raid_event.adds.remains end
 
@@ -3270,6 +3280,9 @@ do
                 return remains * reduction
 
             elseif k == "duration_guess" or k == "duration_expected" then
+                local expected = class.abilities[ t.key ].cooldown_estimate
+                if expected then return expected end
+
                 local remains, duration = t.remains, t.duration
                 if remains == 0 or remains == duration then return duration end
 
@@ -5539,7 +5552,8 @@ local mt_aura = {
 
 local mt_empowering = {
     __index = function( t, k )
-        return state.buff.empowering.up and state.buff.empowering.spell == k
+        if state.buff.empowering.down then return false end
+        return state.buff.empowering.spell == k
     end
 }
 
@@ -6621,7 +6635,6 @@ do
 
         for i = 1, 5 do
             local _, _, start, duration, icon = GetTotemInfo( i )
-
             if icon and class.totems[ icon ] then
                 summonPet( class.totems[ icon ], start + duration - state.now )
             end
@@ -6934,8 +6947,8 @@ Hekili:ProfileCPU( "state.reset", state.reset )
 
 
 function state:SetConstraint( min, max )
-    state.delayMin = min or 0
-    state.delayMax = max or 15
+    if min then state.delayMin = min end
+    if max then state.delayMax = max end
 end
 
 

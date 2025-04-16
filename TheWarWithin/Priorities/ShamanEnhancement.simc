@@ -100,7 +100,7 @@ actions.aoe_open+=/stormstrike
 
 # Multi target action priority list for the Totemic hero talent tree
 actions.aoe_totemic+=/surging_totem
-actions.aoe_totemic+=/call_action_list,name=aoe_totemic_open,strict=1,if=(cooldown.doom_winds.remains=0|cooldown.sundering.remains=0|!buff.hot_hand.up)&time<15
+actions.aoe_totemic+=/call_action_list,name=aoe_totemic_open,strict_if=time<15,if=(cooldown.doom_winds.remains=0|cooldown.sundering.remains=0|!buff.hot_hand.up)&time<15
 actions.aoe_totemic+=/ascendance,if=ti_chain_lightning
 actions.aoe_totemic+=/flame_shock,if=!ticking&(talent.ashen_catalyst.enabled|talent.primordial_wave.enabled)
 actions.aoe_totemic+=/crash_lightning,if=talent.crashing_storms.enabled&(active_enemies>=15-5*talent.unruly_winds.enabled)
@@ -205,7 +205,7 @@ actions.funnel+=/flame_shock,if=!ticking
 actions.funnel+=/frost_shock,if=!talent.hailstorm.enabled
 
 # Single target action priority list
-actions.single+=/call_action_list,name=single_open,if=time<15
+actions.single+=/call_action_list,name=single_open,strict=1,if=time<15
 actions.single+=/primordial_storm,if=buff.maelstrom_weapon.stack>=10|buff.primordial_storm.remains<=4&buff.maelstrom_weapon.stack>=5|buff.primordial_storm.remains<gcd.maX*1.5
 actions.single+=/flame_shock,if=!ticking&(talent.ashen_catalyst.enabled|talent.primordial_wave.enabled|talent.lashing_flames.enabled)
 actions.single+=/feral_spirit,if=(cooldown.doom_winds.remains>30|cooldown.doom_winds.remains<7)
@@ -259,7 +259,7 @@ actions.single_open+=/lava_lash,if=talent.elemental_assault.enabled&talent.molte
 actions.single_open+=/ice_strike
 
 # Single target action priority list for the Totemic hero talent tree
-actions.single_totemic+=/call_action_list,name=single_totemic_open,if=time<20
+actions.single_totemic+=/call_action_list,name=single_totemic_open,strict=1,if=time<20
 actions.single_totemic+=/surging_totem
 actions.single_totemic+=/ascendance,if=ti_lightning_bolt&pet.surging_totem.remains>4&(buff.totemic_rebound.stack>=3|buff.maelstrom_weapon.stack>0)
 actions.single_totemic+=/flame_shock,if=!ticking&(talent.ashen_catalyst.enabled|talent.primordial_wave.enabled)

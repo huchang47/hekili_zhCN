@@ -440,6 +440,7 @@ local actionTemplate = {
     -- Call/Run Action List
     list_name = nil,
     strict = nil,
+    strict_if = "",
 
     -- Pool Resource
     wait = "0.5",
@@ -5977,6 +5978,17 @@ found = true end
     end
 
 
+    -- Options to nil if val is false.
+    local review_options = {
+        enable_moving = 1,
+        line_cd = 1,
+        only_cwc = 1,
+        strict = 1,
+        strict_if = 1,
+        use_off_gcd = 1,
+        use_while_casting = 1
+    }
+
     function Hekili:SetActionOption( info, val )
         local n = #info
         local pack, option = info[ 2 ], info[ n ]
@@ -5994,34 +6006,20 @@ found = true end
 
         if option == "inputName" or option == "selectName" then option = nameMap[ data.action ] end
 
-        if toggleToNumber[ option ] then val = val and 1 or 0 end
-        if type( val ) == 'string' then val = val:trim() end
+        if toggleToNumber[ option ] then
+            if review_options[ option ] and not val then val = nil
+            else val = val and 1 or 0 end
+        end
+        if type( val ) == 'string' then
+            val = val:trim()
+            if val:len() == 0 then val = nil end
+        end
 
         if option == "caption" then
             val = val:gsub( "||", "|" )
         end
 
         data[ option ] = val
-
-        if option == "enable_moving" and not val then
-            data.moving = nil
-        end
-
-        if option == "line_cd" and not val then
-            data.line_cd = nil
-        end
-
-        if option == "use_off_gcd" and not val then
-            data.use_off_gcd = nil
-        end
-
-        if option =="only_cwc" and not val then
-            data.only_cwc = nil
-        end
-
-        if option == "strict" and not val then
-            data.strict = nil
-        end
 
         if option == "use_while_casting" and not val then
             data.use_while_casting = nil
@@ -6677,8 +6675,10 @@ found = true end
                                             for pId, pData in pairs( Hekili.DB.profile.packs ) do
                                                 if pData.builtIn and pData.spec == specId then
                                                     defPack = pId
-                                                    if spec.package == pack then spec.package = pId
-break end
+                                                    if spec.package == pack then
+                                                        spec.package = pId
+                                                        break
+                                                    end
                                                 end
                                             end
                                         end
@@ -7600,6 +7600,7 @@ n = tonumber( n ) + 1
                                                 criteria = {
                                                     type = "input",
                                                     name = "条件",
+                                                    desc = "设置当前指令被推荐或用于生成推荐时必须满足的条件。",
                                                     order = 3.6,
                                                     width = "full",
                                                     multiline = 6,
@@ -7642,7 +7643,8 @@ n = tonumber( n ) + 1
                                                 value = {
                                                     type = "input",
                                                     name = "数值",
-                                                    desc = "提供调用此变量时要存储（或计算）的数值。",
+                                                    desc = "提供调用此变量时要存储（或计算）的数值。\n\n"
+                                                        .. "如果提供了条件，那么当这些条件满足时，此数值就会被设置。",
                                                     order = 3.61,
                                                     width = "full",
                                                     multiline = 3,
@@ -7776,7 +7778,9 @@ n = tonumber( n ) + 1
                                                         local e = GetListEntry( pack )
                                                         local ability = e.action and class.abilities[ e.action ]
 
-                                                        return not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
+                                                        return not e.cycle_targets and
+                                                            not e.max_cycle_targets and
+                                                            not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
                                                     end,
                                                 },
 
@@ -7813,7 +7817,8 @@ n = tonumber( n ) + 1
                                                         local e = GetListEntry( pack )
                                                         local ability = e.action and class.abilities[ e.action ]
 
-                                                        return not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
+                                                        return not e.enable_moving and
+                                                            not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
                                                     end,
                                                 },
 
@@ -7849,7 +7854,10 @@ n = tonumber( n ) + 1
                                                         local e = GetListEntry( pack )
                                                         local ability = e.action and class.abilities[ e.action ]
 
-                                                        return not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
+                                                        return not e.use_off_gcd and
+                                                            not e.use_while_casting and
+                                                            not e.only_cwc and
+                                                            not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
                                                     end,
                                                 },
 
@@ -7872,17 +7880,14 @@ n = tonumber( n ) + 1
                                                             desc = "如果设置，则强制在上次使用此项目后一定时间后，才会再次被推荐。",
                                                             order = 1,
                                                             width = "full",
-                                                            --[[ disabled = function( info )
-                                                                local e = GetListEntry( pack )
-                                                                return not e.enable_line_cd
-                                                            end, ]]
                                                         },
                                                     },
                                                     hidden = function ()
                                                         local e = GetListEntry( pack )
                                                         local ability = e.action and class.abilities[ e.action ]
 
-                                                        return not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
+                                                        return not e.line_cd and
+                                                            not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
                                                     end,
                                                 },
 
@@ -7898,13 +7903,57 @@ n = tonumber( n ) + 1
                                                             desc = "如果勾选，插件将认为此项目不在乎时间，并且在不满足条件时，不会尝试推荐链接的技能列表中的操作。",
                                                             order = 1,
                                                             width = "full",
+                                                        },
+                                                        strict_if = {
+                                                            type = "input",
+                                                            name = "额外即时条件",
+                                                            desc = "如果填写了此处，则必须先满足即时条件，才会检测上述的常规条件。",
+                                                            multiline = 3,
+                                                            dialogControl = "HekiliCustomEditor",
+                                                            arg = function( info )
+                                                                local pack, list, action = info[ 2 ], packControl.listName, tonumber( packControl.actionID )
+                                                                local results = {}
+
+                                                                state.reset( "Primary", true )
+
+                                                                local apack = rawget( self.DB.profile.packs, pack )
+
+                                                                -- Let's load variables, just in case.
+                                                                for name, alist in pairs( apack.lists ) do
+                                                                    state.this_list = name
+
+                                                                    for i, entry in ipairs( alist ) do
+                                                                        if name ~= list or i ~= action then
+                                                                            if entry.action == "variable" and entry.var_name then
+                                                                                state:RegisterVariable( entry.var_name, pack .. ":" .. name .. ":" .. i, name )
+                                                                            end
+                                                                        end
+                                                                    end
+                                                                end
+
+                                                                local entry = apack and apack.lists[ list ]
+                                                                entry = entry and entry[ action ]
+
+                                                                state.this_action = entry.action
+                                                                state.this_list = list
+
+                                                                local scriptID = pack .. ":" .. list .. ":" .. action
+                                                                state.scriptID = scriptID
+                                                                scripts:StoreValues( results, scriptID, "strict_if" )
+
+                                                                return results, list, action
+                                                            end,
+                                                            order = 2,
+                                                            width = "full",
                                                         }
                                                     },
                                                     hidden = function ()
                                                         local e = GetListEntry( pack )
                                                         local ability = e.action and class.abilities[ e.action ]
 
-                                                        return not packControl.showModifiers or ( not ability or not ( ability.key == "call_action_list" or ability.key == "run_action_list" ) )
+                                                        return not e.strict and
+                                                            not e.strict_if and
+                                                            not packControl.showModifiers or ( not ability or not ( ability.key == "call_action_list" or ability.key == "run_action_list" ) )
                                                     end,
                                                 },
 
@@ -10092,9 +10141,7 @@ do
                         name = BlizzBlue .. "监控性能|r",
                         desc = "如果勾选，插件将追踪事件的处理时间和数量。",
                         order = 3,
-                        hidden = function()
-                            return not Hekili.Version:match("Dev")
-                        end,
+                        hidden = true
                     },
 
                     welcome = {
@@ -10108,61 +10155,86 @@ do
                         width = "full"
                     },
 
-                    NoPayTips = {
-                        type = "description",
-                        name = function ()
-                            return "|cFFBB3F3F译者提示：Hekili是免费插件。大家不要在任何渠道付费下载。请前往NGA论坛免费下载。实在想花钱的话，请去捐助原作者，支持他继续开发这个神级插件。|r\n"
-                        end,
-                        fontSize = "Large",
-                        order = 5,
-                        width = "full"
-                    },
-
-                    freedown = {
-                        type = "input",
-                        name = "免费下载",
-                        order = 5,
-                        get = function () return "https://nga.178.com/read.php?tid=30198980" end,
-                        set = function () end,
-                        width = "full",
-                        dialogControl = "SFX-Info-URL",
-                    },
-
                     supporters = {
                         type = "description",
                         name = function ()
-                            return "\n|cFF00CCFF感谢我们的支持者！|r\n\n" .. ns.Patrons .. ".\n\n" ..
-                                "若提交Bug报告，请访问 |cFFFFD100Issue Reporting|r 页面。\n\n"
+                            return "|cFF00CCFF感谢我们的支持者！|r\n\n" .. ns.Patrons .. "\n\n" ..
+                                "有关如何报告漏洞的信息，请查看|cFFFFD100快照（故障排除）|r 部分。\n\n"
                         end,
                         fontSize = "medium",
                         order = 6,
                         width = "full"
                     },
 
+                    discord = {
+                        type = "input",
+                        name = "Discord",
+                        desc = "加入 Hekili 的Discord服务器获取支持和参与讨论。",
+                        order = 7,
+                        get = function () return "https://discord.gg/3cCTFxM" end,
+                        set = function () end,
+                        width = "full",
+                        dialogControl = "SFX-Info-URL",
+                    },
+                    discordSpace = {
+                        type = "description",
+                        name = " ",
+                        order = 8,
+                        width = "full",
+                    },
+
+
+                    github = {
+                        type = "input",
+                        name = "GitHub代码平台",
+                        desc = "在Github上更新。",
+                        order = 10,
+                        get = function () return "https://github.com/Hekili/hekili/releases" end,
+                        set = function () end,
+                        width = "full",
+                        dialogControl = "SFX-Info-URL",
+                    },
                     curse = {
                         type = "input",
-                        name = "Curse插件站",
-                        order = 10,
+                        name = "CurseForge插件站",
+                        desc = "在CF插件站上更新",
+                        order = 11,
                         get = function () return "https://www.curseforge.com/wow/addons/hekili" end,
                         set = function () end,
                         width = "full",
                         dialogControl = "SFX-Info-URL",
                     },
-
-                    github = {
+                    wago = {
                         type = "input",
-                        name = "GitHub代码库",
-                        order = 11,
-                        get = function () return "https://github.com/Hekili/hekili/" end,
+                        name = "Wago分享站",
+                        desc = "在Wago上更新。",
+                        order = 12,
+                        get = function () return "https://addons.wago.io/addons/hekili" end,
                         set = function () end,
                         width = "full",
                         dialogControl = "SFX-Info-URL",
+                    },
+                    wowi = {
+                        type = "input",
+                        name = "WoW Interface插件站",
+                        desc = "在WoW Interface上更新",
+                        order = 13,
+                        get = function () return "https://www.wowinterface.com/downloads/info24608-HekiliPriorityHelper.html" end,
+                        set = function () end,
+                        width = "full",
+                        dialogControl = "SFX-Info-URL",
+                    },
+                    updaterSpace = {
+                        type = "description",
+                        name = " ",
+                        order = 14,
+                        width = "full",
                     },
 
                     link = {
                         type = "input",
                         name = "建议反馈",
-                        order = 12,
+                        order = 20,
                         width = "full",
                         get = function() return "http://github.com/Hekili/hekili/issues" end,
                         set = function() end,
@@ -10171,7 +10243,7 @@ do
                     faq = {
                         type = "input",
                         name = "FAQ / 帮助",
-                        order = 13,
+                        order = 21,
                         width = "full",
                         get = function() return "https://github.com/Hekili/hekili/wiki/Frequently-Asked-Questions" end,
                         set = function() end,
@@ -10179,8 +10251,8 @@ do
                     },
                     simulationcraft = {
                         type = "input",
-                        name = "SimC模拟",
-                        order = 14,
+                        name = "SimC Wiki",
+                        order = 22,
                         get = function () return "https://github.com/simulationcraft/simc/wiki" end,
                         set = function () end,
                         width = "full",
@@ -10189,7 +10261,7 @@ do
 		    newbee = {
                         type = "input",
                         name = "新手盒子",
-                        order = 15,
+                        order = 23,
                         get = function () return "https://www.wclbox.com/" end,
                         set = function () end,
                         width = "full",
@@ -10455,11 +10527,44 @@ do
                         args = {
                             issueReporting_snapshot_next_info = {
                                 type = "description",
-                                name = "|cFFFFD100快照已经在你的剪贴板中准备被粘贴|r\n\n" .. 
-                                "1. 访问 Pastebin 网站：https://pastebin.com/" .. 
-                                "\n\n2. 将它粘贴在需要的地方(discord频道，或者一个 github 工单)",
-                                order = 5.1,
+                                name = "将快照数据复制到剪贴板后，前往 Pastebin。",
                                 fontSize = "medium",
+                                order = 1,
+                                width = "full",
+                            },
+                            issueReporting_snapshot_next_info_2 = {
+                                type = "input",
+                                name = "Pastebin",
+                                dialogControl = "SFX-Info-URL",
+                                get = function() return "https://pastebin.org/" end,
+                                set = function() end,
+                                order = 2,
+                                width = "full",
+                            },
+                            issueReporting_snapshot_next_info_3 = {
+                                type = "description",
+                                name = "将快照数据粘贴到大文本框中，（快捷键|cFFFFD100CTRL+V|r），然后点击|cFFFFD100新建粘贴|r。\n\n"
+                                    .. "然后从浏览器中复制链接地址，并在合适的地方提供该链接，无论是在 Discord 上还是在 GitHub 的问题报告中。",
+                                fontSize = "medium",
+                                order = 3,
+                                width = "full"
+                            },
+                            issueReporting_snapshot_next_info_3 = {
+                                type = "input",
+                                name = "Discord频道",
+                                dialogControl = "SFX-Info-URL",
+                                get = function() return "https://discord.gg/3cCTFxM" end,
+                                set = function() end,
+                                order = 2,
+                                width = "full",
+                            },
+                            issueReporting_snapshot_next_info_2 = {
+                                type = "input",
+                                name = "GitHub问题报告",
+                                dialogControl = "SFX-Info-URL",
+                                get = function() return "http://github.com/Hekili/hekili/issues" end,
+                                set = function() end,
+                                order = 2,
                                 width = "full",
                             },
                         },
@@ -10485,7 +10590,7 @@ do
                         width = "full",
                         fontSize = "medium",
                         hidden = function() return snapshots.selected == 0 or #ns.snapshots == 0 end,
-                        }
+                    }
 
                 },
             },
@@ -12107,7 +12212,7 @@ do
                         -- TODO:  Automerge multiple criteria.
                         if key == 'if' or key == 'condition' then key = 'criteria' end
 
-                        if key == 'criteria' or key == 'target_if' or key == 'value' or key == 'value_else' or key == 'sec' or key == 'wait' then
+                        if key == 'criteria' or key == 'target_if' or key == 'value' or key == 'value_else' or key == 'sec' or key == 'wait' or key == 'strict_if' then
                             value = Sanitize( 'c', value, line, warnings )
                             value = SpaceOut( value )
                         end
@@ -12141,8 +12246,10 @@ do
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
             if result.use_while_casting then result.use_while_casting = tonumber( result.use_while_casting ) end
             if result.strict then result.strict = tonumber( result.strict ) end
-            if result.moving then result.enable_moving = true
-result.moving = tonumber( result.moving ) end
+            if result.moving then
+                result.enable_moving = true
+                result.moving = tonumber( result.moving )
+            end
 
             if result.target_if and not result.criteria then
                 result.criteria = result.target_if

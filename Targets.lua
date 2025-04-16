@@ -1246,6 +1246,8 @@ do
     end
 
     function Hekili:GetTTD( unit, isGUID )
+        if state.target.is_dummy then return 180 end
+
         local default = ( isGUID or UnitIsTrivial(unit) and UnitLevel(unit) > -1 ) and TRIVIAL or FOREVER
         local guid = isGUID and unit or UnitExists(unit) and UnitCanAttack("player", unit) and UnitGUID(unit)
 
@@ -1253,7 +1255,7 @@ do
             return default
         end
 
-        local enemy = db[guid]
+        local enemy = db [guid ]
         if not enemy then
             return default
         end

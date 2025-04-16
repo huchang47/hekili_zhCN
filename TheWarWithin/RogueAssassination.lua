@@ -2919,6 +2919,7 @@ spec:RegisterSetting( "fok_critical_cp_prediction", "predict", {
     width = 1.5,
 } )
 
+--[[
 spec:RegisterSetting( "envenom_pool_pct", 0, {
     name = strformat( "使用 %s 的最小能量", Hekili:GetSpellLinkWithTexture( 32645 ) ),
     desc = strformat( "如果设置大于0，%s 将仅在你至少拥有这个百分比能量时被推荐。", Hekili:GetSpellLinkWithTexture( 32645 ) ),
@@ -2931,7 +2932,7 @@ spec:RegisterSetting( "envenom_pool_pct", 0, {
 
 spec:RegisterStateExpr( "envenom_pool_deficit", function ()
     return energy.max * ( ( 100 - ( settings.envenom_pool_pct or 100 ) ) / 100 )
-end )
+end ) ]]
 
 spec:RegisterSetting( "vanish_charges_reserved", 0, {
     name = strformat( "预留 %s 的消耗", Hekili:GetSpellLinkWithTexture( 1856 ) ),
