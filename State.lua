@@ -1109,24 +1109,27 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
         unit = "target"
     end
 
-    if not class.auras[ aura ] then
+    local model = class.auras[ aura ]
+    if not model then
         Error( "Attempted to apply unknown aura '%s'.", aura )
         local spec = class.specs[ state.spec.id ]
         if spec then
             spec:RegisterAura( aura, { ["duration"] = duration } )
-            class.auras[ aura ] = spec.auras[ aura ]
+            model = spec.auras[ aura ]
         end
 
-        if not class.auras[ aura ] then return end
+        if not model then return end
     end
 
     if state.cycle then
         if duration == 0 then
             if Hekili.ActiveDebug then Hekili:Debug( "Removed an application of '%s' while target-cycling.", aura ) end
             state.active_dot[ aura ] = state.active_dot[ aura ] - 1
+            if model.key ~= aura then state.active_dot[ model.key ] = state.active_dot[ aura ] end
         else
             if Hekili.ActiveDebug then Hekili:Debug( "Added an application of '%s' while target-cycling.", aura ) end
             state.active_dot[ aura ] = state.active_dot[ aura ] + 1
+            if model.key ~= aura then state.active_dot[ model.key ] = state.active_dot[ aura ] end
         end
         return
     end
@@ -1146,9 +1149,11 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
         d.unit = unit
 
         state.active_dot[ aura ] = max( 0, state.active_dot[ aura ] - 1 )
+        if model.key ~= aura then state.active_dot[ model.key ] = state.active_dot[ aura ] end
     else
         if d.down or state.active_dot[ aura ] == 0 then
             state.active_dot[ aura ] = state.active_dot[ aura ] + 1
+            if model.key ~= aura then state.active_dot[ model.key ] = state.active_dot[ aura ] end
             -- TODO: Aura scraping utility may want to populate active_dot table when it sees an aura that wasn't tracked.
         end
 
@@ -5011,10 +5016,12 @@ do
                 return cycle_debuff[ k ]
             end
 
-            if aura and rawget( aura, "meta" ) and aura.meta[ k ] then
+            local meta = aura and rawget( aura, "meta" )
+
+            if meta and meta[ k ]  then
                 if not t.metastack[ k ] then
                     t.metastack[ k ] = true
-                    local value = aura.meta[ k ]( t, "debuff" )
+                    local value = meta[ k ]( t, "debuff" )
                     t.metastack[ k ] = nil
                     if value ~= nil then return value end
                 end
@@ -5067,9 +5074,9 @@ do
             -- This change means that any references to t.X should only occur where X is a real value and not a metatable lookup.
 
             local moment = state.query_time
-            local applied = t.applied
-            local expires = t.expires
-            local remains = applied > 0 and applied <= moment and expires > moment and expires - moment or 0
+            local applied = meta and meta.applied and meta.applied( t, "debuff" ) or t.applied
+            local expires = meta and meta.expires and meta.expires( t, "debuff" ) or t.expires
+            local remains = meta and meta.remains and meta.remains( t, "debuff" ) or applied > 0 and applied <= moment and expires > moment and expires - moment or 0
 
             if k == "remains" then return remains end
 
