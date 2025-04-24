@@ -1535,7 +1535,7 @@ spec:RegisterOptions( {
 } )
 
 spec:RegisterSetting( "priority_rotation", false, {
-    name = "敏锐潜行者能够使用漏斗伤害机制。前往 |cFFFFD100快捷切换|r 了解如何开启和关闭此机制。 " ..
+    name = "敏锐潜行者能够使用漏斗伤害机制。前往 |cFFFFD100快捷开关|r 了解如何开启和关闭此机制。 " ..
     "如果启用漏斗伤害，默认的优先级会推荐使用 |T1375677:0|t 袖箭风暴来积累连击点数，并在单体总结技上使用它们，来对重要目标造成更多伤害。\n\n",
     desc = "",
     type = "description",

@@ -2891,7 +2891,7 @@ spec:RegisterOptions( {
 } )
 
 spec:RegisterSetting( "priority_rotation", false, {
-    name = "奇袭盗贼能够进行漏斗伤害机制。前往 |cFFFFD100快捷切换|r 了解如何开启和关闭此机制。" ..
+    name = "奇袭盗贼能够进行漏斗伤害机制。前往 |cFFFFD100快捷开关|r 了解如何开启和关闭此机制。" ..
     "如果启用漏斗伤害，战斗时的优先级会稍微改变，以求优先对单体目标造成更多伤害。\n\n",
     desc = "",
     type = "description",

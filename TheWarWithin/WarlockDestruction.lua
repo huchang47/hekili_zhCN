@@ -2094,7 +2094,7 @@ spec:RegisterSetting( "default_pet", "summon_sayaad", {
 } )
 
 spec:RegisterSetting( "cleave_apl", false, {
-    name = "\n\n毁灭术士能够使用漏斗伤害机制。前往 |cFFFFD100快捷切换|r 了解如何开启和关闭此机制。" ..
+    name = "\n\n毁灭术士能够使用漏斗伤害机制。前往 |cFFFFD100快捷开关|r 了解如何开启和关闭此机制。" ..
         "如果启用漏斗伤害，默认优先级会建议在AOE状态时，使用混乱箭对重要目标造成更多伤害。\n\n",
     desc = "",
     type = "description",

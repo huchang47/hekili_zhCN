@@ -1278,7 +1278,7 @@ spec:RegisterAbilities( {
             if not t.up then
                 return false, "target is not casting"
             end
-            if not state.target.is_dummy and not class.spellsFilters[ t.v1 ] then
+            if not state.target.is_dummy and not class.spellFilters[ t.v1 ] then
                 return false, "spell[" .. t.v1 .. "] in zone[" .. zone .. "] by npc[" .. npcid .. "] is not on filter"
             end
             if not UnitIsUnit( "player", t.caster .. "target" ) then

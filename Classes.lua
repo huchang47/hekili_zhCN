@@ -1303,9 +1303,9 @@ function Hekili:RestoreDefaults()
         local msg
 
         if #reverted == 1 then
-            msg = "The |cFFFFD100" .. reverted[1] .. "|r priority was reverted."
+            msg = "|cFFFFD100" .. reverted[1] .. "|r 优先级已更新。"
         elseif #reverted == 2 then
-            msg = "The |cFFFFD100" .. reverted[1] .. "|r and |cFFFFD100" .. reverted[2] .. "|r priorities were reverted."
+            msg = "|cFFFFD100" .. reverted[1] .. "|r 和 |cFFFFD100" .. reverted[2] .. "|r 优先级已更新。"
         else
             msg = "|cFFFFD100" .. reverted[1] .. "|r"
 
@@ -1313,7 +1313,7 @@ function Hekili:RestoreDefaults()
                 msg = msg .. ", |cFFFFD100" .. reverted[i] .. "|r"
             end
 
-            msg = "The " .. msg .. ", and |cFFFFD100" .. reverted[ #reverted ] .. "|r priorities were reverted."
+            msg = "|cFFFFD100" .. msg .. "|r 和 |cFFFFD100" .. reverted[ #reverted ] .. "|r 优先级已更新。"
         end
 
         if msg then
@@ -3201,7 +3201,7 @@ all:RegisterAbilities( {
 
     variable = {
         name = "|cff00ccff[变量]|r",
-        listName = '|T136243:0|t |cff00ccff[Variable]|r',
+        listName = '|T136243:0|t |cff00ccff[变量]|r',
         cast = 0,
         cooldown = 0,
         gcd = "off",

@@ -1,5 +1,5 @@
-## Interface: 110100
-## Version: v11.1.0-1.0.24b
+## Interface: 110105
+## Version: v11.1.5-1.0.1
 ## Title: Hekili
 ## Author: Hekili
 ## IconTexture: Interface\AddOns\Hekili\Textures\LOGO-ORANGE.blp
@@ -86,7 +86,9 @@ TheWarWithin\WarriorFury.lua
 TheWarWithin\WarriorProtection.lua
 
 Targets.lua
-Options.lua
+Options\DevTools.lua
+Options\ChatCommands.lua
+Options\Options.lua
 UI.lua
 Scripts.lua
 Core.lua

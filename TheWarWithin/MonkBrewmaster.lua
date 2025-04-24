@@ -262,6 +262,16 @@ spec:RegisterAuras( {
         duration = 10,
         max_stack = 1
     },
+    balanced_stratagem_magic = {
+        id = 451508,
+        duration = 15,
+        max_stack = 5,
+    },
+    balanced_stratagem_physical = {
+        id = 451514,
+        duration = 15,
+        max_stack = 5,
+    },
     blackout_combo = {
         id = 228563,
         duration = 15,
@@ -546,6 +556,11 @@ spec:RegisterAuras( {
         tick_time = 0.75,
         max_stack = 1
     },
+    save_them_all = {
+        id = 390105,
+        duration = 4,
+        max_stack = 1,
+    },
     shuffle = {
         id = 322120,
         duration = 9,
@@ -768,7 +783,7 @@ spec:RegisterGear( "tww2", 229301, 229299, 229298, 229297, 229296 )
 spec:RegisterAuras( {
     -- 2-set
     -- https://www.wowhead.com/ptr-2/spell=1217990/luck-of-the-draw
-    -- Each time you take damage you have a chance to activate Luck of the Draw! causing you to cast Fortifying Brew for 6.0 sec. Your damage done is increased by 15% for 8 sec after Luck of the Draw! activates.  
+    -- Each time you take damage you have a chance to activate Luck of the Draw! causing you to cast Fortifying Brew for 6.0 sec. Your damage done is increased by 15% for 8 sec after Luck of the Draw! activates.
     luck_of_the_draw = {
         id = 1217990,
         duration = 8,
@@ -1078,6 +1093,15 @@ spec:RegisterStateExpr( "persistent_multiplier", function( act )
     return mult
 end )
 
+spec:RegisterStateExpr( "heal_multiplier", function()
+    return ( 1 + 0.02 * talent.chi_proficiency.rank )
+        * ( 1 + 0.04 * talent.grace_of_the_crane.rank )
+        * ( 1 + ( ( talent.flow_of_chi.enabled and health.pct < 35 ) and 0.1 or 0 ) )
+        * ( 1 + 0.1 * buff.save_them_all.stack )
+        * ( 1 + 0.03 * buff.balanced_stratagem_magic.stack )
+        * ( 1 + stat.versatility_atk_mod )
+end )
+
 spec:RegisterCombatLogEvent( function( ... )
     local _, subtype, _, sourceGUID, _, _, _, destGUID, _, _, _, spellID = ...
 
@@ -1200,6 +1224,11 @@ spec:RegisterAbilities( {
 
             if conduit.walk_with_the_ox.enabled and cooldown.invoke_niuzao.remains > 0 then reduceCooldown( "invoke_niuzao", 0.5 ) end
 
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_physical" )
+                addStack( "balanced_stratagem_magic" )
+            end
+
             if set_bonus.tww2 >= 4 and buff.opportunistic_strike.up then
                 reduceCooldown( "blackout_kick", 2 )
                 removeStack( "opportunistic_strike" )
@@ -1235,6 +1264,10 @@ spec:RegisterAbilities( {
                 debuff.breath_of_fire_dot.pmultiplier = persistent_multiplier
             end
             if talent.charred_passions.enabled or legendary.charred_passions.enabled then applyBuff( "charred_passions" ) end
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
         end,
     },
 
@@ -1281,6 +1314,10 @@ spec:RegisterAbilities( {
         startsCombat = true,
 
         handler = function ()
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
         end,
     },
 
@@ -1340,6 +1377,10 @@ spec:RegisterAbilities( {
         start = function ()
             removeBuff( "the_emperors_capacitor" )
             if buff.jade_empowerment.up then removeStack( "jade_empowerment" ) end
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
             applyDebuff( "target", "crackling_jade_lightning" )
         end,
     },
@@ -1457,11 +1498,17 @@ spec:RegisterAbilities( {
         startsCombat = true,
 
         handler = function ()
-            gain( ( healing_sphere.count * stat.attack_power ) + stat.spell_power * ( 1 + stat.versatility_atk_mod ), "health" )
+            local heal = ( healing_sphere.count * 3.3 * stat.attack_power ) + ( 1.2 * stat.spell_power ) * ( 1 + 0.05 * talent.vigorous_expulsion.rank ) * ( 1 + ( talent.strength_of_spirit.enabled and ( ( 100 - health.pct ) / 100 ) or 0 ) )
+            gain( heal * heal_multiplier, "health" )
+
             if pvptalent.reverse_harm.enabled then gain( 1, "chi" ) end
             removeBuff( "gift_of_the_ox" )
             if talent.tranquil_spirit.enabled and healing_sphere.count > 0 then stagger.amount_remains = 0.95 * stagger.amount_remains end
             healing_sphere.count = 0
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
         end,
     },
 
@@ -1477,6 +1524,10 @@ spec:RegisterAbilities( {
         startsCombat = true,
 
         handler = function ()
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
             applyDebuff( "target", "exploding_keg" )
         end,
     },
@@ -1579,6 +1630,11 @@ spec:RegisterAbilities( {
 
             if buff.weapons_of_order.up then
                 applyDebuff( "target", "weapons_of_order_debuff", nil, min( 5, debuff.weapons_of_order_debuff.stack + 1 ) )
+            end
+
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_physical" )
+                addStack( "balanced_stratagem_magic" )
             end
 
             if talent.salsalabims_strength.enabled then setCooldown( "breath_of_fire", 0 ) end
@@ -1728,7 +1784,6 @@ spec:RegisterAbilities( {
                 addStack( "elusive_brawler" )
                 removeBuff( "blackout_combo" )
             end
-
             applyBuff( "purified_chi" )
 
             if talent.pretense_of_instability.enabled then applyBuff( "pretense_of_instability" ) end
@@ -1739,7 +1794,12 @@ spec:RegisterAbilities( {
 
             local reduction = stagger.amount_remains * ( 0.5 + 0.03 * buff.brewmasters_rhythm.stack )
             stagger.amount_remains = stagger.amount_remains - reduction
-            gain( 0.25 * reduction, "health" )
+            gain( 0.25 * reduction * heal_multiplier, "health" )
+
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
 
             applyBuff( "recent_purifies", nil, 1, reduction )
         end,
@@ -1784,6 +1844,11 @@ spec:RegisterAbilities( {
 
             if talent.strike_at_dawn.enabled then addStack( "elusive_brawler" ) end
 
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_physical" )
+                addStack( "balanced_stratagem_magic" )
+            end
+
             if set_bonus.tier30_4pc > 0 then addStack( "elusive_brawler" ) end
         end,
     },
@@ -1822,6 +1887,10 @@ spec:RegisterAbilities( {
 
         handler = function ()
             applyBuff( "rushing_jade_wind" )
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_physical" )
+                addStack( "balanced_stratagem_magic" )
+            end
         end,
     },
 
@@ -1853,6 +1922,10 @@ spec:RegisterAbilities( {
 
         start = function ()
             applyBuff( "soothing_mist" )
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
         end,
     },
 
@@ -1899,6 +1972,11 @@ spec:RegisterAbilities( {
             applyBuff( "spinning_crane_kick" )
             removeBuff( "counterstrike" )
             removeBuff( "leverage" )
+
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_physical" )
+                addStack( "balanced_stratagem_magic" )
+            end
 
             if buff.celestial_flames.up then
                 applyDebuff( "target", "breath_of_fire_dot" )
@@ -1948,6 +2026,10 @@ spec:RegisterAbilities( {
             removeBuff( "blackout_combo" )
             removeBuff( "counterstrike" )
 
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_physical" )
+                addStack( "balanced_stratagem_magic" )
+            end
             if talent.endless_draught.enabled then
                 gainChargeTime( "celestial_brew", 1 )
             else
@@ -1990,6 +2072,10 @@ spec:RegisterAbilities( {
 
         handler = function ()
             removeBuff( "vivacious_vivification" )
+            if talent.balanced_stratagem.enabled then
+                removeBuff( "balanced_stratagem_magic" )
+                addStack( "balanced_stratagem_physical" )
+            end
         end,
     },
 
@@ -2036,7 +2122,7 @@ spec:RegisterAbilities( {
             applyBuff( "zen_meditation" )
         end,
     },
-	
+
 	-- You exploit the enemy target's weakest point, instantly killing $?s322113[creatures if they have less health than you.][them.    Only usable on creatures that have less health than you]$?s322113[ Deals damage equal to $s3% of your maximum health against players and stronger creatures under $s2% health.][.]$?s325095[    Reduces delayed Stagger damage by $325095s1% of damage dealt.]?s325215[    Spawns $325215s1 Chi Spheres, granting 1 Chi when you walk through them.]?s344360[    Increases the Monk's Physical damage by $344361s1% for $344361d.][]
     touch_of_death = {
         id = 322109,
@@ -2183,3 +2269,4 @@ spec:RegisterSetting( "max_damage", true, {
 
 
 spec:RegisterPack( "酒仙Simc", 20241021, [[Hekili:nJvBVTnos4FlblGAC6gfjz7MKIydCTF52IdloaxG9BwMwI2MBKe1rrL0CWq)23HuVrklkB3KDBrbkCehoZZ8cho8zP7YVUCriIJx(7EoEtCD8CTDDhF30jlxWFjfVCrkk4r0w4hjOy4))ed)CmkJJzILEjIIcfQiJMZcGL3X5PzF8MB2s47YxBhqJVjJeNhH4eAsadTHl(7GBwUyDojI)Bjlx3V9hVCbkNVJcMzbj(ZGMjHH4sXXzblxie)AxNR9C)yXQpHw)skJs3a)mcamnNxS6Z0410IVu8LArDfI(VYsXbWQcz)3iwmn5LIvOGGCjkPm4psclwjmAXQ8ub2A0HZ9x759rHMtYYJXhASvpd(DXQVs2Ibf9FrrXQ71zQW(prjG(dP5RJWx)5p1kWDLkVsGeWg4Kmsakc0uoJS5fsYwWKqciRDt3ET3hGn91DaA(dey0)aqajz5IisgptMDXBq5rC4N)UmBJtqGLdx(PLlcyeirsqqUgX2I52H415B2yhajyWy2mmkGdjIar2dsYPyeZFheF8Z4mYJ4LCiTj0zTeHKnBYZW(XOTKavtbco2OX3Hrr8D2PI0YdZkwLH5cZNz)e5jWT9tXqTvcSOvXkj(GVJci08mFPeqmsyE780wKuUvHDNmGtN8OmMAPyZuzO2FdL5hGJWqGqKaajUSyfNeJ95uW9(MFWorildqCXQTbH2W3kwTFFfcLAHGdbXiaUAHU2cmCmIKuQdx7PfRUsrxJkvxaLgfsFoXUbn(RHsaT96PVtWwvOZFdRmGi8H5sJ0gIsRlQKkueQMEsHQYseD0iqyDu6ciqHIGeMnjgou(KWz1LUYedfVgPOTMCJiUhIGIlSYwxxDg0pqCeScjJADtDBlCZpy0n3YOvjRVFl3B5ughTf6j4hKZy7sL5cNsblxOS4F(SJTZHYE3A0TYOr0FM9kz5RZW1M3DAjTE9nRVFxduZ3NNj34qo09)WsxVoF6uswUoNw26VdVRUKAwJ7nS3mR)Wa0v1zqx08LP)DN)EZ8q3H9qVt7g7Iv3ovQEsc4dcnu6K(JZKwPsy5vtxjdko2WnwVV9NIlVkllgv77YydCjmxbuYGJYWgO4uCcmpclwc3tCaJIvtDEZH7LviwbthEtuh3rc6jQJpXP5b78PB8dXi(UoZp5A(2zPP3s2Wf7LVd7t)MnKRdEu6qtKiStmOPKbVRE(QwCG)wkoQnW(bvmMsRKrdB3QkY6ikn0Fto7LUIDNMyywgMjgRORy3RkgIfGseJDXysqQjQNJQOrKT74z()zE424EK1vv2negwc0UsPnqlkjagEGbdpaZHh1v0XAUdARm8ZibpM1vYUdH2KXzKKhXCxOPreLR83In1nH3ztED2KNCtMhUbNGzBFrM9N4OMTGcfOIPPM0Z8GeVYgAY1rYhGjcv7kF(LVYRVSFcfLJlVBYES8OM65XAD8mgLcVpsOekle6OvDLYfIhwX7XeLO0Md5gz9M5Hd9mpOXpbEF7S1hecAgQ(nkoyE(KxzCyJ4uQV27xC6BbXfut(EICEDICd5MJnpPYR0nptq3B6U5XFhKTvJsvHV3GK(yx9(4vo3JWo7(AET2KWR28xNZY62YDSwhYUorxHn)s92Y(nr5Kqc)fHsILxfvx43AhgjtChBwEsjYf6(ixE2jpQYKaxqMJFkksEz4yZ9xRqygCtryZilhaUhXaYIrz7KAZCR2kTjEipdExCkkld2FM2X8HSyBn4bQqLpIdwu9C5yPCIIkqZWejIGU4EtnHUxkKW9Ec7d3XetWLLLtAD6SussIaHbmXD5nzfZ9AFLPBZnVmDSDOjHNmytI(JJ9ZiIHuLOFs3iOyq16jmfR3QeZ1ec5U8OzSXNqXJYyR6Asgp0AtatlgrLQaQT7CMEIwBI2A)osP1MGLNTtOT)efI9FMK0DcTjAZmtsEI(i2pHK))ru5WV1d00DBMBbupzKOOf6LETsJ3gi3gbH20LBa(0wCIPofto(KyVs71)PkOhCkdlkSrTK(2uB3307MFNxtbxv79dp8125V8FlEcMQxSsfF(UU2WWTpJycGcJfljQMeNcpfcUWxq3(7QiO(DfRy4)xouIbLFzub96OCongXfFaQ5t2IZSl(Y)HKalnTKgEWAYLF3Wmoc6MtpQu1Ehi9LUFBKTGL9FtcvHj8kpIsHt1sU1HLLuIhig6(orqNUHeHRdnWJXRZcVF2nLX9IV03AnHWFLSzMPiUalvBg2YbmXxUvJC4RUxno6vxOKYCHMAFR4dZmqgV1WeXRQx9(PLivYMS1GKUBDzp0T)qfj3733hTXwgPy)bx7PxvT3r73Fes1FWRwwRdjsFUGPEf3txfQUNjIYTU8IHle737gb7RNPrReUNR0gv8LF5xQRA7jtebNK8dcNnvPWRbrM7R2BARuoRuOaSNTyxE52WvfsovoBF8a0OZs2ChlfwVMp7iCQniaf869JfFx5Ox7zmi2dgToFik5p8uryjzJ)dgapF0DYHV3kiwM1M5mSpmt3hGNZ9pyu87cIUAquH0Zo3EC7uRdzzDE7JCV6s416Vx8FxjJ8JgzzK4xvl2z9owDQZzB1l7L92rQ2uNCw1vAPlvaeJKXoFILci7HawT0U(adWxAzvv7RnKOQ(vDotvxPdfPAb1Agr10KgbOAwwLVt1fedxadqg)Rc2jNvZO5rLWt3zviLuevlNa(HjodF17zFS4uzPzUJ94RAlHSmrdP1fNchm)K4exCeUe)H4mASa(GNJ(hM7o5CCxpf39ngNNbk0c6hLtp4cGZpWRXvNMNw)sc1p210QR1HofrS5IJYgJwJYMNb30o8a61uLV5jVkJH2pRekBQN3(Q98P(ziXAi1BzITmdluxIo2YmFlpCVLaZT86mFYrI1NvO(WHdmvVQvRObvzXVzoSAFSsVbT9719VhMocEF1fhjpSF)LdeZgpyAAuNREB5EQ3IkTWDxMLuxu7bpMRNlViA(eNRnZzZvQ81CcvTNToLuTS8Vc]] )
+spec:RegisterPack( "酒仙(黑科研)", 20250424, [[Hekili:1QvEVTTrw8plblGRtxxzEOZIWa40dNAeNTfUlcIxSIAe5ijgZRYdllbdcVnnnhnnnTDp6rqptAqZ2TbDrBA2C1pmRLLYF1Vc77nKuKuh(yBIHHL4mV5D)(nZBORYx91RUIkXJw9KcCcf4YlKphFzXcILRUIxhBA1vSjkRrAcFXKya)9XN7d2((F8Sp((VF)B((9)I)6Hrk6OBruro5A57OGuXMU3L(uGI(F7D25IBvDL6(A6EVIz16Jlq(8v4RaR2MQadxeKDlnvvAiTuxLQRm4x(4TV7T25sBn4SpC7h8r9o3f6FVB(4Z9U9F4337ZV3237khNUMMU2o)Wf7D5)E)lEHEx4oB)WR9F36ndwkyP(34g9(Gl)4TEtyb9U(3o4NENGAZ2763S35FVhFTTg8n)LbN)w9(5F4XN7Y7C2ZfuR)9)WEx9c9E4h27IVB)RC7EF1z79GToCWsVq7xBHxq9ne625pCCLJtEvLvN)4TAr1B(Ila)CMvxSBZvpLXgcN2y1Lxi8NtCIMN24ygT2yXZSHWYDxE5tC6fR3TZYEENSUGXQl6I00Tdxh3t2TZclW5EYtCYUl3Tt72lIkEVh(ddU7TEAR4BC6fbrUSWIDx(mhluVp9Qh7mrkEBHLnATA9L7E66NYW2tF1UGH08LrAoLXPm8w9ulUqt4d7vnGV2DAkUWttn3y10U8t)sDxU9YllSGGXglVCDiWCaC5)PXtD)ZdEVR1)D(hvxrxZ1ZftZ18OgYefpnlt3CQ0geFDpy8tYQMOMK66u1QhR6kHKavsoAMRr94HuCDlVup7bP77(AegzncWAGNCik0PQbXSOUULLQCdFNoPLqSmhsf1XL6SMMzZrOsmnvehfIjv2ZYXHA6ncL5ttPUwZwEUYNXxTPX4KwinPn0COmLCeIkMrYMkuxphIUScrxFeklLXsinLTAidEkL1CZsOhcKKXlX(J3eD9RRTUwdWNP4abAhncahrj6ETYzR4fu7isLkeuBMGA19B0ihqlrrZY3vMTknfcYJC(2X(5jiNe(Qszm5vT0CTmdQT5Mb1Ig6f1CPexAIsPs9S2ioSeZ04jHCJMWVYaJ9bhLH)OE0mriBRWphpWmrLuXYsx1QTzoBFhWVGYPUdTDoLweNMu0HWLoNd2Vq2AdgjdJLtKVm7KrVLVNSILrDlWVbUwxpsZMuNCedlFtVJwKd)jL6NrngMfmrzmBuyIG7T4HzhGsByz2bkEu8n81jqgDU1j6(GHC0GAC5edQ9Sb1Ic4gKnsc1TPeBOCdzILJkOFmLnO2HGGML3eeHkXa25mNhKocABqTdNydkuDiPwdIvX2q5N22aOMEeDOICCdjsSpbTMk7M14H5nEaNmqafzvnmjkOMahtbM0SGvXNpjsS)9ecJ5j2v1MN7PDuyyX0ybbhQbrZ0LT4ixXtMyb)iBkevWTgS4rWa4hDZOWVkByToU9qkisLwAY19DCbmOOjpjhJdz20yuBCuXLFQE7OmvxaYxDiGtmLd5)A0MYUge3wmUnDeSKu)g6(AQAEDqvYGbdooxD0Crr66Bg6JqEFqrXsTpUgaLjBt0nymA6qvrAiIQ6qvHv46Y2DpDX5U5wskpgJfravtEYH5DqjOiJomNd4mXRf6MWnPZqufgrO9TovMAsn0OHzT5tSAxBnttudvCWJnm0poDuUFJbODfWzYgowgYmLztdoofFlU18OMm4lGtcCy2V48jmz6brKUz3txS4(iANQMplNyN8GlDDiDdBDlglGkMrplyg0HKkQrOkZrgD8DBHC7mevQCBnZrpTHqguanZ1TwJkBQ53LynkLthcaCZon7eMybWHpxkSZHAzItdqAdxamutQ50Q)eMoiXti5n5mFaN02HIOdKXpN(eppwghEk420eX476W53rIgVF62ehutGJc)6TGnL0mSTCGdW2WYjO2ZeDC4NjOMd9n8H0giLY1YaOJ47zzaDOdda5XMnPU5cw6eAMWu8pFqT)OPRVnYjKGqfeyhUizINhGd(m5WgPEfJyAYNqgRdkyA0By1qthoF7VlO24TC9Rp4Y78r3E77Uv)hD9DU2fdhV))(r9VXNbDY37cV9237Fg(y)p5T6FLVT33FN(3)T25cxfEew7GZ)Ja32(ExzWJ(WEN)E78P)42p4J6FZTGzdVNGWXhErcitUp875zxyaOr9(M3CNp7AB)WVO3T)pROX2Ch0)xWH0WduNTV3Bp4MFnihy2q(17r3cABDWpDNEN7hhChCQD(UVAWVCLEx6l6DUBSZfE)TV)3bd(AVgyp)6d(Kc88ILkuSyjMWgC7FEN37QB)OpDNl936D13T)LUdqcy7BF3Bn4SpS31)8D(xFD)V87h8lxDWxE5HMWqLp6socV6fPOWk8mCMbjeXaYBHm8GL0PRt1LkZfSe28OKnXuLa9YbpAPtL8iMRfSKTLRgAPsnCSmbMGrjAieMulQtDceanK454MNAI5gEq6f(yWsHyvUs)2VKKMRU6b6ssap4lgz0qflKCAGfiUOXWmfOxDBkdmM9SSyWsn0jURjX(lcAs0vAbq6kylMTiwUmsGUsLAaTGXo3Lxl4qqAQMyRTYGd9n8Poa2xWseFwtUS0djfNoqRl66ADH0(Lq5A5qC6ih5RKqOd4iCMQpVg4Ev0jTLB3I656zbafIZB1OX0NnYsF9wAUypIr2BCDLTJMfaK1jScdk1DhwgJMLomHcUhbwowhARe(axwhiNHvKdzeqosoMiEL41d)6Hgb8SNfkd4GEGnJRkOwBnVwH0KQ0giSfjA51TqcCbqhDetXuf5asScgEMJjQ2T0WjDOUG1WoiRMjJPgucIC1WxpAPnHWbJBrLI5c1tdcyzMwEX8iKbEiAhPURLUVhfT9wqCJIQhKF7QvhLPQTBO5(YukiKgouAOzsHtFmhSCvcA4mHd2ay7icAKRi0VXo(GjLQgXPrakI8I6TjDGp1TScpQod913gVcu3S8htKCdfaZcglkhJEYK2lTbvXpmGsbEsXKFC3f85MWwuGhAbffQnYstlZNdBDi0FY4MlMbO3b4w0Z5gU)KKRjX2TLLNmKndlFCk(9sZhwmn55gUB1yQkab5aXdS3U4WKIh6qyUQ1jA6yYrIsjLABLHdoU0rzcz5rxiMm6NMdVUAP0xt2EtD6R1ln1zUtJ50AifUZ)rGJjKMNzA8cjB29BdJhfAw8ztAuCMPDDdZCO9t7Gh(PKwDO946dEYODJ3()re4Mz8rpkF(zoawIqklzVuHdaBZ4G2ZE7pkyjhCNuMo2ZO6j1zjdoQStp3inoHg7H2Z(UsZGKdtJRDkxGxk6hEWzK8DTDMulAcNGo1YNwRvZSBSFMP1x8uMikEDeXzMEJAhPYmOoN0q4rZVh(6dKRo7TCon3nRh205kzu1KS5j287mZEODZPT5MzTVJu4WhEZnp0Eeh2CZz3fFM4UgMYK2NPP1jMuLXDpAlPPNmthOtpFoew)O55EUP353ZMURV9rw7)h8mzt10Bij57sLXbMdFFqsXVcPjtmOptKCH0Cp9MJsjVROjtaMBn8ffnvsY(wIMkzJ8kIMkDdF)qtxGzE5qtx1t)MHqFaGARkbaUa2VRmyv24zVGt2Bc1mQsccveQuEU6wM(UYWZflwqyEEb(sfNNNtSch77LNNNVsro8V4if4ZdtkuOqWsMufS7cqwu8fZi3u3Qn4sucznpWIewhYVqbWjwwe(B5svyIPyeRf5lukK1Z1ecXitG2hZlop8rEShs4SA(6auV74wu8u2ev3HwwXmIVqEMHim)qRScoqzy4cCLITP6aSJeeCv1P1PqFJoiVDS8vhAuvMSrbSoFSPbMtrWCkXfzorngHlPuEUkblPGhtFCRaZDvbepn9yJqKJF0Wt2atHYJfyYioXIaADBh8e1so(M06qvRkiey746W3cLdFfrX8PnR8c8ZxPOO48LRWjaFta8pcC5rtdCaWOq(ae(kWgnuBkMvSv4Ntb7oaef701saz5blhB8lRM00boLqIEiUp1Jk55tPcJimXImH1MOHUzvOifQCC9HZwjdnC6AhjTcCctxAmJmTitmv8sgAoHSqyu81tMKbwAYbpiRRCQAlEwgyg)xroaXRbLoHKeI5A602ug0YWSeUebHkzSyMEErEbiVObOSuhEjw1lGByJYG9MvvSmXcBpuaGAwUKWUvkZShiNpQkkDTDQszOgoQuoBQsbHynrqk6f7whVlam)CO85EsiF(q5ZpU8J3MrA83WmZhlkui)UIMXk5tdogVtKuyxVAUyYjLaTWQ5BaBfRa7jc4Md5o)bI7dVIfjiH3byAtg7Di2Tq4DfAmCLq5PY38JJ7MjdPOyWsX3vZtzXWAFEraVnO2k(ggeC3zyKMWiYA6RRdvpLYvOyYGKMA6WrlLYxINVqYWGwAOzsKeb8NY5troRZAzBR2uhPkILtMbVxCzhs4f8bvfcjt1cVqX45ekvmL4dVRXoXtwKNl1K4fvdJJ63qoxSi2eDmf6uQsR45e5kMAkY6wAQ4U9XtxsOuQzHMOCKapzfr2GUupzMFxYRfTnXbVTkiXa)xQa64xqwWwrIFFrzEKYQRq89Az5uDLO)vGWlEV6)7]] )

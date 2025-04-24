@@ -775,15 +775,15 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                 if not ability then
                     if not invalidActionWarnings[ scriptID ] then
-                        Hekili:Error( "Priority '%s' uses action '%s' ( %s - %d ) that is not found in the abilities table.", packName, action or "unknown", listName, actID )
+                        Hekili:Error( "优先级 '%s' 使用的动作 '%s' ( %s - %d ) 在技能表中未找到。", packName, action or "未知", listName, actID )
                         invalidActionWarnings[ scriptID ] = true
                     end
 
                 elseif state.whitelist and not state.whitelist[ action ] and ( ability.id < -99 or ability.id > 0 ) then
-                    if debug then self:Debug( "[---] %s ( %s - %d) not castable while casting a spell; skipping...", action, listName, actID ) end
+                    if debug then self:Debug( "[---] %s ( %s - %d) 在施法时无法释放；跳过...", action, listName, actID ) end
 
                 elseif rWait <= state.cooldown.global_cooldown.remains and not state.spec.can_dual_cast and ability.gcd ~= "off" then
-                    if debug then self:Debug( "Only off-GCD abilities would be usable before the currently selected ability; skipping..." ) end
+                    if debug then self:Debug( "在当前选定技能可用之前，只有无公共冷却时间的技能可用；跳过..." ) end
 
                 else
                     local entryReplaced = false
@@ -803,7 +803,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                             entryReplaced = true
                         else
                             if debug then
-                                self:Debug( "\nBypassing 'trinket1' action because %s.", state.trinket.t1.usable and state.trinket.t1.ability and ( state.trinket.t1.ability .. " is used elsewhere in this priority" ) or "the equipped trinket #1 is not usable" )
+                                self:Debug( "\n跳过 'trinket1' 动作，原因是 %s。", state.trinket.t1.usable and state.trinket.t1.ability and ( state.trinket.t1.ability .. " 已在该优先级的其他地方使用" ) or "装备的饰品 #1 不可用" )
                             end
                             ability = nil
                         end
@@ -816,7 +816,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                             entryReplaced = true
                         else
                             if debug then
-                                self:Debug( "\nBypassing 'trinket2' action because %s.", state.trinket.t2.usable and state.trinket.t2.ability and ( state.trinket.t2.ability .. " is used elsewhere in this priority" ) or "the equipped trinket #2 is not usable" )
+                                self:Debug( "\n跳过 'trinket2' 动作，原因是 %s。", state.trinket.t2.usable and state.trinket.t2.ability and ( state.trinket.t2.ability .. " 已在当前优先级的其他位置使用" ) or "装备的第二个饰品不可用" )
                             end
                             ability = nil
                         end
@@ -863,7 +863,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                     if debug then
                         local d = ""
-                        if entryReplaced then d = format( "\nSubstituting %s for %s action; it is otherwise not included in the priority.", action, class.abilities[ entry.action ].name ) end
+                        if entryReplaced then d = format( "\n用 %s 替换 %s 动作；否则该动作不会包含在优先级中。", action, class.abilities[ entry.action ].name ) end
 
                         if action == "call_action_list" or action == "run_action_list" then
                             d = d .. format( "\n%-4s %s ( %s - %d )", rDepth .. ".", ( action .. ":" .. ( state.args.list_name or "unknown" ) ), listName, actID )

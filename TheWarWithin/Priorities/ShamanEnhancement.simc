@@ -116,8 +116,8 @@ actions.aoe_totemic+=/lava_lash,if=buff.hot_hand.up
 actions.aoe_totemic+=/crash_lightning,if=buff.electrostatic_wager.stack>8
 actions.aoe_totemic+=/sundering,if=buff.doom_winds.up|talent.earthsurge.enabled&(buff.legacy_of_the_frost_witch.up|!talent.legacy_of_the_frost_witch.enabled)&pet.surging_totem.active
 actions.aoe_totemic+=/chain_lightning,if=buff.maelstrom_weapon.stack>=10&buff.electrostatic_wager.stack>4&!buff.cl_crash_lightning.up&buff.doom_winds.up
-actions.aoe_totemic+=/elemental_blast,if=(buff.maelstrom_weapon.stack>=10)&!buff.primordial_storm.remains<=gcd.max*4
-actions.aoe_totemic+=/chain_lightning,if=buff.maelstrom_weapon.stack>=10&!buff.primordial_storm.remains<=gcd.max*4
+actions.aoe_totemic+=/elemental_blast,if=(buff.maelstrom_weapon.stack>=10)&(buff.primordial_storm.down|buff.primordial_storm.remains>gcd.max*4)
+actions.aoe_totemic+=/chain_lightning,if=buff.maelstrom_weapon.stack>=10&(buff.primordial_storm.down|buff.primordial_storm.remains>gcd.max*4)
 actions.aoe_totemic+=/crash_lightning,if=buff.doom_winds.up|!buff.crash_lightning.up|(talent.alpha_wolf.enabled&feral_spirit.active&alpha_wolf_min_remains=0)
 actions.aoe_totemic+=/voltaic_blaze
 actions.aoe_totemic+=/fire_nova,if=(dot.flame_shock.ticking&(active_dot.flame_shock>=active_enemies|active_dot.flame_shock=6))&pet.searing_totem.active
@@ -128,8 +128,8 @@ actions.aoe_totemic+=/fire_nova,if=dot.flame_shock.ticking&(active_dot.flame_sho
 actions.aoe_totemic+=/frost_shock,if=talent.hailstorm.enabled&buff.hailstorm.up
 actions.aoe_totemic+=/crash_lightning
 actions.aoe_totemic+=/ice_strike,if=talent.hailstorm.enabled&!buff.ice_strike.up
-actions.aoe_totemic+=/elemental_blast,if=buff.maelstrom_weapon.stack>=5&buff.primordial_storm.remains>gcd.max*4
-actions.aoe_totemic+=/chain_lightning,if=buff.maelstrom_weapon.stack>=5&buff.primordial_storm.remains>gcd.max*4
+actions.aoe_totemic+=/elemental_blast,if=buff.maelstrom_weapon.stack>=5&(buff.primordial_storm.down|buff.primordial_storm.remains>gcd.max*4)
+actions.aoe_totemic+=/chain_lightning,if=buff.maelstrom_weapon.stack>=5&(buff.primordial_storm.down|buff.primordial_storm.remains>gcd.max*4)
 actions.aoe_totemic+=/stormstrike
 actions.aoe_totemic+=/sundering,if=buff.doom_winds.up|talent.earthsurge.enabled&(buff.legacy_of_the_frost_witch.up|!talent.legacy_of_the_frost_witch.enabled)&pet.surging_totem.active
 actions.aoe_totemic+=/fire_nova,if=active_dot.flame_shock=6|(active_dot.flame_shock>=4&active_dot.flame_shock>=active_enemies)
@@ -179,7 +179,7 @@ actions.aoe_totemic_open+=/stormstrike
 ## Funnel action priority list
 actions.funnel+=/feral_spirit,if=talent.elemental_spirits.enabled
 actions.funnel+=/surging_totem
-actions.funnel+=/ascendance
+actions.funnel+=/ascendancee
 actions.funnel+=/windstrike,if=(talent.thorims_invocation.enabled&buff.maelstrom_weapon.stack>0)|buff.converging_storms.stack=buff.converging_storms.max_stack
 actions.funnel+=/tempest,if=buff.maelstrom_weapon.stack=buff.maelstrom_weapon.max_stack|(buff.maelstrom_weapon.stack>=5&(tempest_mael_count>30|buff.awakening_storms.stack=2))
 actions.funnel+=/lightning_bolt,if=(active_dot.flame_shock>=active_enemies|active_dot.flame_shock=6)&buff.primordial_wave.up&buff.maelstrom_weapon.stack=buff.maelstrom_weapon.max_stack&(!buff.splintered_elements.up|boss&fight_remains<=12|raid_event.adds.remains<=gcd)
