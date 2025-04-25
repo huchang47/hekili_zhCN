@@ -213,6 +213,8 @@ local enemyExclusions = {
     [231788] = true,              -- Mug'Zee: Unstable Crawler Mine
     [233474] = true,              -- Mug'Zee: Gallagio Goon (they are within a cage with LoS restrictions)
     [231727] = true,              -- Gallywix: 1500-Pound "Dud"
+    [237967] = true,              -- Gallywix: Discharged Giga Bomb
+    [237968] = true,              -- Gallywix: Charged Giga Bomb
     [151579] = true,              -- Operation: Mechagon - Shield Generator
     [219588] = true               -- Cinderbrew Meadery - Yes Man (etc.)
 }

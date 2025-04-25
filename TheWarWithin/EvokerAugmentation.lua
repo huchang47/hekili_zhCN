@@ -602,6 +602,11 @@ spec:RegisterAuras( {
         no_ticks = true,
         friendly = true
     },
+    upheaval = {
+        id = 431620,
+        duration = 8,
+        max_stack = 1
+    },
     -- Damage taken from area-of-effect attacks reduced by $w1%.; Movement speed increased by $w2%.
     zephyr = {
         id = 374227,

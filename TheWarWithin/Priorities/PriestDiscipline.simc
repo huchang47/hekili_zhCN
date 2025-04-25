@@ -173,9 +173,10 @@ actions.long_scov+=/halo
 actions.long_scov+=/smite
 
 ## Cooldowns
-# Don't use pets during shadow covenant windows, wasting GCDs
-actions.cooldowns+=/shadowfiend,if=!talent.mindbender.enabled&!buff.shadow_covenant.up
-actions.cooldowns+=/mindbender,if=talent.mindbender.enabled&!buff.shadow_covenant.up
+# Don't use pets during shadow covenant windows, wasting GCDs -- is this even possible anymore?
+actions.cooldowns+=/shadowfiend,if=!buff.shadow_covenant.up
+actions.cooldowns+=/mindbender,if=!buff.shadow_covenant.up
+actions.cooldowns+=/voidwraith,if=!buff.shadow_covenant.up
 # hold PI to use with shadow covenant if we have it
 actions.cooldowns+=/power_infusion,if=!talent.shadow_covenant.enabled|(talent.shadow_covenant.enabled&(cooldown.shadowfiend.up|buff.shadow_covenant.up))
 # sync potion with PI

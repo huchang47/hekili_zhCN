@@ -22,6 +22,9 @@ local IsUsableItem = C_Item.IsUsableItem
 local GetSpellInfo, GetSpellCharges, GetSpellLossOfControlCooldown = ns.GetUnpackedSpellInfo, C_Spell.GetSpellCharges, C_Spell.GetSpellLossOfControlCooldown
 local UnitBuff, UnitDebuff = ns.UnitBuff, ns.UnitDebuff
 
+local GetBuffDataByIndex, GetDebuffDataByIndex = C_UnitAuras.GetBuffDataByIndex, C_UnitAuras.GetDebuffDataByIndex
+local UnpackAuraData = AuraUtil.UnpackAuraData
+
 local GetSpellCharges = function(spellID)
     local spellChargeInfo = GetSpellCharges(spellID);
     if spellChargeInfo then
@@ -961,21 +964,22 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
         return
     end
 
-    local auraInfo = class.auras[ aura ]
+    local model = class.auras[ aura ]
 
-    if not auraInfo then
+    if not model then
+        Error( "警告:试图应用未知的Buff '%s'.", aura )
         local spec = class.specs[ state.spec.id ]
         if spec then
             spec:RegisterAura( aura, { ["duration"] = duration } )
             class.auras[ aura ] = spec.auras[ aura ]
         end
 
-        auraInfo = class.auras[ aura ]
-        if not auraInfo then return end
+        model = class.auras[ aura ]
+        if not model then return end
     end
 
-    if auraInfo.alias then
-        aura = auraInfo.alias[1]
+    if model.alias then
+        aura = model.alias[1]
     end
 
     if state.cycle then
@@ -987,7 +991,7 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
     local b = state.buff[ aura ]
     if not b then return end
 
-    duration = duration or auraInfo.duration or 15
+    duration = duration or model.duration or 15
 
     if duration == 0 then
         b.last_expiry = b.expires or 0
@@ -1007,10 +1011,10 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
 
         state.active_dot[ aura ] = max( 0, state.active_dot[ aura ] - 1 )
 
-        if auraInfo.funcs.onRemove then auraInfo.funcs.onRemove() end
+        if model.funcs.onRemove then model.funcs.onRemove() end
 
     else
-        if not b.up or auraInfo.friendly then state.active_dot[ aura ] = min( state.group_members, state.active_dot[ aura ] + 1 ) end
+        if not b.up or model.friendly then state.active_dot[ aura ] = min( state.group_members, state.active_dot[ aura ] + 1 ) end
 
         b.lastCount = b.count
         b.lastApplied = b.applied
@@ -1046,9 +1050,9 @@ state.applyBuff = applyBuff
 
 
 local function removeBuff( aura )
-    local auraInfo = class.auras[ aura ]
-    if auraInfo and auraInfo.alias then
-        for _, child in ipairs( auraInfo.alias ) do
+    local model = class.auras[ aura ]
+    if model and model.alias then
+        for _, child in ipairs( model.alias ) do
             applyBuff( child, 0 )
         end
     else
@@ -1059,9 +1063,8 @@ state.removeBuff = removeBuff
 
 
 -- Apply stacks of a buff to the current game state.
--- Wraps around Buff() to check for an existing buff.
+-- Wraps around applyBuff() to check for an existing buff.
 local function addStack( aura, duration, stacks, value )
-
     local a = class.auras[ aura ]
 
     duration = duration or ( a and a.duration or 15 )
@@ -1111,13 +1114,14 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
 
     local model = class.auras[ aura ]
     if not model then
-        Error( "Attempted to apply unknown aura '%s'.", aura )
+        Error( "警告:试图应用未知的Debuff '%s'.", aura )
         local spec = class.specs[ state.spec.id ]
         if spec then
             spec:RegisterAura( aura, { ["duration"] = duration } )
-            model = spec.auras[ aura ]
+            class.auras[ aura ] = spec.auras[ aura ]
         end
 
+        model = class.auras[ aura ]
         if not model then return end
     end
 
@@ -1135,7 +1139,7 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
     end
 
     local d = state.debuff[ aura ]
-    duration = duration or class.auras[ aura ].duration or 15
+    duration = duration or model.duration or 15
 
     if duration == 0 then
         d.expires = 0
@@ -1166,7 +1170,7 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
         d.lastCount = d.count or 0
         d.lastApplied = d.applied or 0
 
-        d.count = min( class.auras[ aura ].max_stack or 1, stacks or 1 )
+        d.count = min( model.max_stack or 1, stacks or 1 )
         d.value = value or 0
         d.applied = state.query_time
         d.unit = unit or "target"
@@ -1883,6 +1887,7 @@ do
         encounter = 1,
         group = 1,
         group_members = 1,
+        active_allies = 1,
         level = 1,
         mounted = 1,
             is_mounted = 1,
@@ -2085,7 +2090,24 @@ do
                 t[k] = t.encounterID > 0 or UnitCanAttack( "player", "target" ) and ( UnitClassification( "target" ) == "worldboss" or UnitLevel( "target" ) == -1 )
             elseif k == "encounter" then t[k] = t.encounterID > 0
             elseif k == "group" then t[k] = t.group_members > 1
-            elseif k == "group_members" or k == "active_allies" then t[k] = max( 1, GetNumGroupMembers() )
+            elseif k == "group_members" then t[k] = max( 1, GetNumGroupMembers() )
+            elseif k == "active_allies" then
+                local n = GetNumGroupMembers()
+                local maxUnits = IsInRaid() and 40 or 5
+                local token = IsInRaid() and "raid" or "party"
+                local count = 0
+
+                for i = 1, maxUnits do
+                    local unit = token .. i
+                    if UnitExists( unit ) and not UnitIsDead( unit ) and UnitIsConnected( unit ) and UnitInRange( unit ) then
+                        count = count + 1
+                        if n == 1 then break end
+                        n = n - 1
+                    end
+                end
+
+                t[k] = max( 1, count )
+
             elseif k == "level" then t[k] = UnitEffectiveLevel("player") or MAX_PLAYER_LEVEL
             elseif k == "mounted" or k == "is_mounted" then t[k] = IsMounted()
             elseif k == "moving" then t[k] = ( GetUnitSpeed("player") > 0 )
@@ -2625,13 +2647,12 @@ do
 
                 if totemIcon then
                     -- This is actually a totem; check them.
-                    local present, name, start, duration, icon
-
                     for i = 1, 5 do
-                        present, name, start, duration, icon = GetTotemInfo( i )
+                        local present, name, start, duration, icon, _, spellID = GetTotemInfo( i )
                         if duration == 0 then duration = 3600 end
 
-                        if present and ( icon == totemIcon or class.abilities[ name ] and t.key == class.abilities[ name ].key ) then
+                        local ability = class.abilities[ spellID ]
+                        if present and ( icon == totemIcon or abilitty and t.key == ability.key ) then
                             t.expires = start + duration
                             return t.expires
                         end
@@ -4482,9 +4503,9 @@ ns.metatables.mt_active_dot = mt_active_dot
 -- Table of default handlers for a totem. Under-implemented at the moment.
 -- Needs review.
 local mt_default_totem = {
-    __index = function(t, k)
+    __index = function( t, k )
         if k == "expires" then
-            local _, name, start, duration = GetTotemInfo( t.totem )
+            local _, name, start, duration, icon, modRate, spellID = GetTotemInfo( t.totem )
 
             t.name = name
             t.expires = ( start or 0 ) + ( duration or 0 )
@@ -5826,14 +5847,17 @@ do
 
         local i = 1
         while ( true ) do
-            local name, _, count, _, duration, expires, caster, _, _, spellID, _, _, isFromPlayerOrPlayerPet, _, timeMod, v1, v2, v3 = UnitBuff( unit, i )
+            local buffData = GetBuffDataByIndex( unit, i )
+            if not buffData then break end
+
+            local name, _, count, _, duration, expires, caster, _, _, spellID, _, _, _, _, timeMod, v1, v2, v3 = UnpackAuraData( buffData )
             if not name then break end
 
             local aura = class.auras[ spellID ]
             local shared = aura and aura.shared
             local key = aura and aura.key or autoAuraKey[ spellID ]
 
-            if key and ( shared or isFromPlayerOrPlayerPet ) then
+            if aura and key and ( shared or caster and ( UnitIsUnit( caster, "player" ) or UnitIsUnit( caster, "pet" ) ) ) then
                 db.buff[ key ] = db.buff[ key ] or {}
                 local buff = db.buff[ key ]
 
@@ -5871,15 +5895,17 @@ do
 
         i = 1
         while ( true ) do
+            local debuffData = GetDebuffDataByIndex( unit, i )
+            if not debuffData then break end
 
-            local name, _, count, _, duration, expires, caster, _, _, spellID, _, _, isFromPlayerOrPlayerPet, _, timeMod, v1, v2, v3 = UnitDebuff( unit, i )
+            local name, _, count, _, duration, expires, caster, _, _, spellID, _, _, _, _, timeMod, v1, v2, v3 = UnpackAuraData( debuffData )
             if not name then break end
 
             local aura = class.auras[ spellID ]
             local shared = aura and aura.shared
             local key = aura and aura.key or autoAuraKey[ spellID ]
 
-            if key and ( shared or isFromPlayerOrPlayerPet ) then
+            if aura and key and ( shared or caster and ( UnitIsUnit( caster, "player" ) or UnitIsUnit( caster, "pet" ) ) ) then
                 db.debuff[ key ] = db.debuff[ key ] or {}
                 local debuff = db.debuff[ key ]
 

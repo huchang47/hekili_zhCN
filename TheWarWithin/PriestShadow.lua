@@ -293,6 +293,11 @@ end )
 
 -- Auras
 spec:RegisterAuras( {
+    ancient_madness = {
+        id = 341240,
+        duration = 20,
+        max_stack = 20
+    },
     angelic_feather = {
         id = 121557,
         duration = 5,
@@ -398,10 +403,10 @@ spec:RegisterAuras( {
         duration = 20,
         max_stack = 20
     },
-    voidheart = {
-        id = 449887,
-        duration = 8,
-        max_stack = 1
+    empty_mind = {
+        id = 247226,
+        duration = 12,
+        max_stack = 10
     },
     entropic_rift = {
         duration = 8,
@@ -776,6 +781,11 @@ spec:RegisterAuras( {
     void_bolt = {
         id = 228266,
     },
+    voidheart = {
+        id = 449887,
+        duration = 8,
+        max_stack = 1
+    },
     -- Talent: A Shadowy tendril is appearing under you.
     -- https://wowhead.com/beta/spell=108920
     void_tendrils_root = {
@@ -835,6 +845,17 @@ spec:RegisterAuras( {
     words_of_the_pious = {
         id = 390933,
         duration = 12,
+        max_stack = 1
+    },
+
+    anunds_last_breath = {
+        id = 215210,
+        duration = 15,
+        max_stack = 50
+    },
+    zeks_exterminatus = {
+        id = 236546,
+        duration = 15,
         max_stack = 1
     },
 
@@ -1090,7 +1111,7 @@ spec:RegisterHook( "reset_precast", function ()
 end )
 
 spec:RegisterHook( "TALENTS_UPDATED", function()
-    local sf = talent.voidwraith.enabled and "voidwraith" or talent.mindbender.enabled and "mindbender" or "shadowfiend"
+    local sf = talent.mindbender.enabled and "mindbender" or talent.voidwraith.enabled and "voidwraith" or "shadowfiend"
     class.totems.fiend = spec.totems[ sf ]
     totem.fiend = totem[ sf ]
     cooldown.fiend = cooldown[ sf ]
@@ -1780,7 +1801,7 @@ spec:RegisterAbilities( {
         end,
     },
 
-    -- Talent: Summons a Mindbender to attack the target for $d.     |cFFFFFFFFGenerates ${$123051m1/100}.1% mana each time the Mindbender attacks.|r
+    --[[ -- Talent: Summons a Mindbender to attack the target for $d.     |cFFFFFFFFGenerates ${$123051m1/100}.1% mana each time the Mindbender attacks.|r
     mindbender = {
         id = function()
             if talent.voidwraith.enabled then
@@ -1813,7 +1834,7 @@ spec:RegisterAbilities( {
         end,
 
         copy = { "shadowfiend", 34433, 123040, 200174, "voidwraith", 451235 }
-    },
+    }, ]]
 
     -- Covenant (Venthyr): Assault an enemy's mind, dealing ${$s1*$m3/100} Shadow damage and briefly reversing their perception of reality.    $?c3[For $d, the next $<damage> damage they deal will heal their target, and the next $<healing> healing they deal will damage their target.    |cFFFFFFFFReversed damage and healing generate up to ${$323706s2*2} Insanity.|r]  ][For $d, the next $<damage> damage they deal will heal their target, and the next $<healing> healing they deal will damage their target.    |cFFFFFFFFReversed damage and healing restore up to ${$323706s3*2}% mana.|r]
     mindgames = {
