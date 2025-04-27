@@ -670,6 +670,16 @@ spec:RegisterAuras( {
         duration = 5,
         max_stack = 1
     },
+    unrelenting_siege = {
+        id = 441248,
+        duration = 3600,
+        max_stack = 15,
+        meta = {
+            stack = function( t )
+                return max( t.count, min( 15, time ) )
+            end
+        }
+    },
     -- Movement speed reduced by $s2%.
     -- https://wowhead.com/beta/spell=357214
     wing_buffet = {
@@ -1711,6 +1721,7 @@ spec:RegisterAbilities( {
         toggle = "interrupts",
 
         handler = function()
+            if talent.menacing_presence.enabled then applyDebuff( "target", "menacing_presence" ) end
             if talent.walloping_blow.enabled then applyDebuff( "target", "walloping_blow" ) end
         end
     },
@@ -1834,6 +1845,7 @@ spec:RegisterAbilities( {
         startsCombat = true,
 
         handler = function()
+            if talent.menacing_presence.enabled then applyDebuff( "target", "menacing_presence" ) end
             if talent.walloping_blow.enabled then applyDebuff( "target", "walloping_blow" ) end
         end,
     },

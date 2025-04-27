@@ -209,6 +209,20 @@ local matchThreshold = 0.02
 local MINE = 1
 local RUNE_WEAPON = 2
 
+
+local dnd_damage_ids = {
+    [52212] = "death_and_decay",
+    [156000] = "defile"
+}
+
+local dmg_events = {
+    SPELL_DAMAGE = 1,
+    SPELL_PERIODIC_DAMAGE = 1
+}
+
+local last_dnd_tick, dnd_spell = 0, "death_and_decay"
+
+
 spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellID, spellName )
     if spellID == 55078 and ( subtype == "SPELL_AURA_APPLIED" or subtype == "SPELL_AURA_REFRESH" ) then
         local source
@@ -243,6 +257,40 @@ spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, so
 
         bpUnits[ destGUID ] = storage
     end
+
+    if sourceGUID == state.GUID and dnd_damage_ids[ spellID ] and dmg_events[ subtype ] then
+        last_dnd_tick = GetTime()
+        dnd_spell = dnd_damage_ids[ spellID ]
+        return
+    end
+end )
+
+
+local dnd_model = setmetatable( {}, {
+    __index = function( t, k )
+        if k == "ticking" then
+            -- Disabled
+            -- if state.query_time - class.abilities.any_dnd.lastCast < 10 then return true end
+            return debuff.death_and_decay.up
+
+        elseif k == "remains" then
+            return debuff.death_and_decay.remains
+
+        end
+
+        return false
+    end
+} )
+
+spec:RegisterStateTable( "death_and_decay", dnd_model )
+spec:RegisterStateTable( "defile", dnd_model )
+
+spec:RegisterStateExpr( "dnd_ticking", function ()
+    return death_and_decay.ticking
+end )
+
+spec:RegisterStateExpr( "dnd_remains", function ()
+    return death_and_decay.remains
 end )
 
 
@@ -1271,6 +1319,19 @@ local BonestormShield = setfenv( function()
 end, state )
 
 
+spec:RegisterHook( "TALENTS_UPDATED", function()
+    class.abilityList.any_dnd = "|T136144:0|t |cff00ccff[Any " .. class.abilities.death_and_decay.name .. "]|r"
+    local dnd = talent.defile.enabled and "defile" or "death_and_decay"
+
+    class.abilities.any_dnd = class.abilities[ dnd ]
+    rawset( cooldown, "any_dnd", nil )
+    rawset( cooldown, "death_and_decay", nil )
+    rawset( cooldown, "defile", nil )
+
+    if dnd == "defile" then rawset( cooldown, "death_and_decay", cooldown.defile )
+    else rawset( cooldown, "defile", cooldown.death_and_decay ) end
+end )
+
 spec:RegisterHook( "reset_precast", function ()
     if UnitExists( "pet" ) then
         for i = 1, 40 do
@@ -1341,9 +1402,18 @@ spec:RegisterHook( "reset_precast", function ()
         end
     end
 
-    if buff.death_and_decay.up and buff.death_and_decay.duration == 10 then
+    if buff.death_and_decay.up and buff.death_and_decay.duration > 4 then
         -- Extend by 4 to support on-leave effect.
         buff.death_and_decay.expires = buff.death_and_decay.expires + 4
+    end
+
+    -- Death and Decay tick time is 1s; if we haven't seen a tick in 2 seconds, it's not ticking.
+    local last_dnd = action[ dnd_spell ].lastCast
+    local dnd_expires = last_dnd + 10
+    if now - last_dnd_tick < 2 and dnd_expires > now then
+        applyDebuff( "target", "death_and_decay", dnd_expires - now )
+        debuff.death_and_decay.duration = 10
+        debuff.death_and_decay.applied = debuff.death_and_decay.expires - 10
     end
 end )
 

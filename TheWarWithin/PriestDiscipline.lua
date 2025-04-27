@@ -283,11 +283,6 @@ spec:RegisterAuras( {
         duration = 60,
         max_stack = 1
     },
-    mindbender = { -- TODO: Check Aura (https://wowhead.com/beta/spell=123040)
-        id = 123040,
-        duration = 12,
-        max_stack = 1
-    },
     mindgames = {
         id = 375901,
         duration = function() return talent.shattered_perceptions.enabled and 7 or 5 end,
@@ -403,7 +398,46 @@ spec:RegisterAuras( {
     shadowfiend = {
         id = 34433,
         duration = 15,
-        max_stack = 1
+        type = "Magic",
+        max_stack = 1,
+        generate = function( t, auraType )
+            if auraType == "debuff" then return end
+
+            local remains = pet.shadowfiend.remains
+            if remains == 0 then return end
+
+            t.expires = query_time + remains
+            t.applied = t.expires - 15
+            t.count = 1
+        end
+    },
+    mindbender = {
+        duration = 15,
+        max_stack = 1,
+        generate = function( t, auraType )
+            if auraType == "debuff" then return end
+
+            local remains = pet.mindbender.remains
+            if remains == 0 then return end
+
+            t.expires = query_time + remains
+            t.applied = t.expires - 15
+            t.count = 1
+        end
+    },
+    voidwraith = {
+        duration = 15,
+        max_stack = 1,
+        generate = function( t, auraType )
+            if auraType == "debuff" then return end
+
+            local remains = pet.voidwraith.remains
+            if remains == 0 then return end
+
+            t.expires = query_time + remains
+            t.applied = t.expires - 15
+            t.count = 1
+        end
     },
     shield_of_absolution = {
         id = 394624,
@@ -547,46 +581,37 @@ spec:RegisterHook( "reset_precast", function ()
         applyBuff( "entropic_rift", entropic_rift_expires - query_time )
     end
 
-    if pet.mindbender.active then
-        applyBuff( "mindbender", pet.mindbender.remains )
-        buff.mindbender.applied = action.mindbender.lastCast
-        buff.mindbender.duration = 15
-        buff.mindbender.expires = action.mindbender.lastCast + 15
-    elseif pet.shadowfiend.active then
-        applyBuff( "shadowfiend", pet.shadowfiend.remains )
-        buff.shadowfiend.applied = action.shadowfiend.lastCast
-        buff.shadowfiend.duration = 15
-        buff.shadowfiend.expires = action.shadowfiend.lastCast + 15
-    elseif pet.voidwraith.active then
-        applyBuff( "voidwraith", pet.voidwraith.remains )
-        buff.voidwraith.applied = action.voidwraith.lastCast
-        buff.voidwraith.duration = 15
-        buff.voidwraith.expires = action.voidwraith.lastCast + 15
-    end
-
     rift_extensions = nil
 end )
 
 spec:RegisterHook( "TALENTS_UPDATED", function()
-    local sf = talent.mindbender.enabled and "mindbender" or talent.voidwraith.enabled and "voidwraith" or "shadowfiend"
+    -- For ability/cooldown, Mindbender takes precedent.
+    local sf = talent.mindbender.enabled and "mindbender_actual" or talent.voidwraith.enabled and "voidwraith" or "shadowfiend"
+
+    class.abilities.shadowfiend = class.abilities[ sf ]
+    class.abilities.mindbender = class.abilities.mindbender_actual
+
+    rawset( cooldown, "shadowfiend", cooldown[ sf ] )
+    rawset( cooldown, "mindbender", cooldown.mindbender_actual )
+    rawset( cooldown, "fiend", cooldown.shadowfiend )
+
+    -- For totem/pet/buff, Voidwraith takes precedent.
+    sf = talent.voidwraith.enabled and "voidwraith" or talent.mindbender.enabled and "mindbender" or "shadowfiend"
+
     class.totems.fiend = spec.totems[ sf ]
     totem.fiend = totem[ sf ]
-    cooldown.fiend = cooldown[ sf ]
     pet.fiend = pet[ sf ]
-
-    if sf == "shadowfiend" then
-        rawset( cooldown, "shadowfiend", cooldown.shadowfiend_actual )
-    else
-        rawset( cooldown, "shadowfiend", cooldown[ sf ] )
-    end
+    buff.fiend = buff[ sf ]
 end )
 
 spec:RegisterTotems( {
     mindbender = {
-        id = 136214
+        id = 136214,
+        copy = "mindbender_actual"
     },
     shadowfiend = {
-        id = 136199
+        id = 136199,
+        copy = "shadowfiend_actual"
     },
     voidwraith = {
         id = 615099
@@ -848,14 +873,15 @@ spec:RegisterAbilities( {
         texture = 136214,
 
         handler = function ()
-            summonPet( "mindbender", 12 )
-            applyBuff( "mindbender" )
+            local sf = talent.voidwraith.enabled and "voidwraith" or "mindbender"
+            summonPet( sf, 12 )
+            applyBuff( sf )
             if talent.shadow_covenant.enabled then applyBuff( "shadow_covenant" ) end
         end,
 
         bind = { "shadowfiend", "voidwraith" },
 
-        copy = { 123040, 200174 }
+        copy = { "mindbender_actual", 123040, 200174 }
     },
 
     shadowfiend = {
@@ -876,6 +902,7 @@ spec:RegisterAbilities( {
         handler = function ()
             summonPet( "shadowfiend" )
             applyBuff( "shadowfiend" )
+
             if talent.shadow_covenant.enabled then applyBuff( "shadow_covenant" ) end
         end,
 

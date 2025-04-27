@@ -513,9 +513,14 @@ spec:RegisterAuras( {
     },
     -- Talent: Damage of your next Frost Shock increased by $s1%.
     -- https://wowhead.com/ptr-2/spell=384357
-    ice_strike = {
+    ice_strike_buff = {
         id = 384357,
         duration = 12,
+        max_stack = 1
+    },
+    ice_strike = {
+        id = 470194,
+        duration = 6,
         max_stack = 1
     },
     -- Frost Shock damage increased by $w2%.

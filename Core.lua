@@ -1649,6 +1649,15 @@ function Hekili.Update()
 
             if debug then Hekili:Debug( "Combat Timer: %.2f", state.time ) end
 
+            local isMain = ( dispName == "Primary" and dispName == "AOE" )
+            local defaultMax = isMain and 15 or ( display.forecastPeriod or 15 )
+
+            if class.file == "DEATHKNIGHT" then
+                defaultMax = max( defaultMax, 0.01 + 20 * state.haste )
+            elseif state.spec.assassination then
+                defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
+            end
+
             for i = 1, numRecs do
                 local chosen_depth = 0
 
@@ -1662,10 +1671,16 @@ function Hekili.Update()
 
                 local action, wait, depth
                 local isMain = ( dispName == "Primary" or dispName == "AOE" )
+                local defaultMax = 15
+
+                if class.file == "DEATHKNIGHT" then
+                    defaultMax = max( defaultMax, 0.01 + 20 * state.haste )
+                elseif state.spec.assassination then
+                    defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
+                end
 
                 state.delay = 0
-                state.delayMin = 0
-                state.delayMax = not isMain and display.forecastPeriod or 15
+                state:SetConstraint( 0, defaultMax )
 
                 local hadProj = false
 
@@ -1821,11 +1836,9 @@ function Hekili.Update()
                                         slot.actionID = nil
 
                                         state.delay = 0
-                                        state.delayMin = 0
-                                        state.delayMax = dispName ~= "Primary" and dispName ~= "AOE" and display.forecastPeriod or 15
+                                        state:SetConstraint( 0, defaultMax )
 
                                         action, wait = nil, 10
-
                                         action, wait, depth = Hekili:GetNextPrediction( dispName, packName, slot )
                                     end
 
@@ -1838,8 +1851,7 @@ function Hekili.Update()
                                         slot.actionID = nil
 
                                         state.delay = 0
-                                        state.delayMin = 0
-                                        state.delayMax = dispName ~= "Primary" and dispName ~= "AOE" and display.forecastPeriod or 15
+                                        state:SetConstraint( 0, defaultMax )
 
                                         action, wait = nil, 10
                                         break
@@ -1877,8 +1889,7 @@ function Hekili.Update()
 
                 if not action then
                     state.delay = 0
-                    state.delayMin = 0
-                    state.delayMax = not isMain and display.forecastPeriod or 15
+                    state:SetConstraint( 0, defaultMax )
 
                     if class.file == "DEATHKNIGHT" then
                         state:SetConstraint( 0, max( state.delayMax, 0.01 + 20 * state.haste ) )
@@ -1917,11 +1928,9 @@ function Hekili.Update()
                             slot.actionID = nil
 
                             state.delay = 0
-                            state.delayMin = 0
-                            state.delayMax = dispName ~= "Primary" and dispName ~= "AOE" and max( state.delayMax, display.forecastPeriod or 15 )
+                            state:SetConstraint( 0, defaultMax )
 
                             action, wait = nil, 10
-
                             action, wait, depth = Hekili:GetNextPrediction( dispName, packName, slot )
                         end
 
@@ -1935,11 +1944,9 @@ function Hekili.Update()
                             slot.actionID = nil
 
                             state.delay = 0
-                            state.delayMin = 0
-                            state.delayMax = dispName ~= "Primary" and dispName ~= "AOE" and max( state.delayMax, display.forecastPeriod or 15 )
+                            state:SetConstraint( 0, defaultMax )
 
                             action, wait = nil, 10
-
                             break
                         end
                     until action ~= "wait"

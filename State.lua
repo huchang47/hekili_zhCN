@@ -1641,8 +1641,8 @@ do
             if type( x ) == "number" then
                 if x > 0 and x >= state.delayMin and x <= state.delayMax then
                     t[ x ] = true
-                elseif Hekili.ActiveDebug and x < 60 then
-                    Hekili:Debug( "Excluded %.2f recheck time as it is outside our constraints ( %.2f - %.2f ).", x, state.delayMin or -1, state.delayMax or -1 )
+                -- elseif Hekili.ActiveDebug and x < 60 then
+                --    Hekili:Debug( "Excluded %.2f recheck time as it is outside our constraints ( %.2f - %.2f ).", x, state.delayMin or -1, state.delayMax or -1 )
                 end
             end
         end
@@ -3155,8 +3155,11 @@ do
         charge = 1,
         duration = 1,
         expires = 1,
+        remains = 1,
         next_charge = 1,
+        recharge = 1,
         recharge_began = 1,
+        true_duration = 1,
         true_expires = 1,
         true_remains = 1,
     }
@@ -3249,15 +3252,8 @@ do
                 t.true_expires = start > 0 and ( start + true_duration ) or 0
 
                 if ability.charges and ability.charges > 1 then
-                    local charges, maxCharges
-                    charges, maxCharges, start, duration = GetSpellCharges( id )
-
-                    --[[ if class.abilities[ t.key ].toggle and not state.toggle[ class.abilities[ t.key ].toggle ] then
-                        charges = 1
-                        maxCharges = 1
-                        start = state.now
-                        duration = 0
-                    end ]]
+                    local charges, _
+                    charges, _, start, duration = GetSpellCharges( id )
 
                     if not duration then duration = max( ability.recharge or 0, ability.cooldown or 0 ) end
 
@@ -3268,18 +3264,10 @@ do
                     t.duration = duration
                     t.recharge = duration
 
-                    --[[ if charges and charges < maxCharges then
-                        -- t.recharge_began = start
-                        t.next_charge = start + duration
-                    else
-                        t.next_charge = 0
-                    end ]]
                     t.recharge_began = start or t.expires - t.duration
-                    -- t.recharge_began = max( 0, start or t.expires - t.duration )
 
                 else
                     t.charge = t.expires < state.query_time and 1 or 0
-                    -- t.next_charge = t.expires > state.query_time and t.expires or 0
                     t.recharge_began = t.expires - t.duration
                 end
 
@@ -3417,7 +3405,6 @@ do
     }
     ns.metatables.mt_cooldowns = mt_cooldowns
 end
-
 
 local mt_dot = {
     __index = function( t, k )
@@ -5239,7 +5226,6 @@ do
 
     -- Table of debuffs applied to the target by the player.
     local debuffs_warned = {}
-
     mt_debuffs = {
         -- The debuff/ doesn't exist in our table so check the real game state,
         -- and copy it so we don't have to use the API next time.
@@ -5271,7 +5257,7 @@ do
 
             else
                 if Hekili.PLAYER_ENTERING_WORLD and not debuffs_warned[ k ] then
-                    Hekili:Error( "Unknown debuff in [" .. ( state.scriptID or "unknown" ) .. "]: " .. k .. "\n\n" .. debugstack() )
+                    Hekili:Error( "WARNING: Unknown debuff in [" .. ( state.scriptID or "unknown" ) .. "]: " .. k .. "\n\n" .. debugstack() )
                     debuffs_warned[ k ] = true
                 end
 
@@ -7457,7 +7443,7 @@ do
 
         -- New: DoT Cap
         local dotCap = option.dotCap
-        if dotCap and dotCap > 0 then
+        if dotCap and dotCap > 0 and class.auras[ spell ] then
             local activeDot = state.active_dot[ spell ]
             local aura = state.dot[ spell ]
             if activeDot and activeDot >= dotCap then

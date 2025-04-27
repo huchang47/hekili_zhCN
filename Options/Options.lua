@@ -8,7 +8,7 @@ local class = Hekili.Class
 local scripts = Hekili.Scripts
 local state = Hekili.State
 
-local format, lower, match = string.format, string.lower, string.match
+local format, lower, match, find = string.format, string.lower, string.match, string.find
 local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
 local UnitBuff, UnitDebuff, SkeletonHandler = ns.UnitBuff, ns.UnitDebuff, ns.SkeletonHandler
 local callHook = ns.callHook
@@ -25,6 +25,11 @@ local ACD = LibStub( "AceConfigDialog-3.0" )
 local LDBIcon = LibStub( "LibDBIcon-1.0", true )
 local LSM = LibStub( "LibSharedMedia-3.0" )
 local SF = SpellFlashCore
+
+local search_in = nil
+local search_out = nil
+local trans_in = nil
+local trans_out = nil
 
 local NewFeature = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0|t"
 local GreenPlus = "Interface\\AddOns\\Hekili\\Textures\\GreenPlus"
@@ -6540,43 +6545,49 @@ packControl.actionID = format( "%04d", id ) end
                                     name = "指令（技能）",
                                     desc = "选择满足项目条件时推荐进行的操作指令。",
                                     values = function()
-                                        local list = {}
+                                        local list = {"",}
                                         local bypass = {
                                             trinket1 = actual_trinket1,
                                             trinket2 = actual_trinket2,
                                             main_hand = actual_main_hand
                                         }
-
-                                        for k, v in pairs( class.abilityList ) do
-                                            list[ k ] = bypass[ k ] or v
+                                        if search_out and not Hekili.Trans.isChinese(search_out) then
+                                            for k, v in pairs( class.abilityList ) do
+                                                if k == search_out then
+                                                    list[ k ] = bypass[ k ] or v
+                                                end
+                                            end
+                                        elseif search_out and Hekili.Trans.isChinese(search_out) then
+                                            for k, v in pairs( class.abilityList ) do
+                                                if v then
+                                                    if  string.find(v, search_out)  then
+                                                        list[ k ] = bypass[ k ] or v
+                                                    end
+                                                end
+                                            end
+                                        else
+                                            for k, v in pairs( class.abilityList ) do
+                                                list[ k ] = bypass[ k ] or v
+                                            end
                                         end
 
                                         return list
                                     end,
-                                    sorting = function( a, b )
-                                        local list = {}
-
-                                        for k in pairs( class.abilityList ) do
-                                            insert( list, k )
-                                        end
-
-                                        sort( list, function( a, b )
-                                            local bypass = {
-                                                trinket1 = actual_trinket1,
-                                                trinket2 = actual_trinket2,
-                                                main_hand = actual_main_hand
-                                            }
-                                            local aName = bypass[ a ] or class.abilities[ a ].name
-                                            local bName = bypass[ b ] or class.abilities[ b ].name
-                                            if aName ~= nil and type( aName.name ) == "string" then aName = aName.name end
-                                            if bName ~= nil and type( bName.name ) == "string" then bName = bName.name end
-                                            return aName < bName
-                                        end )
-
-                                        return list
-                                    end,
+                                    
                                     order = 3.1,
                                     width = 1.5,
+                                },
+                                search_input = {
+                                    type = "input",
+                                    name = "技能搜索",
+                                    desc = "输入技能名称或部分，进行搜索。\n可能遇到搜索不到的情况，这是正常的，手动翻找一下。",
+                                    get = function () return search_in end,
+                                    set = function( info, val )
+                                        search_in = val
+                                        search_out = Hekili.Trans.isChinese(val) and val or Hekili.Trans.transSpell(val) or val
+                                    end,
+                                    order = 3.15,
+                                    width = 1.3,
                                 },
 
                                 list_name = {
@@ -6846,7 +6857,7 @@ n = tonumber( n ) + 1
                                     type = "input",
                                     name = "条件",
                                     desc = "设置当前指令被推荐或用于生成推荐时必须满足的条件。",
-                                    order = 3.6,
+                                    order = 3.55,
                                     width = "full",
                                     multiline = 6,
                                     dialogControl = "HekiliCustomEditor",
@@ -6883,6 +6894,27 @@ n = tonumber( n ) + 1
 
                                         return results, list, action
                                     end,
+                                },
+                                trans_input = {
+                                    type = "input",
+                                    name = "中英文全称查询：",
+                                    desc = "输入完整的中英文名称用于翻译",
+                                    get = function () return trans_in end,
+                                    set = function( info, val )
+                                        trans_in = val
+                                        trans_out = Hekili.Trans.transSpell(trans_in)
+                                    end,
+                                    width = 1.5,
+                                    order = 3.56,
+                                },
+                        
+                                trans_result = {
+                                    type = "input",
+                                    name = "翻译结果：",
+                                    desc = "翻译结果",
+                                    get = function () return trans_out end,
+                                    width = 1.5,
+                                    order = 3.57,
                                 },
 
                                 value = {
@@ -8740,7 +8772,76 @@ do
                     },
                 }
             },
-
+            translate = {
+                type = "group",
+                name = "技能翻译（开发中）",
+                desc = "你可以轻松翻译技能/物品/光环/天赋的中英文名称",
+                order = 98,
+                childGroups = "tab",
+                args = {
+                    trans_input = {
+                        type = "input",
+                        name = "中英文查询：",
+                        desc = "输入技能、光环、天赋名称，支持中英文",
+                        get = function(info)
+                            return trans_in or ""
+                        end,
+                        set = function( info, val )
+                            trans_in = val
+                            if val == "" then
+                                info.option.type = "input"
+                                return
+                            end
+                            local trans_list = {"",}
+                            if trans_in and not Hekili.Trans.isChinese(trans_in) then
+                                for k, v in pairs( class.abilityList ) do
+                                    if k == trans_in then
+                                        trans_list[ k ] = class.abilityList[ k ] or v
+                                    end
+                                end
+                            
+                            elseif trans_in and Hekili.Trans.isChinese(trans_in) then
+                                for k, v in pairs( class.abilityList ) do
+                                    if v then
+                                        if  string.find(v, trans_in)  then
+                                            trans_list[ k ] = class.abilityList[ k ] or v
+                                        end
+                                    end
+                                end
+                            else
+                                for k, v in pairs( class.abilityList ) do
+                                    trans_list[ k ] = class.abilityList[ k ] or v
+                                end
+                            end
+                            info.option.values = trans_list
+                            info.option.type = "select"
+                            if info.option.values[val] == "" then
+                                info.option.values = nil
+                                info.option.type = "input"
+                            else
+                                -- 遍历 trans_list 查找对应的键
+                                for k, v in pairs(trans_list) do
+                                    if v == info.option.values[val] then
+                                        trans_out = k
+                                        break
+                                    end
+                                end
+                            end
+                        end,
+                        width = 1.5,
+                        order = 3.56,
+                    },
+                    
+                    trans_result = {
+                        type = "input",
+                        name = "翻译结果：",
+                        desc = "翻译结果",
+                        get = function () return trans_out end,
+                        width = 1.5,
+                        order = 3.57,
+                    },      
+                }
+            },
             abilities = {
                 type = "group",
                 name = "技能",

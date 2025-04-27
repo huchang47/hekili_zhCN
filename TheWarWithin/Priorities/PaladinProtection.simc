@@ -11,7 +11,6 @@ actions.precombat+=/variable,name=trinket_sync_slot,value=1,if=trinket.1.has_coo
 actions.precombat+=/variable,name=trinket_sync_slot,value=2,if=trinket.2.has_cooldown&trinket.2.has_stat.any_dps&(!trinket.1.has_stat.any_dps|trinket.2.cooldown.duration>trinket.1.cooldown.duration)|!trinket.1.has_cooldown
 
 actions+=/rebuke
-actions+=/blessing_of_spellwarding
 actions+=/call_action_list,name=mitigation
 actions+=/call_action_list,name=cooldowns
 actions+=/call_action_list,name=trinkets
@@ -27,6 +26,8 @@ actions.cooldowns+=/bastion_of_light,if=buff.avenging_wrath.up|cooldown.avenging
 actions.cooldowns+=/fireblood,if=buff.avenging_wrath.remains>8
 
 actions.mitigation+=/shield_of_the_righteous,if=tanking&buff.shield_of_the_righteous.down&(holy_power.deficit=0|buff.divine_purpose.up)
+# [Hekili] Recommend BoSP if the filter is enabled in spec options. Custom priorities can use BoSP with or without this feature.
+actions.mitigation+=/blessing_of_spellwarding,if=settings.bosp_filter
 actions.mitigation+=/word_of_glory,if=health.pct<wog_health&(holy_power.deficit=0|buff.divine_purpose.up|buff.shining_light_free.up)
 actions.mitigation+=/divine_shield,if=talent.final_stand.enabled&tanking&incoming_damage_5s>ds_damage&!(buff.ardent_defender.up|buff.guardian_of_ancient_kings.up|buff.divine_shield.up|buff.potion.up)
 actions.mitigation+=/guardian_of_ancient_kings,if=tanking&incoming_damage_5s>goak_damage&!(buff.ardent_defender.up|buff.guardian_of_ancient_kings.up|buff.divine_shield.up|buff.potion.up)

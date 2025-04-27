@@ -287,10 +287,6 @@ spec:RegisterPvpTalents( {
 } )
 
 
-spec:RegisterHook( "TALENTS_UPDATED", function()
-    talent.shadow_crash = talent.shadow_crash_targeted.enabled and talent.shadow_crash_targeted or talent.shadow_crash_ground
-end )
-
 -- Auras
 spec:RegisterAuras( {
     ancient_madness = {
@@ -547,14 +543,6 @@ spec:RegisterAuras( {
         type = "Magic",
         max_stack = 1
     },
-    mindbender = {
-        duration = 15,
-        max_stack = 1,
-    },
-    voidwraith = {
-        duration = 15,
-        max_stack = 1
-    },
     -- Talent / Covenant: The next $w2 damage and $w5 healing dealt will be reversed.
     -- https://wowhead.com/beta/spell=323673
     mindgames = {
@@ -678,14 +666,6 @@ spec:RegisterAuras( {
         id = 589,
         duration = function() return talent.misery.enabled and 21 or 16 end,
         tick_time = function () return 2 * haste * ( 1 - 0.4 * ( buff.screams_of_the_void.up and talent.screams_of_the_void.rank or 0 ) ) end,
-        type = "Magic",
-        max_stack = 1
-    },
-    -- Talent: 343726
-    -- https://wowhead.com/beta/spell=34433
-    shadowfiend = {
-        id = 34433,
-        duration = 15,
         type = "Magic",
         max_stack = 1
     },
@@ -917,13 +897,14 @@ spec:RegisterAuras( {
     },
 } )
 
-
 spec:RegisterTotems( {
     mindbender = {
-        id = 136214
+        id = 136214,
+        copy = "mindbender_actual"
     },
     shadowfiend = {
-        id = 136199
+        id = 136199,
+        copy = "shadowfiend_actual"
     },
     voidwraith = {
         id = 615099
@@ -1047,23 +1028,6 @@ spec:RegisterHook( "reset_precast", function ()
         rawset( debuff, "unfurling_darkness_cd", buff.unfurling_darkness_cd )
     end
 
-    if pet.mindbender.active then
-        applyBuff( "mindbender", pet.mindbender.remains )
-        buff.mindbender.applied = action.mindbender.lastCast
-        buff.mindbender.duration = 15
-        buff.mindbender.expires = action.mindbender.lastCast + 15
-    elseif pet.shadowfiend.active then
-        applyBuff( "shadowfiend", pet.shadowfiend.remains )
-        buff.shadowfiend.applied = action.shadowfiend.lastCast
-        buff.shadowfiend.duration = 15
-        buff.shadowfiend.expires = action.shadowfiend.lastCast + 15
-    elseif pet.voidwraith.active then
-        applyBuff( "voidwraith", pet.voidwraith.remains )
-        buff.voidwraith.applied = action.voidwraith.lastCast
-        buff.voidwraith.duration = 15
-        buff.voidwraith.expires = action.voidwraith.lastCast + 15
-    end
-
     if buff.voidform.up then
         state:QueueAuraExpiration( "voidform", ExpireVoidform, buff.voidform.expires )
     end
@@ -1075,9 +1039,6 @@ spec:RegisterHook( "reset_precast", function ()
     if IsActiveSpell( 356532 ) then
         applyBuff( "direct_mask", class.abilities.fae_guardians.lastCast + 20 - now )
     end
-
-    -- If we are channeling Mind Sear, see if it started with Thought Harvester.
-    local _, _, _, start, finish, _, _, spellID = UnitChannelInfo( "player" )
 
     if settings.pad_void_bolt and cooldown.void_bolt.remains > 0 then
         reduceCooldown( "void_bolt", latency * 2 )
@@ -1111,12 +1072,27 @@ spec:RegisterHook( "reset_precast", function ()
 end )
 
 spec:RegisterHook( "TALENTS_UPDATED", function()
-    local sf = talent.mindbender.enabled and "mindbender" or talent.voidwraith.enabled and "voidwraith" or "shadowfiend"
+    talent.shadow_crash = talent.shadow_crash_targeted.enabled and talent.shadow_crash_targeted or talent.shadow_crash_ground
+
+    -- For ability/cooldown, Mindbender takes precedent.
+    local sf = talent.mindbender.enabled and "mindbender_actual" or talent.voidwraith.enabled and "voidwraith" or "shadowfiend"
+
+    class.abilities.shadowfiend = class.abilities.shadowfiend_actual
+    class.abilities.mindbender = class.abilities[ sf ]
+
+    rawset( cooldown, "shadowfiend", cooldown.shadowfiend_actual )
+    rawset( cooldown, "mindbender", cooldown[ sf ] )
+    rawset( cooldown, "fiend", cooldown.mindbender )
+
+    -- For totem/pet/buff, Voidwraith takes precedent.
+    sf = talent.voidwraith.enabled and "voidwraith" or talent.mindbender.enabled and "mindbender" or "shadowfiend"
+
     class.totems.fiend = spec.totems[ sf ]
     totem.fiend = totem[ sf ]
-    cooldown.fiend = cooldown[ sf ]
     pet.fiend = pet[ sf ]
+    buff.fiend = buff[ sf ]
 end )
+
 
 spec:RegisterHook( "pregain", function( amount, resource, overcap )
     if amount > 0 and resource == "insanity" and state.buff.memory_of_lucid_dreams.up then
