@@ -6573,7 +6573,6 @@ packControl.actionID = format( "%04d", id ) end
 
                                         return list
                                     end,
-                                    
                                     order = 3.1,
                                     width = 1.5,
                                 },

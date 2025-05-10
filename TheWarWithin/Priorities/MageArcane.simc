@@ -28,6 +28,7 @@ actions+=/ancestral_call,if=(prev_gcd.1.arcane_surge&variable.opener)|((prev_gcd
 ##actions+=/invoke_external_buff,name=power_infusion,if=(!equipped.spymasters_web&prev_gcd.1.arcane_surge)|(equipped.spymasters_web&prev_gcd.1.evocation)
 ##actions+=/invoke_external_buff,name=blessing_of_summer,if=prev_gcd.1.arcane_surge
 ##actions+=/invoke_external_buff,name=blessing_of_autumn,if=cooldown.touch_of_the_magi.remains>5
+actions+=/variable,name=spymasters_double_on_use,op=set,value=(equipped.gladiators_badge|equipped.signet_of_the_priory|equipped.high_speakers_accretion|equipped.treacherous_transmitter|equipped.imperfect_ascendancy_serum|equipped.quickwick_candlestick|equipped.soulletting_ruby|equipped.funhouse_lens|equipped.house_of_cards|equipped.flarendos_pilot_light|equipped.signet_of_the_priory)&equipped.spymasters_web&cooldown.evocation.remains<17&(buff.spymasters_report.stack>35|(fight_remains<90&buff.spymasters_report.stack>25))
 # Trinket specific use cases vary, default is just with cooldowns
 actions+=/use_items,if=((prev_gcd.1.arcane_surge&variable.steroid_trinket_equipped)|(cooldown.arcane_surge.ready&variable.steroid_trinket_equipped)|!variable.steroid_trinket_equipped&variable.nonsteroid_trinket_equipped|(variable.nonsteroid_trinket_equipped&buff.siphon_storm.remains<10&(cooldown.evocation.remains>17|trinket.cooldown.remains>20)))&!variable.spymasters_double_on_use|(boss&fight_remains<20)
 actions+=/use_item,name=treacherous_transmitter,if=buff.spymasters_report.stack<40

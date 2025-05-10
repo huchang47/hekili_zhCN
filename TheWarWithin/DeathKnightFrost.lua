@@ -976,8 +976,6 @@ spec:RegisterGear({
     }
 } )
 
-local any_dnd_set = false
-
 local spendHook = function( amt, resource )
     -- Runic Power
     if amt > 0 and resource == "runic_power" then
@@ -998,33 +996,15 @@ end
 
 spec:RegisterHook( "spend", spendHook )
 
+spec:RegisterHook( "TALENTS_UPDATED", function()
+    class.abilityList.any_dnd = "|T136144:0|t |cff00ccff[Any " .. class.abilities.death_and_decay.name .. "]|r"
+    class.abilities.any_dnd = class.abilities.death_and_decay_actual
+    rawset( cooldown, "any_dnd", nil )
+    rawset( cooldown, "death_and_decay", nil )
+    rawset( cooldown, "any_dnd", cooldown.death_and_decay )
+end )
+
 spec:RegisterHook( "reset_precast", function ()
-
-    if covenant.night_fae then
-        if state:IsKnown( "deaths_due" ) then
-            class.abilities.any_dnd = class.abilities.deaths_due
-            cooldown.any_dnd = cooldown.deaths_due
-            setCooldown( "death_and_decay", cooldown.deaths_due.remains )
-        elseif state:IsKnown( "defile" ) then
-            class.abilities.any_dnd = class.abilities.defile
-            cooldown.any_dnd = cooldown.defile
-            setCooldown( "death_and_decay", cooldown.defile.remains )
-        end
-    else
-        class.abilities.any_dnd = class.abilities.death_and_decay
-        cooldown.any_dnd = cooldown.death_and_decay
-    end
-
-    if not any_dnd_set then
-        class.abilityList.any_dnd = "|T136144:0|t |cff00ccff[Any]|r " .. class.abilities.death_and_decay.name
-        any_dnd_set = true
-    end
-    --[[ Uncomment if enduring strength buff ever becomes referenced in APL
-    if buff.pillar_of_frost.up and talent.enduring_strength.enabled then
-        state:QueueAuraEvent( "pillar_of_frost", TriggerEnduringStrengthBuff, buff.pillar_of_frost.expires, "AURA_EXPIRATION" )
-    end
-    --]]
-
     local control_expires = action.control_undead.lastCast + 300
     if talent.control_undead.enabled and control_expires > now and pet.up then
         summonPet( "controlled_undead", control_expires - now )
@@ -1239,25 +1219,30 @@ spec:RegisterAbilities( {
         end,
     },
 
-    -- Corrupts the targeted ground, causing ${$341340m1*11} Shadow damage over $d to targets within the area.$?!c2[; While you remain within the area, your ][]$?s223829&!c2[Necrotic Strike and ][]$?c1[Heart Strike will hit up to $188290m3 additional targets.]?s207311&!c2[Clawing Shadows will hit up to ${$55090s4-1} enemies near the target.]?!c2[Scourge Strike will hit up to ${$55090s4-1} enemies near the target.][; While you remain within the area, your Obliterate will hit up to $316916M2 additional $Ltarget:targets;.]
+    -- Corrupts the targeted ground, causing ${$52212m1*11} Shadow damage over $d to...
     death_and_decay = {
         id = 43265,
         noOverride = 324128,
         cast = 0,
-        charges = function() if talent.deaths_echo.enabled then return 2 end end,
+        charges = function () if talent.deaths_echo.enabled then return 2 end end,
         cooldown = 30,
-        recharge = function() if talent.deaths_echo.enabled then return 30 end end,
+        recharge = function () if talent.deaths_echo.enabled then return 30 end end,
         gcd = "spell",
 
         spend = 1,
         spendType = "runes",
 
         startsCombat = true,
+        notalent = "defile",
 
         handler = function ()
             applyBuff( "death_and_decay" )
             applyDebuff( "target", "death_and_decay" )
+            if talent.grip_of_the_dead.enabled then applyDebuff( "target", "grip_of_the_dead" ) end
         end,
+
+        bind = "any_dnd",
+        copy = { "death_and_decay_actual", "any_dnd" }
     },
 
     -- Fires a blast of unholy energy at the target$?a377580[ and $377580s2 additional nearby target][], causing $47632s1 Shadow damage to an enemy or healing an Undead ally for $47633s1 health.$?s390268[    Increases the duration of Dark Transformation by $390268s1 sec.][]
@@ -1893,6 +1878,14 @@ spec:RegisterAbilities( {
             applyBuff( "wraith_walk" )
         end,
     },
+
+    -- Stub.
+    any_dnd = {
+        name = function() return "|T136144:0|t |cff00ccff[Any " .. ( class.abilities.death_and_decay and class.abilities.death_and_decay.name or "Death and Decay" ) .. "]|r" end,
+        cast = 0,
+        cooldown = 0,
+        copy = "any_dnd_stub"
+    }
 } )
 
 spec:RegisterRanges( "frost_strike", "mind_freeze", "death_coil" )

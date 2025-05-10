@@ -149,7 +149,7 @@ actions.san_fishing+=/antimagic_shell,if=death_knight.ams_absorb_percent>0&runic
 actions.san_fishing+=/wound_spender,if=buff.infliction_of_sorrow.up
 actions.san_fishing+=/any_dnd,if=!buff.death_and_decay.up&!buff.vampiric_strike.up
 actions.san_fishing+=/death_coil,if=buff.sudden_doom.up&talent.doomed_bidding|set_bonus.tww2_4pc&buff.essence_of_the_blood_queen.at_max_stacks&talent.frenzied_bloodthirst&!buff.vampiric_strike.up
-actions.san_fishing+=/soul_reaper,if=target.health.pct<=35&fight_remains>5
+actions.san_fishing+=/soul_reaper,if=target.health.pct<=35&target.time_to_die>5
 actions.san_fishing+=/death_coil,if=!buff.vampiric_strike.up
 actions.san_fishing+=/wound_spender,if=(debuff.festering_wound.stack>=3-pet.abomination.active&cooldown.apocalypse.remains>variable.apoc_timing)|buff.vampiric_strike.up
 actions.san_fishing+=/festering_strike,if=debuff.festering_wound.stack<3-pet.abomination.active
@@ -159,7 +159,7 @@ actions.san_st+=/any_dnd,if=!death_and_decay.ticking&talent.unholy_ground&cooldo
 actions.san_st+=/wound_spender,if=buff.infliction_of_sorrow.up
 actions.san_st+=/death_coil,if=buff.sudden_doom.up&buff.gift_of_the_sanlayn.remains&(talent.doomed_bidding|talent.rotten_touch)|rune<3&!buff.runic_corruption.up|set_bonus.tww2_4pc&runic_power>80|buff.gift_of_the_sanlayn.up&buff.essence_of_the_blood_queen.at_max_stacks&talent.frenzied_bloodthirst&set_bonus.tww2_4pc&buff.winning_streak_unholy.at_max_stacks&rune<=3&buff.essence_of_the_blood_queen.remains>3
 actions.san_st+=/wound_spender,if=buff.vampiric_strike.up&debuff.festering_wound.up|buff.gift_of_the_sanlayn.up|talent.gift_of_the_sanlayn&buff.dark_transformation.up&buff.dark_transformation.remains<gcd
-actions.san_st+=/soul_reaper,if=target.health.pct<=35&!buff.gift_of_the_sanlayn.up&fight_remains>5
+actions.san_st+=/soul_reaper,if=target.health.pct<=35&!buff.gift_of_the_sanlayn.up&target.time_to_die>5
 actions.san_st+=/festering_strike,if=(debuff.festering_wound.stack=0&cooldown.apocalypse.remains<variable.apoc_timing)|(talent.gift_of_the_sanlayn&!buff.gift_of_the_sanlayn.up|!talent.gift_of_the_sanlayn)&(buff.festering_scythe.up|debuff.festering_wound.stack<=1)
 actions.san_st+=/wound_spender,if=(!talent.apocalypse|cooldown.apocalypse.remains>variable.apoc_timing)&(debuff.festering_wound.stack>=3-pet.abomination.active|buff.vampiric_strike.up)
 actions.san_st+=/death_coil,if=!variable.pooling_runic_power&debuff.death_rot.remains<gcd|(buff.sudden_doom.up&debuff.festering_wound.up|rune<2)
@@ -177,10 +177,10 @@ actions.san_trinkets+=/use_item,slot=trinket2,if=!variable.trinket_2_buffs&(trin
 actions.san_trinkets+=/use_item,slot=main_hand,if=(!variable.trinket_1_buffs&!variable.trinket_2_buffs|trinket.1.cooldown.remains>20&!variable.trinket_2_buffs|trinket.2.cooldown.remains>20&!variable.trinket_1_buffs|trinket.1.cooldown.remains>20&trinket.2.cooldown.remains>20)&(buff.dark_transformation.up&buff.dark_transformation.remains>10)&(!talent.raise_abomination&!talent.army_of_the_dead|!talent.raise_abomination&talent.army_of_the_dead&pet.army_ghoul.active|talent.raise_abomination&pet.abomination.active|(variable.trinket_1_buffs|variable.trinket_2_buffs|boss&fight_remains<15))
 
 ## Single Target Non-San'layn
-actions.st+=/soul_reaper,if=target.health.pct<=35&fight_remains>5
+actions.st+=/soul_reaper,if=target.health.pct<=35&target.time_to_die>5
 actions.st+=/wound_spender,if=debuff.chains_of_ice_trollbane_slow.up
 actions.st+=/any_dnd,if=talent.unholy_ground&!buff.death_and_decay.up&(pet.apoc_ghoul.active|pet.abomination.active|pet.gargoyle.active)
-actions.st+=/death_coil,if=!variable.pooling_runic_power&variable.spend_rp|boss&fight_remains<10
+actions.st+=/death_coil,if=!variable.pooling_runic_power&variable.spend_rp|fight_remains<10
 actions.st+=/festering_strike,if=debuff.festering_wound.stack<4&(!variable.pop_wounds|buff.festering_scythe.up)
 actions.st+=/wound_spender,if=variable.pop_wounds
 actions.st+=/death_coil,if=!variable.pooling_runic_power

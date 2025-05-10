@@ -807,7 +807,8 @@ do
         ["!"] = true,
         ["!="] = true,
         ["~="] = true,
-        ["@"] = true
+        ["@"] = true,
+        [","] = true
      }
 
     local math_ops = {
@@ -818,9 +819,6 @@ do
         ["%"] = true,
         ["<"] = true,
         [">"] = true,
-        -- ["="] = true,
-        -- ["!="] = true,
-        -- ["~="] = true,
         ["<="] = true,
         [">="] = true,
         [">?"] = true,
@@ -847,7 +845,9 @@ do
 
     local funcs = {
         ["floor"] = true,
-        ["ceil"] = true
+        ["ceil"] = true,
+        ["max"] = true,
+        ["min"] = true
     }
 
 
@@ -985,7 +985,9 @@ do
                         esDepth = esDepth - 1
                         return orig
                     end
-                    piece.s = scripts:EmulateSyntax( piece.s, numeric )
+
+                    local isNumber = numeric and prev == nil and next == nil or prev and math_ops[ prev.a ] or next and math_ops[ next.a ]
+                    piece.s = scripts:EmulateSyntax( piece.s, isNumber, squawk )
                 end
 
                 if ( prev and prev.t == "op" and math_ops[ prev.a ] and not equality[ prev.a ] ) or ( next and next.t == "op" and math_ops[ next.a ] and not equality[ next.a ] ) then

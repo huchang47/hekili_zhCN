@@ -900,18 +900,23 @@ spec:RegisterHook( "reset_precast", function()
         Hekili:Debug( " - lastRoll: %.2f", lastRoll )
         Hekili:Debug( " - rollDuration: %.2f", rollDuration )
         Hekili:Debug( " - rtb_primary_remains: %.2f", rtb_primary_remains )
+        Hekili:Debug( " - Totals  | longer: %d  normal: %d  shorter: %d  willLose: %d",
+        rtb_buffs_longer, rtb_buffs_normal, rtb_buffs_shorter, rtb_buffs_will_lose )
 
-        Hekili:Debug( " - Buff Status (vs. %.2f):", rollDuration )
-        for i = 1, 6 do
-            local bone = rtb_buff_list[ i ]
-            if buff[ bone ].up then
-                local bone_duration = buff[ bone ].duration
-                Hekili:Debug( "   * %-20s %5.2f : %5.2f %s",
-                    bone,
-                    buff[ bone ].remains,
-                    bone_duration,
-                    bone_duration < rollDuration and "shorter" or bone_duration > rollDuration and "longer" or "normal"
-                )
+        local lenTol = 0.2                             -- length tolerance for "longer" and "shorter"
+        local primary  = rtb_primary_remains
+        Hekili:Debug(" - Buff Status (vs. %.2f):", rtb_primary_remains)
+
+        for i = 1, #rtb_buff_list do
+            local name = rtb_buff_list[i]
+            local b = buff[name]
+            if b.up then
+                local diff = b.remains - primary
+                local label = diff > lenTol and "longer"
+                             or diff < -lenTol and "shorter"
+                             or                     "normal"
+                local lose = rtb_buffs_will_lose_buff[name] and "*" or " "  -- mark with * what buff will be lost 
+                Hekili:Debug("   %s %-20s %5.2f [%s]", lose, name, b.remains, label)
             end
         end
     end

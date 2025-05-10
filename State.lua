@@ -4033,7 +4033,7 @@ do
                 return t.applied <= state.query_time and max( 0, t.expires - state.query_time ) or 0
 
             elseif k == "duration" then
-                return ( t.remains > 0 and t.expires - t.applied ) or aura.duration or 15
+                return aura.duration or ( t.remains > 0 and t.expires - t.applied or 0 ) or 15
 
             elseif k == "refreshable" then
                 local tr = t.remains

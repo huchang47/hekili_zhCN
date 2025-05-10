@@ -212,9 +212,128 @@ local function transSpell(input)
     return nil, "未找到匹配项"
 end
 
--- 导出模块功能
+-- 导出数据到JSON文件
+-- @param filePath 导出文件的路径
+
+-- 自定义简单的JSON转换函数
+local function tableToJSON(obj, padding) 
+    padding = padding or ""
+    local t = type(obj) 
+    if t == "number" then 
+        return tostring(obj) 
+    end 
+    if t == "string" then 
+        return "\"" .. obj:gsub("\\", "\\\\"):gsub("\"", "\\\""):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t") .. "\"" 
+    end 
+    if t == "boolean" then 
+        return tostring(obj) 
+    end 
+    local json = "" 
+    if t == "table" then 
+        local indent = padding .. "  " 
+        local isArray = true
+        local i = 1
+        for k in pairs(obj) do
+            if k ~= i then
+                isArray = false
+                break
+            end
+            i = i + 1
+        end
+        if isArray then 
+            json = padding .. "[\n" 
+            local elements = {} 
+            for _, v in ipairs(obj) do 
+                table.insert(elements, indent .. tableToJSON(v, indent)) 
+            end 
+            json = json .. table.concat(elements, ",\n") .. "\n" .. padding .. "]" 
+        else 
+            json = padding .. "{\n" 
+            local keyValues = {} 
+            for k, v in pairs(obj) do 
+                table.insert(keyValues, indent .. tableToJSON(k) .. ": " .. tableToJSON(v, indent)) 
+            end 
+            json = json .. table.concat(keyValues, ",\n") .. "\n" .. padding .. "}" 
+        end 
+    end 
+    return json 
+end
+
+-- 创建窗口和文本框
+local exportWindow = CreateFrame("Frame", "HekiliExportWindow", UIParent, "BasicFrameTemplateWithInset")
+exportWindow:SetSize(600, 400)
+exportWindow:SetPoint("CENTER")
+exportWindow:SetMovable(true)
+exportWindow:EnableMouse(true)
+exportWindow:RegisterForDrag("LeftButton")
+exportWindow:SetScript("OnDragStart", exportWindow.StartMoving)
+exportWindow:SetScript("OnDragStop", exportWindow.StopMovingOrSizing)
+
+exportWindow.title = exportWindow:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+exportWindow.title:SetPoint("TOP", 0, -5)
+exportWindow.title:SetText("Hekili 导出数据")
+
+local scrollFrame = CreateFrame("ScrollFrame", nil, exportWindow, "UIPanelScrollFrameTemplate") 
+scrollFrame:SetPoint("TOPLEFT", 10, -30) 
+scrollFrame:SetPoint("BOTTOMRIGHT", -30, 10)  -- 调整位置为顶部按钮留出空间 
+
+local editBox = CreateFrame("EditBox", nil, scrollFrame) 
+editBox:SetMultiLine(true) 
+editBox:SetFontObject("GameFontHighlight") 
+editBox:SetWidth(scrollFrame:GetWidth()) 
+editBox:SetAutoFocus(true) 
+editBox:SetTextInsets(5, 5, 5, 5) 
+scrollFrame:SetScrollChild(editBox)
+
+-- 平时隐藏窗口
+exportWindow:Hide()
+
+local function updateExportWindow()
+    local jsonData = {
+        keywords = {},
+    }
+    -- 提取abilities中的中英文名称，过滤数字key和中文key
+    for key, ability in pairs(Hekili.Class.abilities) do
+        if type(key) ~= 'number' and not isChinese(key) then
+            local enName = key
+            local zhName = ability.name
+            jsonData.keywords[enName] = zhName
+        end
+    end
+    -- 提取auras中的中英文名称，过滤数字key和中文key
+    for key, aura in pairs(Hekili.Class.auras) do
+        if type(key) ~= 'number' and not isChinese(key) then
+            local enName = key
+            local zhName = aura.name
+            jsonData.keywords[enName] = zhName
+        end
+    end
+    -- 提取talents中的中英文名称，过滤数字key和中文key
+    for key, talent in pairs(Hekili.Class.talents) do
+        if type(key) ~= 'number' and not isChinese(key) then
+            local spellInfo = C_Spell.GetSpellInfo(talent[2])
+            if spellInfo then
+                local enName = key
+                local zhName = spellInfo.name
+                jsonData.keywords[enName] = zhName
+            end
+        end
+    end
+    -- 将数据转换为JSON字符串
+    local jsonString = tableToJSON(jsonData)
+    editBox:SetText(jsonString)
+    exportWindow:Show()
+end
+
+-- 修改斜杠命令以显示窗口
+SLASH_HekiliExportJSON1 = '/hky'
+SlashCmdList['HekiliExportJSON'] = function(arg) 
+    updateExportWindow()
+end
+
 Hekili.Trans = {
     isChinese = isChinese,  -- 中文检测函数
     getTalentSpellID = getTalentSpellID,  -- 天赋名称转法术ID
-    transSpell = transSpell  -- 技能名称翻译主函数
+    transSpell = transSpell,  -- 技能名称翻译主函数
+    exportToJSON = exportToJSON  -- 导出数据到JSON文件
 }
