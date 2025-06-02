@@ -1429,7 +1429,7 @@ spec:RegisterAbilities( {
 
         readyTime = function()
             if buff.revenge.up then return 0 end
-            local threshold = settings.reserve_rage + 40
+            local threshold = settings.reserve_rage + 20
             return ( tanking and rage.current < threshold ) and rage[ "time_to_" .. threshold ] or 0
         end,
 

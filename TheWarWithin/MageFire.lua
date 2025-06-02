@@ -1222,25 +1222,52 @@ spec:RegisterStateTable( "incanters_flow_time_to", setmetatable( {}, {
 spec:RegisterAbilities( {
     -- Talent: Alters the fabric of time, returning you to your current location and health when cast a second time, or after 10 seconds. Effect negated by long distance or death.
     alter_time = {
-        id = function () return buff.alter_time.down and 342247 or 342245 end,
+        id = 342245,
         cast = 0,
         cooldown = function () return talent.master_of_time.enabled and 50 or 60 end,
         gcd = "off",
         school = "arcane",
 
+        texture = 609811,
+
         spend = 0.01,
         spendType = "mana",
+        nobuff = "alter_time",
 
         talent = "alter_time",
         startsCombat = false,
 
+        toggle = "defensives",
+
         handler = function ()
-            if buff.alter_time.down then
-                applyBuff( "alter_time" )
-            else
-                removeBuff( "alter_time" )
-                if talent.master_of_time.enabled then setCooldown( "blink", 0 ) end
-            end
+            applyBuff( "alter_time" )
+            setCooldown( "alter_time_return", 0 )
+        end,
+
+        copy = { 342247, 342245 }
+    },
+
+    alter_time_return = {
+        id = 342247,
+        cast = 0,
+        cooldown = function () return talent.master_of_time.enabled and 50 or 60 end,
+        gcd = "off",
+        school = "arcane",
+
+        texture = 985088,
+
+        spend = 0.01,
+        spendType = "mana",
+        buff = "alter_time",
+
+        talent = "alter_time",
+        startsCombat = false,
+
+        toggle = "defensives",
+
+        handler = function ()
+            removeBuff( "alter_time" )
+            if talent.master_of_time.enabled then setCooldown( "blink", 0 ) end
         end,
 
         copy = { 342247, 342245 }

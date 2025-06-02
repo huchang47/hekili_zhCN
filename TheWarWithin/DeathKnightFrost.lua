@@ -1235,6 +1235,8 @@ spec:RegisterAbilities( {
         startsCombat = true,
         notalent = "defile",
 
+        usable = function () return ( settings.dnd_while_moving or not moving ), "cannot cast while moving" end,
+
         handler = function ()
             applyBuff( "death_and_decay" )
             applyDebuff( "target", "death_and_decay" )
@@ -1881,7 +1883,7 @@ spec:RegisterAbilities( {
 
     -- Stub.
     any_dnd = {
-        name = function() return "|T136144:0|t |cff00ccff[Any " .. ( class.abilities.death_and_decay and class.abilities.death_and_decay.name or "Death and Decay" ) .. "]|r" end,
+        name = function() return "|T136144:0|t |cff00ccff[任意 " .. ( class.abilities.death_and_decay and class.abilities.death_and_decay.name or "凋零缠绕" ) .. "]|r" end,
         cast = 0,
         cooldown = 0,
         copy = "any_dnd_stub"
@@ -1906,7 +1908,7 @@ spec:RegisterOptions( {
 
     potion = "tempered_potion",
 
-    package = "冰霜Simc",
+    package = "Frost DK",
 } )
 
 --[[ Estimation of whether or not random RP gains can happen, in an attempt to smooth out changing recommendations

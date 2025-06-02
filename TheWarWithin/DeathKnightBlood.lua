@@ -1833,6 +1833,8 @@ spec:RegisterAbilities( {
 
         startsCombat = true,
 
+        usable = function () return ( settings.dnd_while_moving or not moving ), "cannot cast while moving" end,
+
         handler = function ()
             if buff.crimson_scourge.up then
                 if talent.perseverance_of_the_ebon_blade.enabled then applyBuff( "perseverance_of_the_ebon_blade" ) end
@@ -2543,6 +2545,12 @@ spec:RegisterOptions( {
     package = "鲜血Simc",
 } )
 
+spec:RegisterSetting( "dnd_while_moving", true, {
+    name = strformat( "允许移动时使用 %s", Hekili:GetSpellLinkWithTexture( spec.abilities.death_and_decay.id ) ),
+    desc = strformat( "如果勾选，则允许在玩家移动时推荐使用 %s；否则，仅在玩家静止时推荐使用。", Hekili:GetSpellLinkWithTexture( spec.abilities.death_and_decay.id ) ),
+    type = "toggle",
+    width = "full",
+} )
 
 spec:RegisterSetting( "save_blood_shield", true, {
     name = strformat( "保持 %s", Hekili:GetSpellLinkWithTexture( spec.auras.blood_shield.id ) ),

@@ -204,7 +204,8 @@ spec:RegisterAuras( {
     aether_attunement_stack = {
         id = 458388,
         duration = 180,
-        max_stack = 3
+        max_stack = 3,
+        copy = "aether_attunement_counter"
     },
     --[[aethervision = {
         id = 467634,
@@ -1226,28 +1227,55 @@ end )
 spec:RegisterAbilities( {
     -- Alters the fabric of time, returning you to your current location and health when cast a second time, or after 10 seconds. Effect negated by long distance or death.
     alter_time = {
-        id = function () return buff.alter_time.down and 342247 or 342245 end,
+        id = 342245,
         cast = 0,
         cooldown = function () return talent.master_of_time.enabled and 50 or 60 end,
-        gcd = "spell",
+        gcd = "off",
         school = "arcane",
+
+        texture = 609811,
 
         spend = 0.01,
         spendType = "mana",
+        nobuff = "alter_time",
 
-        toggle = "defensives",
+        talent = "alter_time",
         startsCombat = false,
 
+        toggle = "defensives",
+
         handler = function ()
-            if buff.alter_time.down then
-                applyBuff( "alter_time" )
-            else
-                removeBuff( "alter_time" )
-                if talent.master_of_time.enabled then setCooldown( "blink", 0 ) end
-            end
+            applyBuff( "alter_time" )
+            setCooldown( "alter_time_return", 0 )
         end,
 
-        copy = { 342247, 342245 },
+        copy = { 342247, 342245 }
+    },
+
+    alter_time_return = {
+        id = 342247,
+        cast = 0,
+        cooldown = function () return talent.master_of_time.enabled and 50 or 60 end,
+        gcd = "off",
+        school = "arcane",
+
+        texture = 985088,
+
+        spend = 0.01,
+        spendType = "mana",
+        buff = "alter_time",
+
+        talent = "alter_time",
+        startsCombat = false,
+
+        toggle = "defensives",
+
+        handler = function ()
+            removeBuff( "alter_time" )
+            if talent.master_of_time.enabled then setCooldown( "blink", 0 ) end
+        end,
+
+        copy = { 342247, 342245 }
     },
 
     -- Talent: Launches bolts of arcane energy at the enemy target, causing 1,617 Arcane damage. For each Arcane Charge, deals 36% additional damage and hits 1 additional nearby target for 40% of its damage. Consumes all Arcane Charges.
@@ -1269,6 +1297,14 @@ spec:RegisterAbilities( {
             removeBuff( "arcane_harmony" )
             removeBuff( "bursting_energy" )
 
+            if buff.burden_of_power.up then
+                removeBuff( "burden_of_power" )
+                applyBuff( "glorious_incandescence" )
+            elseif buff.glorious_incandescence.up then
+                gain( 4, "arcane_charges")
+                removeBuff( "glorious_incandescence" )
+            end
+
             if talent.spellfire_spheres.enabled then
                 if buff.next_blast_spheres.stacks == 5 then
                     removeBuff( "next_blast_spheres" )
@@ -1276,14 +1312,6 @@ spec:RegisterAbilities( {
                     applyBuff( "burden_of_power" )
                 else addStack( "next_blast_spheres" )
                 end
-            end
-
-            if buff.burden_of_power.up then
-                removeBuff( "burden_of_power" )
-                applyBuff( "glorious_incandescence" )
-            elseif buff.glorious_incandescence.up then
-                gain( 4, "arcane_charges")
-                removeBuff( "glorious_incandescence" )
             end
 
             if buff.arcane_soul.up then
@@ -1344,6 +1372,11 @@ spec:RegisterAbilities( {
             -- removeBuff( "concentration" )
             removeBuff( "leydrinker" )
 
+            if buff.burden_of_power.up then
+                removeBuff( "burden_of_power" )
+                applyBuff( "glorious_incandescence" )
+            end
+
             if talent.spellfire_spheres.enabled then
                 if buff.next_blast_spheres.stacks == 5 then
                     removeBuff( "next_blast_spheres" )
@@ -1351,11 +1384,6 @@ spec:RegisterAbilities( {
                     applyBuff( "burden_of_power" )
                 else addStack( "next_blast_spheres" )
                 end
-            end
-
-            if buff.burden_of_power.up then
-                removeBuff( "burden_of_power" )
-                applyBuff( "glorious_incandescence" )
             end
 
             if buff.nether_precision.up then

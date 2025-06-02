@@ -6397,6 +6397,8 @@ do
                 self.ClearCycle()
             end
 
+            self:SetWhitelist( nil )
+
             if ability.item and not ( ability.essence or ability.no_icd ) then
                 self.putTrinketsOnCD( cooldown / 6 )
             end
@@ -6872,62 +6874,20 @@ do
             if ability then
                 casting = ability.key
 
-                --[[ if ability.empowered then
-                    local empowerment = state.empowerment
-                    local timeDiff = state.now - state.buff.casting.applied
-
-                    state.gainCharges( casting, 1 )
-                    state.setCooldown( casting, 0 )
-
-                    if timeDiff >= 0 then
-                        if Hekili.ActiveDebug then Hekili:Print( "Empowerment [%s] is active; turning back time by %.2fs...", casting, timeDiff ) end
-                        state.now = state.now - timeDiff
-
-                        empowerment.active = true
-                        empowerment.spell = casting
-                        empowerment.start = state.now
-
-                        wipe( empowerment.stages )
-
-                        for i = 1, 4 do
-                            local n = GetUnitEmpowerStageDuration( "player", i - 1 )
-                            if n == 0 then break end
-
-                            if i == 1 then insert( empowerment.stages, state.now + n * 0.001 )
-                            else insert( empowerment.stages, empowerment.stages[ i - 1 ] + n * 0.001 ) end
-                        end
-
-                        local stage = state.args.empower_to or ability.empowerment_default or #empowerment.stages
-
-                        empowerment.finish = state.buff.casting.expires
-                        empowerment.hold = state.buff.casting.expires + GetUnitEmpowerHoldAtMaxTime( "player" ) * 0.001
-
-                        print( empowerment.active, empowerment.spell, empowerment.start, empowerment.finish, empowerment.hold )
+                if castID == class.abilities.cyclotronic_blast.id then
+                    -- Set up Pocket-Sized Computation Device.
+                    if state.buff.casting.v3 == 1 then
+                        -- We are in the channeled part of the cast.
+                        setCooldown( "pocketsized_computation_device", state.buff.casting.applied + 120 - state.now )
+                        setCooldown( "global_cooldown", cast_time )
+                    else
+                        -- This is the casting portion.
+                        casting = class.abilities.pocketsized_computation_device.key
+                        state.buff.casting.v1 = class.abilities.pocketsized_computation_device.id
                     end
-
-                    removeBuff( "casting" )
-
-                    casting = nil
-                    ability = nil
-                    cast_time = 0
-                else ]]
-                    if castID == class.abilities.cyclotronic_blast.id then
-                        -- Set up Pocket-Sized Computation Device.
-                        if state.buff.casting.v3 == 1 then
-                            -- We are in the channeled part of the cast.
-                            setCooldown( "pocketsized_computation_device", state.buff.casting.applied + 120 - state.now )
-                            setCooldown( "global_cooldown", cast_time )
-                        else
-                            -- This is the casting portion.
-                            casting = class.abilities.pocketsized_computation_device.key
-                            state.buff.casting.v1 = class.abilities.pocketsized_computation_device.id
-                        end
-                    end
-                -- end
+                end
             end
         end
-
-        -- print( state.display, state.empowerment.active, state.empowerment.spell, state.empowerment.start, state.empowerment.finish, state.empowerment.hold )
 
         -- Okay, two paths here.
         -- 1.  We can cast while casting (i.e., Fire Blast for Fire Mage), so we want to hand off the current cast to the event system, and then let the recommendation engine sort it out.

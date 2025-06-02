@@ -1024,7 +1024,9 @@ spec:RegisterHook( "reset_precast", function ()
     end
 
     if not unfurlingDarknessInitialized then
+        -- Copy actual scraped debuff to buff table.        
         auras.player.buff.unfurling_darkness_cd = auras.player.debuff.unfurling_darkness_cd
+        -- Make debuff.unfurling_darkness_cd reference buff.unfurling_darkness_cd (incl. buff metatable).
         rawset( debuff, "unfurling_darkness_cd", buff.unfurling_darkness_cd )
     end
 

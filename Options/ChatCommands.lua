@@ -13,6 +13,8 @@ local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table
 
 local tableCopy =  ns.tableCopy
 
+local ACD = LibStub( "AceConfigDialog-3.0" )
+
 function Hekili:countPriorities()
     local priorities = {}
     local spec = state.spec.id

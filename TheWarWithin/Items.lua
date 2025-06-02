@@ -786,21 +786,28 @@ all:RegisterAbilities( {
 
     tome_of_lights_devotion = {
         cast = 0,
-        cooldown = 120,
+        cooldown = 90,
         gcd = "off",
 
         item = 219309,
-        toggle = "defensives",
+        toggle = "cooldowns",
 
-        proc = "absorb",
-        self_buff = "radiance",
+        proc = "crit",
+        self_buff = "radiance_tome",
 
         handler = function()
-            applyBuff( "radiance" )
+            applyBuff( "radiance_tome" )
+            if buff.inner_resilience.up then
+                removeBuff( "inner_resilience" )
+                applyBuff( "inner_radiance" )
+            elseif buff.inner_radiance.up then
+                removeBuff( "inner_radiance" )
+                applyBuff( "inner_resilience" )
+            end
         end,
 
         auras = {
-            radiance = {
+            radiance_tome = {
                 id = 443534,
                 duration = 20,
                 max_stack = 1
@@ -814,6 +821,16 @@ all:RegisterAbilities( {
                 id = 450706,
                 duration = 20,
                 max_stack = 1
+            },
+            radiance_verses = {
+                id = 450699,
+                duration = 3600,
+                max_stack = 50,
+            },
+            resilience_verses = {
+                id = 450696,
+                duration = 3600,
+                max_stack = 50,
             },
             ward_of_devotion = {
                 id = 450719,
@@ -1306,7 +1323,7 @@ all:RegisterAbilities( {
         toggle = "cooldowns",
 
         proc = "secondary",
-        self_buff = "funhouse_lens",
+        self_buff = "funhouse_lens_crit",
 
         handler = function ()
             applyBuff( "funhouse_lens" )

@@ -1907,6 +1907,8 @@ spec:RegisterAbilities( {
         startsCombat = true,
         notalent = "defile",
 
+        usable = function () return ( settings.dnd_while_moving or not moving ), "cannot cast while moving" end,
+
         handler = function ()
             applyBuff( "death_and_decay" )
             applyDebuff( "target", "death_and_decay" )
@@ -2081,6 +2083,8 @@ spec:RegisterAbilities( {
 
         talent = "defile",
         startsCombat = true,
+
+        usable = function () return ( settings.dnd_while_moving or not moving ), "cannot cast while moving" end,
 
         handler = function ()
             applyDebuff( "target", "defile" )
@@ -2578,6 +2582,13 @@ spec:RegisterOptions( {
     potion = "tempered_potion",
 
     package = "邪恶Simc",
+} )
+
+spec:RegisterSetting( "dnd_while_moving", true, {
+    name = strformat( "允许移动时使用 %s", Hekili:GetSpellLinkWithTexture( spec.abilities.death_and_decay.id ) ),
+    desc = strformat( "如果勾选，则允许在玩家移动时推荐使用 %s；否则，仅在玩家静止时推荐使用。", Hekili:GetSpellLinkWithTexture( spec.abilities.death_and_decay.id ) ),
+    type = "toggle",
+    width = "full",
 } )
 
 spec:RegisterSetting( "dps_shell", false, {

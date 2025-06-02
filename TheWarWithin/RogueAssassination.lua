@@ -666,152 +666,6 @@ local ExpireDeathmarkT30 = setfenv( function ()
     applyBuff( "poisoned_edges" )
 end, state )
 
-spec:RegisterGear( {
-    -- The War Within
-    tww2 = {
-        items = { 229290, 229288, 229289, 229287, 229292 },
-        auras = {
-            -- 2-set
-            winning_streak = {
-                id = 1218439,
-                duration = 3600,
-                max_stack = 10
-            },
-            -- 4-set
-            cashout = {
-                id = 1219264,
-                duration = 4,
-                max_stack = 1
-            }
-        }
-    },
-    -- Dragonflight
-    tier31 = {
-        items = { 207234, 207235, 207236, 207237, 207239, 217208, 217210, 217206, 217207, 217209 },
-        auras = {
-            natureblight = {
-                id = 426568,
-                duration = 6,
-                max_stack = 12
-            }
-        }
-    },
-    tier30 = {
-        items = { 202500, 202498, 202497, 202496, 202495 },
-        auras = {
-            poisoned_edges = {
-                id = 409587,
-                duration = 30,
-                max_stack = 1
-            }
-        }
-    },
-    tier29 = {
-        items = { 200372, 200374, 200369, 200371, 200373 },
-        auras = {
-            septic_wounds = {
-                id = 394845,
-                duration = 8,
-                max_stack = 5
-            }
-        }
-    }
-} )
-
-spec:RegisterHook( "reset_precast", function ()
-    -- Supercharged Combo Point handling
-    local cPoints = GetUnitChargedPowerPoints( "player" )
-    if talent.supercharger.enabled and cPoints then
-        local charged = 0
-        for _, point in pairs( cPoints ) do
-            charged = charged + 1
-        end
-        if charged > 0 then applyBuff( "supercharged_combo_points", nil, charged ) end
-    end
-
-    if covenant.night_fae and debuff.sepsis.up then
-        state:QueueAuraExpiration( "sepsis", ExpireSepsis, debuff.sepsis.expires )
-    end
-
-    if set_bonus.tier30_4pc > 0 and debuff.deathmark.up then
-        state:QueueAuraExpiration( "deathmark", ExpireDeathmarkT30, debuff.deathmark.expires )
-    end
-
-    class.abilities.apply_poison = class.abilities[ action.apply_poison_actual.next_poison ]
-
-    if buff.cold_blood.up then setCooldown( "cold_blood", action.cold_blood.cooldown ) end
-
-    if buff.vanish.up then applyBuff( "stealth" ) end
-    -- Pad Improved Garrote's expiry in order to avoid ruining your snapshot.
-    if buff.improved_garrote.up then buff.improved_garrote.expires = buff.improved_garrote.expires - 0.05 end
-
-    if not kingsbaneReady then
-        rawset( buff, "kingsbane", buff.kingsbane_buff )
-        rawset( debuff, "kingsbane", debuff.kingsbane_dot )
-        kingsbaneReady = true
-    end
-
-    if talent.indiscriminate_carnage.enabled and buff.stealth.up then
-        applyBuff( "indiscriminate_carnage_aura", 3600 )
-        removeBuff( "indiscriminate_carnage" )
-    end
-
-    if talent.master_assassin.enabled and buff.stealth.up then
-        applyBuff( "master_assassin_aura", 3600 )
-        removeBuff( "master_assasin" )
-    end
-
-    -- Tracking Envenom buff stacks.
-    first_envenom = min( buff.envenom.expires, envenom1 )
-    second_envenom = envenom2
-
-    if Hekili.ActiveDebug then
-        if talent.twist_the_knife.enabled then Hekili:Debug( "Envenoms:  [1] = %.2f, [2] = %.2f", max( 0, first_envenom - query_time ), max( second_envenom - query_time, 0 ) ) end
-        Hekili:Debug( "Energy Cap in %.2f -- Enemies: %d, Bleeds: %d, P. Bleeds: %d, P. Garrotes: %d, P. Ruptures: %d", energy.time_to_max, active_enemies, bleeds, poisoned_bleeds, poisoned_garrotes, poisoned_ruptures )
-    end
-end )
-
--- We need to break stealth when we start combat from an ability.
-spec:RegisterHook( "runHandler", function( ability )
-    local a = class.abilities[ ability ]
-
-    if stealthed.mantle and ( not a or a.startsCombat ) then
-        if talent.master_assassin.enabled then
-            removeBuff( "master_assassin_aura" )
-            applyBuff( "master_assassin" )
-        end
-
-        if talent.improved_garrote.enabled then
-            removeBuff( "improved_garrote_aura" )
-            applyBuff( "improved_garrote" )
-        end
-
-        if talent.indiscriminate_carnage.enabled then
-            removeBuff( "indiscriminate_carnage_aura" )
-            applyBuff( "indiscriminate_carnage" )
-        end
-
-        if legendary.mark_of_the_master_assassin.enabled and stealthed.mantle then
-            applyBuff( "master_assassins_mark", 4 )
-        end
-
-        if buff.stealth.up then
-            setCooldown( "stealth", 2 )
-            removeBuff( "stealth" )
-            if talent.subterfuge.enabled then applyBuff( "subterfuge" ) end
-        end
-
-        if buff.shadowmeld.up then removeBuff( "shadowmeld" ) end
-        if buff.vanish.up then removeBuff( "vanish" ) end
-    end
-
-    if buff.cold_blood.up and ( ability == "envenom" or not talent.inevitable_end.enabled ) and ( not a or a.startsCombat ) then
-        removeStack( "cold_blood" )
-    end
-
-    class.abilities.apply_poison = class.abilities[ action.apply_poison_actual.next_poison ]
-end )
-
 -- Auras
 spec:RegisterAuras( {
     acrobatic_strikes = {
@@ -1687,6 +1541,152 @@ spec:RegisterAuras( {
     }
 } )
 
+spec:RegisterGear( {
+    -- The War Within
+    tww2 = {
+        items = { 229290, 229288, 229289, 229287, 229292 },
+        auras = {
+            -- 2-set
+            winning_streak = {
+                id = 1218439,
+                duration = 3600,
+                max_stack = 10
+            },
+            -- 4-set
+            cashout = {
+                id = 1219264,
+                duration = 4,
+                max_stack = 1
+            }
+        }
+    },
+    -- Dragonflight
+    tier31 = {
+        items = { 207234, 207235, 207236, 207237, 207239, 217208, 217210, 217206, 217207, 217209 },
+        auras = {
+            natureblight = {
+                id = 426568,
+                duration = 6,
+                max_stack = 12
+            }
+        }
+    },
+    tier30 = {
+        items = { 202500, 202498, 202497, 202496, 202495 },
+        auras = {
+            poisoned_edges = {
+                id = 409587,
+                duration = 30,
+                max_stack = 1
+            }
+        }
+    },
+    tier29 = {
+        items = { 200372, 200374, 200369, 200371, 200373 },
+        auras = {
+            septic_wounds = {
+                id = 394845,
+                duration = 8,
+                max_stack = 5
+            }
+        }
+    }
+} )
+
+spec:RegisterHook( "reset_precast", function ()
+    -- Supercharged Combo Point handling
+    local cPoints = GetUnitChargedPowerPoints( "player" )
+    if talent.supercharger.enabled and cPoints then
+        local charged = 0
+        for _, point in pairs( cPoints ) do
+            charged = charged + 1
+        end
+        if charged > 0 then applyBuff( "supercharged_combo_points", nil, charged ) end
+    end
+
+    if covenant.night_fae and debuff.sepsis.up then
+        state:QueueAuraExpiration( "sepsis", ExpireSepsis, debuff.sepsis.expires )
+    end
+
+    if set_bonus.tier30_4pc > 0 and debuff.deathmark.up then
+        state:QueueAuraExpiration( "deathmark", ExpireDeathmarkT30, debuff.deathmark.expires )
+    end
+
+    class.abilities.apply_poison = class.abilities[ action.apply_poison_actual.next_poison ]
+
+    if buff.cold_blood.up then setCooldown( "cold_blood", action.cold_blood.cooldown ) end
+
+    if buff.vanish.up then applyBuff( "stealth" ) end
+    -- Pad Improved Garrote's expiry in order to avoid ruining your snapshot.
+    if buff.improved_garrote.up then buff.improved_garrote.expires = buff.improved_garrote.expires - 0.05 end
+
+    if not kingsbaneReady then
+        rawset( buff, "kingsbane", buff.kingsbane_buff )
+        rawset( debuff, "kingsbane", debuff.kingsbane_dot )
+        kingsbaneReady = true
+    end
+
+    if talent.indiscriminate_carnage.enabled and buff.stealth.up then
+        applyBuff( "indiscriminate_carnage_aura", 3600 )
+        removeBuff( "indiscriminate_carnage" )
+    end
+
+    if talent.master_assassin.enabled and buff.stealth.up then
+        applyBuff( "master_assassin_aura", 3600 )
+        removeBuff( "master_assasin" )
+    end
+
+    -- Tracking Envenom buff stacks.
+    first_envenom = min( buff.envenom.expires, envenom1 )
+    second_envenom = envenom2
+
+    if Hekili.ActiveDebug then
+        if talent.twist_the_knife.enabled then Hekili:Debug( "Envenoms:  [1] = %.2f, [2] = %.2f", max( 0, first_envenom - query_time ), max( second_envenom - query_time, 0 ) ) end
+        Hekili:Debug( "Energy Cap in %.2f -- Enemies: %d, Bleeds: %d, P. Bleeds: %d, P. Garrotes: %d, P. Ruptures: %d", energy.time_to_max, active_enemies, bleeds, poisoned_bleeds, poisoned_garrotes, poisoned_ruptures )
+    end
+end )
+
+-- We need to break stealth when we start combat from an ability.
+spec:RegisterHook( "runHandler", function( ability )
+    local a = class.abilities[ ability ]
+
+    if stealthed.mantle and ( not a or a.startsCombat ) then
+        if talent.master_assassin.enabled then
+            removeBuff( "master_assassin_aura" )
+            applyBuff( "master_assassin" )
+        end
+
+        if talent.improved_garrote.enabled then
+            removeBuff( "improved_garrote_aura" )
+            applyBuff( "improved_garrote" )
+        end
+
+        if talent.indiscriminate_carnage.enabled then
+            removeBuff( "indiscriminate_carnage_aura" )
+            applyBuff( "indiscriminate_carnage" )
+        end
+
+        if legendary.mark_of_the_master_assassin.enabled and stealthed.mantle then
+            applyBuff( "master_assassins_mark", 4 )
+        end
+
+        if buff.stealth.up then
+            setCooldown( "stealth", 2 )
+            removeBuff( "stealth" )
+            if talent.subterfuge.enabled then applyBuff( "subterfuge" ) end
+        end
+
+        if buff.shadowmeld.up then removeBuff( "shadowmeld" ) end
+        if buff.vanish.up then removeBuff( "vanish" ) end
+    end
+
+    if buff.cold_blood.up and ( ability == "envenom" or not talent.inevitable_end.enabled ) and ( not a or a.startsCombat ) then
+        removeStack( "cold_blood" )
+    end
+
+    class.abilities.apply_poison = class.abilities[ action.apply_poison_actual.next_poison ]
+end )
+
 local BoneSpikes = setfenv( function( ruptureTargets )
 
     -- Locals / setup
@@ -2154,7 +2154,6 @@ spec:RegisterAbilities( {
 
         handler = function ()
             gain( action.fan_of_knives.cp_gain, "combo_points" )
-            removeBuff( "hidden_blades" )
             removeBuff( "clear_the_witnesses" )
 
             -- This is a rough estimation for AoE poison applications. If required, can be iterated on in the future if it needs to be referenced in an APL

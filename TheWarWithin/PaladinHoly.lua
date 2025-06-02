@@ -219,18 +219,18 @@ spec:RegisterAuras( {
     },
     avenging_crusader = {
         id = 216331,
-        duration = 15,
+        duration = function() return 15 * ( 1.25 * talent.sanctified_wrath.rank or 1 ) end,
         max_stack = 1,
     },
     avenging_wrath = {
         id = 31884,
-        duration = 25,
+        duration = function() return 20 * ( 1.25 * talent.sanctified_wrath.rank or 1 ) end,
         max_stack = 1,
     },
     awakening = {
         id = 414196,
         duration = 60,
-        max_stack = 15
+        max_stack = 14
     },
     awakening_ready = {
         id = 414193,
@@ -280,6 +280,11 @@ spec:RegisterAuras( {
         id = 433019,
         duration = 20,
         max_stack = 1,
+    },
+    blessing_of_anshe = {
+        id = 445204,
+        duration = 20,
+        max_stack = 1
     },
     blessing_of_autumn = {
         id = 388010,
@@ -623,14 +628,19 @@ spec:RegisterGear( "tier30", 202455, 202453, 202452, 202451, 202450, 217198, 217
 -- 2pc is based on crits which aren't guaranteed, so we can't proactively model them.
 
 local HandleAwakening = setfenv( function()
-    if talent.awakening.enabled then
-        if buff.awakening.stack == buff.awakening.max_stack - 1 then
+        if buff.awakening.at_max_stacks then
             removeBuff( "awakening" )
             applyBuff( "awakening_ready" )
         else
             addStack( "awakening" )
         end
-    end
+end, state )
+
+
+local InfusionOfLight = setfenv( function()
+    removeStack( "infusion_of_light" )
+    if talent.valiance.enabled then reduceCooldown( "holy_armaments", 3 ) end
+    if talent.imbued_infusions.enabled then reduceCooldown( "holy_shock", 1 ) end
 end, state )
 
 
@@ -659,20 +669,26 @@ spec:RegisterHook( "spend", function( amt, resource )
             reduceCooldown( "lay_on_hands", amt * 1.5 )
         end
 
-        if talent.relentless_inquisition.enabled then
-            addStack( "relentless_inquisitor" )
-        end
-
-        if talent.blessed_assurance.enabled then
-            applyBuff( "blessed_assurance" )
-        end
-
         if talent.unending_light.enabled and this_action == "word_of_glory" then
             addStack( "unending_light", nil, amt )
+        end
+
+        if talent.afterimage.enabled then
+            addStack( "afterimage_stacks", nil, amt )
         end
     end
 end )
 
+spec:RegisterHook( "runHandler", function( ability )
+    local a = class.abilities[ ability ]
+
+    -- These interactions work even if the HP spender is free from various effects/procs
+    if a.spendType and a.spendType == "holy_power" then
+        if talent.awakening.enabled then HandleAwakening() end
+        if talent.blessed_assurance.enabled then applyBuff( "blessed_assurance" ) end
+        if talent.relentless_inquisition.enabled then addStack( "relentless_inquisitor" ) end
+    end
+end )
 
 -- Abilities
 spec:RegisterAbilities( {
@@ -1212,8 +1228,8 @@ spec:RegisterAbilities( {
         id = 35395,
         cast = 0,
         charges = function() return buff.avenging_crusader.up and 3 or 2 end,
-        cooldown = function() return 6 * ( buff.avenging_crusader.up and 0.7 or 1 ) end,
-        recharge = function() return 6 * ( buff.avenging_crusader.up and 0.7 or 1 ) end,
+        cooldown = function() return 7 * ( buff.avenging_crusader.up and 0.7 or 1 ) end,
+        recharge = function() return 7 * ( buff.avenging_crusader.up and 0.7 or 1 ) end,
         gcd = "spell",
 
         spend = 0.006,
@@ -1225,11 +1241,12 @@ spec:RegisterAbilities( {
         handler = function ()
             gain( 1, "holy_power" )
             removeBuff( "liberation" )
-
+            removeBuff( "blessed_assurance" )
             if talent.crusaders_might.enabled then
                 reduceCooldown( "holy_shock", 2 )
                 reduceCooldown( "judgment", 2 )
             end
+
         end,
     },
 
@@ -1316,11 +1333,7 @@ spec:RegisterAbilities( {
         texture = 135907,
 
         handler = function ()
-            if buff.infusion_of_light.up then
-                removeStack( "infusion_of_light" )
-                if talent.valiance.enabled then reduceCooldown( "holy_armaments", 3 ) end
-                if talent.imbued_infusions.enabled then reduceCooldown( "holy_shock", 1) end
-            end
+            if buff.infusion_of_light.up then InfusionOfLight() end
             removeBuff( "divine_favor" )
             if talent.boundless_salvation.enabled and buff.tyrs_deliverance.up then
                 buff.tyrs_deliverance.expires = buff.tyrs_deliverance.expires + 4
@@ -1386,7 +1399,6 @@ spec:RegisterAbilities( {
         handler = function ()
             removeBuff( "veneration" )
             gain( 1, "holy_power" )
-            HandleAwakening()
         end,
     },
 
@@ -1442,11 +1454,7 @@ spec:RegisterAbilities( {
             removeStack( "hand_of_divinity" )
             removeBuff( "liberation" )
 
-            if buff.infusion_of_light.up then
-                removeStack( "infusion_of_light" )
-                if talent.valiance.enabled then reduceCooldown( "holy_armaments", 3 ) end
-                if talent.imbued_infusions.enabled then reduceCooldown( "holy_shock", 1) end
-            end
+            if buff.infusion_of_light.up then InfusionOfLight() end
             if talent.boundless_salvation.enabled and buff.tyrs_deliverance.up then
                 buff.tyrs_deliverance.expires = buff.tyrs_deliverance.expires + 8
             end
@@ -1471,7 +1479,6 @@ spec:RegisterAbilities( {
             if talent.dawnlight.enabled then applyBuff( "dawnlight", nil, 2 ) end
             if set_bonus.tier30_4pc > 0 then
                 gain( 1, "holy_power" )
-                HandleAwakening()
             end
         end,
     },
@@ -1480,9 +1487,9 @@ spec:RegisterAbilities( {
     holy_shock = {
         id = 20473,
         cast = 0,
-        cooldown = function() return ( 8.5 - ( 1 * talent.imbued_infusions.rank ) - ( 2 * talent.crusaders_might.rank ) ) * ( talent.sanctified_wrath.enabled and buff.avenging_wrath.up and 0.5 or 1 ) end,
+        cooldown = function() return 9.5 * ( talent.sanctified_wrath.enabled and buff.avenging_wrath.up and 0.5 or 1 ) * haste end,
         charges = function() return talent.lights_conviction.enabled and 2 or nil end,
-        recharge = function() return talent.lights_conviction.enabled and ( ( 8.5 - ( 2 * talent.imbued_infusions.rank ) - ( 2 * talent.crusaders_might.rank ) ) * ( talent.sanctified_wrath.enabled and buff.avenging_wrath.up and 0.5 or 1 ) ) or nil end,
+        recharge = function() return talent.lights_conviction.enabled and ( 9.5 * ( talent.sanctified_wrath.enabled and buff.avenging_wrath.up and 0.5 or 1 ) * haste ) or nil end,
         gcd = "spell",
 
         spend = 0.028,
@@ -1492,27 +1499,22 @@ spec:RegisterAbilities( {
         texture = 135972,
 
         handler = function ()
-            local times = buff.rising_sunlight.up and 3 or 1
+            local casts = buff.rising_sunlight.up and 3 or 1
 
-            for i = 1, times do
-                gain( 1, "holy_power" )
-                HandleAwakening()
+            gain( casts, "holy_power" )
+            removeBuff( "power_of_the_silver_hand" )
 
-                removeBuff( "power_of_the_silver_hand" )
-                removeStack( "rising_sunlight" )
-
-                if talent.boundless_salvation.enabled and buff.tyrs_deliverance.up then
-                    buff.tyrs_deliverance.expires = buff.tyrs_deliverance.expires + 2
-                end
-
-                if talent.light_of_the_martyr.enabled and health.pct > ( talent.bestow_light.enabled and 70 or 80 ) then
-                    applyDebuff( "player", "light_of_the_martyr" )
-                end
-
-                if talent.overflowing_light.enabled then applyBuff( "overflowing_light" ) end
+            if talent.boundless_salvation.enabled and buff.tyrs_deliverance.up then
+                buff.tyrs_deliverance.expires = buff.tyrs_deliverance.expires + ( 2 * casts )
             end
 
+            if talent.light_of_the_martyr.enabled and health.pct > ( talent.bestow_light.enabled and 70 or 80 ) then
+                applyDebuff( "player", "light_of_the_martyr" )
+            end
+
+            if talent.overflowing_light.enabled then applyBuff( "overflowing_light" ) end
             removeStack( "rising_sunlight" )
+            removeBuff( "blessing_of_anshe" )
         end,
     },
 
@@ -1538,10 +1540,10 @@ spec:RegisterAbilities( {
     judgment = {
         id = 275773,
         cast = 0,
-        cooldown = function() return ( 12 - ( 0.5 * talent.seal_of_alacrity.rank ) - ( 2 * talent.crusaders_might.rank ) )  * ( buff.avenging_crusader.up and 0.7 or 1 ) end,
+        cooldown = function() return 12 * ( buff.avenging_crusader.up and 0.7 or 1 ) end,
         gcd = "spell",
 
-        spend = 0.024,
+        spend = function() return 0.024 * ( 1 - 0.3 * talent.truth_prevails.rank ) end,
         spendType = "mana",
 
         startsCombat = true,
@@ -1549,14 +1551,13 @@ spec:RegisterAbilities( {
 
         handler = function ()
             gain( 1, "holy_power" )
-            HandleAwakening()
-
-            if buff.infusion_of_light.up then
-                removeStack( "infusion_of_light" )
-                if talent.valiance.enabled then reduceCooldown( "holy_armaments", 3 ) end
-                if talent.imbued_infusions.enabled then reduceCooldown( "holy_shock", 1) end
+            if buff.awakening_ready.up then
+                removeBuff( "awakening_ready" )
+                applyBuff( "avenging_wrath", 12 )
             end
 
+            if buff.infusion_of_light.up then InfusionOfLight() end
+            if talent.righteous_judgment.enabled then applyBuff( "consecration" ) end
             removeBuff( "liberation" )
 
             if talent.empyrean_legacy.enabled and debuff.empyrean_legacy_icd.down then
@@ -1602,9 +1603,7 @@ spec:RegisterAbilities( {
         texture = 461859,
 
         handler = function ()
-            if talent.blessed_assurance.enabled then applyBuff( "blessed_assurance" ) end
             spend( 0.18 * mana.max, "mana" )
-            if buff.divine_purpose.down and buff.shining_righteousness_ready.down then addStack( "afterimage_stacks", nil, 3 ) end
             if buff.dawnlight.up then
                 applyBuff( "dawnlight_hot" )
                 removeStack( "dawnlight" )
@@ -1706,9 +1705,7 @@ spec:RegisterAbilities( {
 
 
         handler = function ()
-            if talent.blessed_assurance.enabled then applyBuff( "blessed_assurance" ) end
 
-            if buff.divine_purpose.down and buff.shining_righteousness_ready.down then addStack( "afterimage_stacks", nil, 3 ) end
             removeBuff( "divine_purpose" )
             reduceCooldown( "crusader_strike", 1.5 )
 
@@ -1780,7 +1777,6 @@ spec:RegisterAbilities( {
 
         handler = function ()
             gain( 1, "holy_power" )
-            HandleAwakening()
             applyBuff( "vanquishers_hammer" )
         end,
     },
@@ -1802,13 +1798,11 @@ spec:RegisterAbilities( {
         texture = 133192,
 
         handler = function ()
-            if talent.blessed_assurance.enabled then applyBuff( "blessed_assurance" ) end
             if buff.afterimage_stacks.stack >= 20 then removeStack( "afterimage_stacks", 20 ) end
             if buff.dawnlight.up then
                 applyBuff( "dawnlight_hot" )
                 removeStack( "dawnlight" )
             end
-            if buff.divine_purpose.down and buff.shining_righteousness_ready.down then addStack( "afterimage_stacks", nil, 3 ) end
 
             removeBuff( "divine_purpose" )
             removeBuff( "shining_righteousness_ready" )

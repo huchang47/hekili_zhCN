@@ -12,7 +12,7 @@ local state = Hekili.State
 local GetUnitChargedPowerPoints = GetUnitChargedPowerPoints
 local PTR = ns.PTR
 local FindPlayerAuraByID = ns.FindPlayerAuraByID
-local strformat, abs = string.format, math.abs
+local strformat, abs, max, min = string.format, math.abs, math.max, math.min
 local IsSpellOverlayed = IsSpellOverlayed
 
 local spec = Hekili:NewSpecialization( 260 )
@@ -564,6 +564,15 @@ spec:RegisterCombatLogEvent( function( _, subtype, _,  sourceGUID, sourceName, _
             disorientStacks = disorientStacks - 1
 
         end
+        if spellID == 315508 then
+            -- 1. ‑‑ compute pandemic before we overwrite rollDuration
+            local elapsed    = now - lastRoll           -- time since previous roll
+            local remaining  = max( 0, rollDuration - elapsed )   -- container time left
+            local pandemic   = min( 9, max( 0, remaining ) )
+            -- 2. ‑‑ reset container
+            lastRoll     = now                          -- real start‑time
+            rollDuration = 30 + pandemic                -- 30 s + up‑to‑9 s
+        end
     end
 
     -- SPELL_DAMAGE
@@ -576,7 +585,7 @@ spec:RegisterCombatLogEvent( function( _, subtype, _,  sourceGUID, sourceName, _
     end
 
     -- SPELL_AURA_APPLIED / SPELL_AURA_REFRESH
-    if spellID == 315508 then
+   --[[ if spellID == 315508 then
         if subtype == "SPELL_AURA_APPLIED" then
             lastRoll = now
             rollDuration = 30
@@ -589,7 +598,7 @@ spec:RegisterCombatLogEvent( function( _, subtype, _,  sourceGUID, sourceName, _
         if Hekili.ActiveDebug then
             Hekili:Debug( "Updated lastRoll to %.2f, rollDuration to %.2f", lastRoll, rollDuration )
         end
-    end
+    end ]]
 end)
 
 spec:RegisterStateExpr( "rtb_buffs", function ()
@@ -892,10 +901,27 @@ spec:RegisterHook( "reset_precast", function()
         else
             removeBuff( "disorienting_strikes" )
         end
+        if Hekili.ActiveDebug then
+            Hekili:Debug( "UB-Status: unseen_blades_available=%d DS=%d  ICD=%.1f",
+              unseen_blades_available,
+              buff.disorienting_strikes.stack or 0,
+              unseenBladeCD
+            )
+        end
     end
 
     -- Debugging for Roll the Bones
     if Hekili.ActiveDebug and buff.roll_the_bones.up then
+       -- local elapsed = query_time - lastRoll
+       -- local remaining = max( 0, rollDuration - elapsed )
+       -- local pandemic = min( 9, remaining )
+       -- Hekili:Debug( "RTB: elapsed=%.2f  pandemic=%.2f  duration=%.2f",
+       --               elapsed, pandemic, rollDuration )
+        Hekili:Debug( "RTB   queueBase=%.2f (lastRoll=%.2f / lastCast=%.2f)  rollDur=%.2f",
+                      max( lastRoll or 0, action.roll_the_bones.lastCast or 0 ),
+                      lastRoll or 0,
+                      action.roll_the_bones.lastCast or 0,
+                      rollDuration )
         Hekili:Debug( "\nRoll the Bones Debugging:" )
         Hekili:Debug( " - lastRoll: %.2f", lastRoll )
         Hekili:Debug( " - rollDuration: %.2f", rollDuration )
@@ -1215,6 +1241,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "totem",
         school = "physical",
+        known = 2098,
 
         spend = function() return 35 * ( talent.tight_spender.enabled and 0.94 or 1 ) - ( 5 * buff.summarily_dispatched.stack ) end,
         spendType = "energy",

@@ -220,7 +220,7 @@ spec:RegisterCombatLogEvent( function( _, subtype, _,  sourceGUID, sourceName, _
 end )
 
 spec:RegisterStateExpr( "cycle_of_life_count", function()
-    return eb_col_cast
+    return eb_col_casts
 end )
 
 -- Auras

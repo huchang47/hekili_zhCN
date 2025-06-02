@@ -8,7 +8,7 @@ local class = Hekili.Class
 local scripts = Hekili.Scripts
 local state = Hekili.State
 
-local format, lower, match, find = string.format, string.lower, string.match, string.find
+local format, lower, match = string.format, string.lower, string.match
 local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
 local UnitBuff, UnitDebuff, SkeletonHandler = ns.UnitBuff, ns.UnitDebuff, ns.SkeletonHandler
 local callHook = ns.callHook
@@ -25,11 +25,6 @@ local ACD = LibStub( "AceConfigDialog-3.0" )
 local LDBIcon = LibStub( "LibDBIcon-1.0", true )
 local LSM = LibStub( "LibSharedMedia-3.0" )
 local SF = SpellFlashCore
-
-local search_in = nil
-local search_out = nil
-local trans_in = nil
-local trans_out = nil
 
 local NewFeature = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0|t"
 local GreenPlus = "Interface\\AddOns\\Hekili\\Textures\\GreenPlus"

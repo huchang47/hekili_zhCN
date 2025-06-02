@@ -484,6 +484,16 @@ spec:RegisterAuras( {
         onRemove = function()
             applyBuff( "lunar_storm_ready" )
         end,
+        -- This is a player debuff, use generate to create the buff version in order to align with SimulationCraft
+        generate = function( t )
+            local src = auras.player.debuff.lunar_storm_cooldown
+            if src and src.expires > now then
+                t.applied = src.applied
+                t.duration = src.duration
+                t.expires = src.expires
+            return
+            end
+        end
     },
     lunar_storm_ready = {
         id = 451805,
@@ -905,8 +915,6 @@ local PreciseShotsConsumer = setfenv( function ()
     removeBuff( "precise_shots" )
 end, state )
 
-
-
 spec:RegisterHook( "reset_precast", function ()
     if debuff.tar_trap.up then
         debuff.tar_trap.expires = debuff.tar_trap.applied + 30
@@ -930,7 +938,7 @@ end )
 
 -- Abilities
 spec:RegisterAbilities( {
-    -- 特质：一次强力的瞄准射击，造成 $s1 点物理伤害$?s260240[ 并使你接下来的 1 - $260242u 发 ][]$?s342049&s260240[奇美拉射击]?s260240[奥术射击][]$?s260240[ 或多重射击造成 $260242s1% 额外伤害][].$?s260228[    瞄准射击对生命值高于 $260228s1% 的目标造成 $393952s1% 的额外伤害。][]$?s378888[    瞄准射击还会对主目标发射一条毒蛇钉刺。][]
+    -- Trait: A powerful aimed shot that deals $s1 Physical damage$?s260240[ and causes your next 1-$260242u ][]$?s342049&s260240[Chimaera Shots]?s260240[Arcane Shots][]$?s260240[ or Multi-Shots to deal $260242s1% more damage][].$?s260228[    Aimed Shot deals $393952s1% bonus damage to targets who are above $260228s1% health.][]$?s378888[    Aimed Shot also fires a Serpent Sting at the primary target.][]
     aimed_shot = {
         id = 19434,
         cast = function ()
@@ -1346,13 +1354,13 @@ spec:RegisterAbilities( {
         bind = "black_arrow"
     },
 
-    lunar_storm = {
+    --[[lunar_storm = {
         cast = 0,
         cooldown = 30,
         gcd = "off",
         hidden = true,
-        readyTime = function() return buff.lunar_storm_cooldown.remains end,
-    },
+       nodebuff = lunar_storm_cooldown,
+    },--]]
 
         -- Your pet removes all root and movement impairing effects from itself and a friendly target, and grants immunity to all such effects for 4 sec.
         masters_call = {
@@ -1439,9 +1447,9 @@ spec:RegisterAbilities( {
                 addStack( "bulletstorm", nil, action.rapid_fire.max_targets * action.rapid_fire.shots )
             end
             if talent.lunar_storm.enabled and buff.lunar_storm_ready.up then
-                applyDebuff( "target", "lunar_storm" )
-                applyBuff( "lunar_storm_cooldown" )
                 removeBuff( "lunar_storm_ready" )
+                applyDebuff( "player", "lunar_storm_cooldown" )
+                applyDebuff( "target", "lunar_storm" )
             end
             if talent.streamline.enabled then addStack( "streamline" ) end
             if talent.no_scope.enabled then addStack( "precise_shots" ) end
@@ -1478,7 +1486,7 @@ spec:RegisterAbilities( {
         end,
     },
 
-    -- 一次稳固射击，造成 $s1 点物理伤害。移动时也可使用。$?s321018[    |cFFFFFFFF产生 $s2 点集中值。|r][]
+    -- A steady shot that causes $s1 Physical damage.    Usable while moving.$?s321018[    |cFFFFFFFFGenerates $s2 Focus.|r][]
     steady_shot = {
         id = 56641,
         cast = 1.7,
@@ -1525,6 +1533,7 @@ spec:RegisterAbilities( {
             if talent.withering_fire.enabled then
                 applyBuff ( "withering_fire" )
                 applyBuff( "deathblow" )
+                gainCharges( "black_arrow", 1 )
             end
             if talent.feathered_frenzy.enabled then applyDebuff( "target", "spotters_mark" ) end
 

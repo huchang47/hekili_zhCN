@@ -573,8 +573,29 @@ spec:RegisterStateExpr( "rift_extensions", function()
     return er_extensions
 end )
 
+local premonitions = {
+    insight = "premonition_of_insight",
+    piety = "premonition_of_piety",
+    solace = "premonition_of_solace",
+    clairvoyance = "premonition_of_clairvoyance"
+}
+
 
 spec:RegisterHook( "reset_precast", function ()
+    if talent.premonition.enabled then
+        local charge = min( cooldown.premonition_of_insight.charge, cooldown.premonition_of_solace.charge, cooldown.premonition_of_piety.charge, cooldown.premonition_of_clairvoyance.charge )
+        local start = max( cooldown.premonition_of_insight.recharge_began, cooldown.premonition_of_solace.recharge_began, cooldown.premonition_of_piety.recharge_began, cooldown.premonition_of_clairvoyance.recharge_began )
+        local duration = talent.perfect_vision.enabled and 45 or 60
+
+        for _, v in pairs( premonitions ) do
+            local cd = cooldown[ v ]
+            cd.charge = charge
+            cd.recharge_began = start
+            cd.duration = duration
+            cd.recharge = duration
+        end
+    end
+
     if buff.voidheart.up then
         applyBuff( "entropic_rift", buff.voidheart.remains )
     elseif entropic_rift_expires > query_time then
@@ -1171,12 +1192,17 @@ spec:RegisterAbilities( {
 
         handler = function()
             applyBuff( "premonition_of_insight", nil, 3 )
+
+            spendCharges( "premonition_of_clairvoyance", 1 )
+            spendCharges( "premonition_of_piety", 1 )
+            spendCharges( "premonition_of_solace", 1 )
         end,
     },
 
     premonition_of_clairvoyance = {
         id = 440725,
         cast = 0,
+        charges = 2,
         cooldown = function() return talent.perfect_vision.enabled and 45 or 60 end,
         recharge = function() return action.premonition_of_insight.cooldown end,
         gcd = "off",
@@ -1187,12 +1213,17 @@ spec:RegisterAbilities( {
             applyBuff( "premonition_of_insight" )
             applyBuff( "premonition_of_piety" )
             applyBuff( "premonition_of_solace" )
+
+            spendCharges( "premonition_of_insight", 1 )
+            spendCharges( "premonition_of_piety", 1 )
+            spendCharges( "premonition_of_solace", 1 )
         end,
     },
 
     premonition_of_piety = {
         id = 428930,
         cast = 0,
+        charges = 2,
         cooldown = function() return talent.perfect_vision.enabled and 45 or 60 end,
         recharge = function() return action.premonition_of_insight.cooldown end,
         gcd = "off",
@@ -1201,12 +1232,17 @@ spec:RegisterAbilities( {
 
         handler = function()
             applyBuff( "premonition_of_piety" )
+
+            spendCharges( "premonition_of_clairvoyance", 1 )
+            spendCharges( "premonition_of_insight", 1 )
+            spendCharges( "premonition_of_solace", 1 )
         end,
     },
 
     premonition_of_solace = {
         id = 428934,
         cast = 0,
+        charges = 2,
         cooldown = function() return talent.perfect_vision.enabled and 45 or 60 end,
         recharge = function() return action.premonition_of_insight.cooldown end,
         gcd = "off",
@@ -1215,6 +1251,10 @@ spec:RegisterAbilities( {
 
         handler = function()
             applyBuff( "premonition_of_solace" )
+
+            spendCharges( "premonition_of_clairvoyance", 1 )
+            spendCharges( "premonition_of_insight", 1 )
+            spendCharges( "premonition_of_piety", 1 )
         end,
     },
 

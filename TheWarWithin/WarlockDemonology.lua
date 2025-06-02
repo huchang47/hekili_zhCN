@@ -34,7 +34,7 @@ spec:RegisterTalents( {
     blackened_soul                 = {  94837, 440043, 1 }, -- Spending Soul Shards on damaging spells will further corrupt enemies affected by your Wither, increasing its stack count by 1. Each time Wither gains a stack it has a chance to collapse, consuming a stack every 1 sec to deal 7,974 Shadowflame damage to its host until 1 stack remains.
     bleakheart_tactics             = {  94854, 440051, 1 }, -- Wither damage increased 20%. When Wither gains a stack from Blackened Soul, it has a chance to gain an additional stack.
     burning_rush                   = {  71949, 111400, 1 }, -- Increases your movement speed by 50%, but also damages you for 4% of your maximum health every 1 sec. Movement impairing effects may not reduce you below 100% of normal movement speed. Lasts until canceled.
-    curse_of_the_satyr             = {  94822, 440057, 1 }, -- Curse of Weakness is empowered and transforms into Curse of the Satyr.  Curse of the Satyr 
+    curse_of_the_satyr             = {  94822, 440057, 1 }, -- Curse of Weakness is empowered and transforms into Curse of the Satyr.  Curse of the Satyr
     curses_of_enfeeblement         = {  71951, 386105, 1 }, -- Grants access to the following abilities: Curse of Tongues: Forces the target to speak in Demonic, increasing the casting time of all spells by 30% for 1 min. Curses: A warlock can only have one Curse active per target. Curse of Exhaustion: Reduces the target's movement speed by 50% for 12 sec. Curses: A warlock can only have one Curse active per target.
     dark_accord                    = {  71956, 386659, 1 }, -- Reduces the cooldown of Unending Resolve by 45 sec.
     dark_pact                      = {  71936, 108416, 1 }, -- Sacrifices 5% of your current health to shield you for 800% of the sacrificed health plus an additional 33,815 for 20 sec. Usable while suffering from control impairing effects.
@@ -44,11 +44,11 @@ spec:RegisterTalents( {
     demonic_embrace                = {  71930, 288843, 1 }, -- Stamina increased by 10%.
     demonic_fortitude              = {  71922, 386617, 1 }, -- Increases you and your pets' maximum health by 5%.
     demonic_gateway                = {  71955, 111771, 1 }, -- Creates a demonic gateway between two locations. Activating the gateway transports the user to the other gateway. Each player can use a Demonic Gateway only once per 90 sec.
-    demonic_inspiration            = {  71928, 386858, 1 }, -- Increases the attack speed of your primary pet by 5%. 
+    demonic_inspiration            = {  71928, 386858, 1 }, -- Increases the attack speed of your primary pet by 5%.
     demonic_resilience             = {  71917, 389590, 2 }, -- Reduces the chance you will be critically struck by 2%. All damage your primary demon takes is reduced by 8%.
     demonic_tactics                = {  71925, 452894, 1 }, -- Your spells have a 5% increased chance to deal a critical strike. You gain 10% more of the Critical Strike stat from all sources.
     fel_armor                      = {  71950, 386124, 2 }, -- When Soul Leech absorbs damage, 5% of damage taken is absorbed and spread out over 5 sec. Reduces damage taken by 1.5%.
-    fel_domination                 = {  71931, 333889, 1 }, -- Your next Imp, Voidwalker, Incubus, Succubus, Felhunter, or Felguard Summon spell is free and has its casting time reduced by 90%. 
+    fel_domination                 = {  71931, 333889, 1 }, -- Your next Imp, Voidwalker, Incubus, Succubus, Felhunter, or Felguard Summon spell is free and has its casting time reduced by 90%.
     fel_pact                       = {  71932, 386113, 1 }, -- Reduces the cooldown of Fel Domination by 60 sec.
     fel_synergy                    = {  71924, 389367, 2 }, -- Soul Leech also heals you for 8% and your pet for 25% of the absorption it grants.
     fiendish_stride                = {  71948, 386110, 1 }, -- Reduces the damage dealt by Burning Rush by 10%. Burning Rush increases your movement speed by an additional 20%.
@@ -65,7 +65,7 @@ spec:RegisterTalents( {
     mortal_coil                    = {  71947,   6789, 1 }, -- Horrifies an enemy target into fleeing, incapacitating for 3 sec and healing you for 20% of maximum health.
     nightmare                      = {  71916, 386648, 1 }, -- Increases the amount of damage required to break your fear effects by 60%.
     pact_of_gluttony               = {  71926, 386689, 1 }, -- Healthstones you conjure for yourself are now Demonic Healthstones and can be used multiple times in combat. Demonic Healthstones cannot be traded.  Demonic Healthstone Instantly restores 25% health. 60 sec cooldown.
-    resolute_barrier               = {  71915, 389359, 2 }, -- Attacks received that deal at least 5% of your health decrease Unending Resolve's cooldown by 10 sec. Cannot occur more than once every 30 sec. 
+    resolute_barrier               = {  71915, 389359, 2 }, -- Attacks received that deal at least 5% of your health decrease Unending Resolve's cooldown by 10 sec. Cannot occur more than once every 30 sec.
     sargerei_technique             = {  93179, 405955, 2 }, -- Shadow Bolt damage increased by 8%.
     seeds_of_their_demise          = {  94829, 440055, 1 }, -- After Wither reaches 8 stacks or when its host reaches 20% health, Wither deals 7,974 Shadowflame damage to its host every 1 sec until 1 stack remains. When Blackened Soul deals damage, you have a chance to gain Tormented Crescendo.
     shadowflame                    = {  71941, 384069, 1 }, -- Slows enemies in a 12 yard cone in front of you by 70% for 6 sec.
@@ -73,7 +73,7 @@ spec:RegisterTalents( {
     socrethars_guile               = {  93178, 405936, 2 }, -- Wild Imp damage increased by 10%.
     soul_conduit                   = {  71939, 215941, 1 }, -- Every Soul Shard you spend has a 5% chance to be refunded.
     soul_leech                     = {  71933, 108370, 1 }, -- All single-target damage done by you and your minions grants you and your pet shadowy shields that absorb 3% of the damage dealt, up to 10% of maximum health.
-    soul_link                      = {  71923, 108415, 2 }, -- 5% of all damage you take is taken by your demon pet instead. 
+    soul_link                      = {  71923, 108415, 2 }, -- 5% of all damage you take is taken by your demon pet instead.
     soulburn                       = {  71957, 385899, 1 }, -- Consumes a Soul Shard, unlocking the hidden power of your spells. Demonic Circle: Teleport: Increases your movement speed by 50% and makes you immune to snares and roots for 6 sec. Demonic Gateway: Can be cast instantly. Drain Life: Gain an absorb shield equal to the amount of healing done for 30 sec. This shield cannot exceed 30% of your maximum health. Health Funnel: Restores 140% more health and reduces the damage taken by your pet by 30% for 10 sec. Healthstone: Increases the healing of your Healthstone by 30% and increases your maximum health by 20% for 12 sec.
     strength_of_will               = {  71956, 317138, 1 }, -- Unending Resolve reduces damage taken by an additional 15%.
     sweet_souls                    = {  71927, 386620, 1 }, -- Your Healthstone heals you for an additional 10% of your maximum health. Any party or raid member using a Healthstone also heals you for that amount.
@@ -81,7 +81,7 @@ spec:RegisterTalents( {
     teachings_of_the_black_harvest = {  71938, 385881, 1 }, -- Your primary pets gain a bonus effect. Imp: Successful Singe Magic casts grant the target 4% damage reduction for 5 sec. Voidwalker: Reduces the cooldown of Shadow Bulwark by 30 sec. Felhunter: Reduces the cooldown of Devour Magic by 5 sec. Sayaad: Reduces the cooldown of Seduction by 10 sec and causes the target to walk faster towards the demon. Felguard: Reduces the cooldown of Pursuit by 5 sec and increases its maximum range by 5 yards.
     teachings_of_the_satyr         = {  71935, 387972, 1 }, -- Reduces the cooldown of Amplify Curse by 15 sec.
     wither                         = {  94840, 445468, 1 }, -- Bestows a vile malediction upon the target, burning the sinew and muscle of its host, dealing 3,220 Shadowflame damage immediately and an additional 62,918 Shadowflame damage over 18 sec. Replaces Corruption.
-    wrathful_minion                = {  71946, 386864, 1 }, -- Increases the damage done by your primary pet by 5%. 
+    wrathful_minion                = {  71946, 386864, 1 }, -- Increases the damage done by your primary pet by 5%.
     xalans_cruelty                 = {  94845, 440040, 1 }, -- Shadow damage dealt by your spells and abilities is increased by 2% and your Shadow spells gain 10% more critical strike chance from all sources.
     xalans_ferocity                = {  94853, 440044, 1 }, -- Fire damage dealt by your spells and abilities is increased by 2% and your Fire spells gain 10% more critical strike chance from all sources.
     zevrims_resilience             = {  94835, 440065, 1 }, -- Dark Pact heals you for 22,261 every 1 sec while active.
@@ -148,7 +148,7 @@ spec:RegisterTalents( {
     ruination                      = {  94830, 428522, 1 }, -- Summoning a Pit Lord causes your next Hand of Gul'dan to become Ruination.  Ruination Call down a demon-infested meteor from the depths of the Twisting Nether, dealing 152,567 Chaos damage on impact to all enemies within 8 yds of the target and summoning 3 Wild Imps. Damage is reduced beyond 8 targets.
     secrets_of_the_coven           = {  94826, 428518, 1 }, -- Mother of Chaos empowers your next Shadow Bolt to become Infernal Bolt.  Infernal Bolt Hurl a bolt enveloped in the infernal flames of the abyss, dealing 133,265 Fire damage to your enemy target and generating 3 Soul Shards.
     souletched_circles             = {  94836, 428911, 1 }, -- You always gain the benefit of Soulburn when casting Demonic Circle: Teleport, increasing your movement speed by 50% and making you immune to snares and roots for 6 sec.
-    touch_of_rancora               = {  94856, 429893, 1 }, -- Demonic Art increases the damage of your next Hand of Gul'dan by 100% and reduces its cast time by 50%. 
+    touch_of_rancora               = {  94856, 429893, 1 }, -- Demonic Art increases the damage of your next Hand of Gul'dan by 100% and reduces its cast time by 50%.
 
     -- Soul Harvester
     demoniacs_fervor               = {  94832, 449629, 1 }, -- Your demonic soul deals 100% increased damage to the main target of Hand of Gul'dan.
@@ -168,13 +168,13 @@ spec:RegisterTalents( {
 } )
 
 -- PvP Talents
-spec:RegisterPvpTalents( { 
-    bloodstones      = 5694, -- (1218692) 
+spec:RegisterPvpTalents( {
+    bloodstones      = 5694, -- (1218692)
     bonds_of_fel     = 5545, -- (353753) Encircle enemy players with Bonds of Fel. If any affected player leaves the 8 yd radius they explode, dealing 98,469 Fire damage split amongst all nearby enemies.
     call_fel_lord    =  162, -- (212459) Summon a fel lord to guard the location for 15 sec. Any enemy that comes within 6 yards will suffer 36,940 Physical damage, and players struck will be stunned for 1 sec.
-    gateway_mastery  = 3506, -- (248855) 
-    impish_instincts = 5577, -- (409835) 
-    master_summoner  = 1213, -- (212628) 
+    gateway_mastery  = 3506, -- (248855)
+    impish_instincts = 5577, -- (409835)
+    master_summoner  = 1213, -- (212628)
     nether_ward      = 3624, -- (212295) Surrounds the caster with a shield that lasts 3 sec, reflecting all harmful spells cast on you.
     shadow_rift      = 5394, -- (353294) Conjure a Shadow Rift at the target location lasting 2 sec. Enemy players within the rift when it expires are teleported to your Demonic Circle. Must be within 40 yds of your Demonic Circle to cast.
     soul_rip         = 5606, -- (410598) Fracture the soul of up to 3 target players within 20 yds into the shadows, reducing their damage done by 25% and healing received by 25% for 8 sec. Souls are fractured up to 20 yds from the player's location. Players can retrieve their souls to remove this effect.
@@ -572,6 +572,8 @@ spec:RegisterHook( "reset_precast", function()
                         buff.other_demon.stack, buff.other_demon.remains,
                         major_demon_remains )
     end
+
+    if Hekili.ActiveDebug then Hekili:Debug( "Should have seen demons." ) end
 end )
 
 
@@ -893,6 +895,56 @@ spec:RegisterStateTable( "query_imp_spawn", setmetatable( {}, {
         return remains
     end,
 } ) )
+
+
+local valid_demons = {
+    grimoire_felguard = "grimoire_felguard",
+    vilefiend = "summon_vilefiend",
+    dreadstalkers = "call_dreadstalkers"
+}
+
+spec:RegisterStateTable( "tyrant_before_expires", setmetatable( {}, {
+    __index = function( t, k )
+        local summon = valid_demons[ k ]
+        if not summon then return false end
+
+        local tyrant_remains = cooldown.summon_demonic_tyrant.remains
+        local tyrant_cast = action.summon_demonic_tyrant.cast_time
+        local padding = gcd.max * 1.5
+
+        return buff[ k ].up and buff[ k ].remains > tyrant_remains + tyrant_cast and buff[ k ].remains < tyrant_remains + tyrant_cast + padding
+    end
+} ) )
+
+spec:RegisterStateTable( "pre_tyrant_window", setmetatable( {}, {
+    __index = function( t, k )
+        local summon = valid_demons[ k ]
+        if not summon then return 0 end
+
+        local tyrant_remains = cooldown.summon_demonic_tyrant.remains
+        local tyrant_cast = action.summon_demonic_tyrant.cast_time
+        local padding = gcd.max * 1.5
+
+        return max( 0, buff[ k ].remains - tyrant_remains - tyrant_cast - padding )
+    end
+} ) )
+
+spec:RegisterStateExpr( "there_would_really_be_no_point_to_generate_shards", function()
+    local tyrant_remains = cooldown.summon_demonic_tyrant.remains
+    local tyrant_cast = action.summon_demonic_tyrant.cast_time
+    local gen_cast = max( gcd.max, min( action.infernal_bolt.cast_time, action.demonbolt.cast_time, action.shadow_bolt.cast_time ) )
+    local hog_cast = action.hand_of_guldan.cast_time
+    local padding = gcd.max * 2
+
+    
+    local shortest = 999
+
+    for k in pairs( valid_demons ) do
+        if buff[ k ].up then shortest = min( shortest, buff[ k ].remains ) end
+    end
+
+    return max( 0, tyrant_remains + tyrant_cast + padding - gen_cast - hog_cast  )
+end )
 
 spec:RegisterStateTable( "time_to_imps", setmetatable( {}, {
     __index = function( t, k )
@@ -1858,7 +1910,7 @@ spec:RegisterAbilities( {
     -- [386646] When you use a Healthstone, gain $s2% Leech for $386647d.
     create_healthstone = {
         id = 6201,
-        cast = function() return 3.0 * ( 1 - 0.5 * talent.swift_artifice.rank ) end,
+        cast = function() return 3.0 * ( 1 - 0.5 * talent.swift_artifice.rank ) * haste end,
         cooldown = 0.0,
         gcd = "spell",
 
@@ -1892,7 +1944,6 @@ spec:RegisterAbilities( {
         end,
 
         handler = function ()
-            removeBuff( "fel_covenant" )
             if buff.demonic_core.up then
                 removeStack( "demonic_core" )
                 if set_bonus.tier30_2pc > 0 then reduceCooldown( "grimoire_felguard", 0.5 ) end
@@ -2219,7 +2270,7 @@ spec:RegisterAbilities( {
     -- Talent: Summon a Demonic Tyrant to increase the duration of your Dreadstalkers, Vilefiend, Felguard, and up to $s3 of your Wild Imps by ${$265273m3/1000} sec. Your Demonic Tyrant increases the damage of affected demons by $265273s1%, while damaging your target.$?s334585[; Generates ${$s2/10} Soul Shards.][]
     summon_demonic_tyrant = {
         id = 265187,
-        cast = function() return 2 * ( 1 - 0.15 * talent.master_summoner.rank ) end,
+        cast = function() return 2 * ( 1 - 0.15 * talent.master_summoner.rank ) * haste end,
         cooldown = 60,
         gcd = "spell",
         school = "shadow",
