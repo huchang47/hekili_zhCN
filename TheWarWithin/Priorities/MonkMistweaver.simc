@@ -1,3 +1,5 @@
+## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/monk_mistweaver.simc
+
 actions.precombat+=/potion
 actions.precombat+=/chi_burst
 actions.precombat+=/variable,name=tea_up,value=buff.tea_of_plenty_rsk.up|buff.tea_of_plenty_em.up|buff.tea_of_plenty_eh.up|buff.tea_of_serenity_em.up|buff.tea_of_serenity_rm.up|buff.tea_of_serenity_v.up|buff.thunder_focus_tea.up

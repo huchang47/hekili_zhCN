@@ -25,6 +25,7 @@ local GetItemCooldown = C_Item.GetItemCooldown
 local GetItemInfoInstant = C_Item.GetItemInfoInstant
 local GetSpellTexture = C_Spell.GetSpellTexture
 local IsUsableSpell = C_Spell.IsSpellUsable
+local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
 
 local GetSpellCooldown = function(spellID)
     local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
@@ -34,6 +35,9 @@ local GetSpellCooldown = function(spellID)
     return 0, 0, false, 0
 end
 
+local GetSpecialization = C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
+
 local floor, format, insert = math.floor, string.format, table.insert
 
 local HasVehicleActionBar, HasOverrideActionBar, IsInPetBattle, UnitHasVehicleUI, UnitOnTaxi = HasVehicleActionBar, HasOverrideActionBar, C_PetBattles.IsInBattle, UnitHasVehicleUI, UnitOnTaxi
@@ -42,6 +46,11 @@ local Tooltip = ns.Tooltip
 local Masque, MasqueGroup
 local _
 
+local performanceSettings = {
+  [1] = { refreshRate = 0.5,  combatRate = 0.2,  frameCeiling = 20 },  -- Low
+  [2] = { refreshRate = 0.25, combatRate = 0.1,  frameCeiling = 12 },  -- Medium
+  [3] = { refreshRate = 0.1, combatRate = 0.05, frameCeiling = 10 },  -- High
+}
 
 function Hekili:GetScale()
     return PixelUtil.GetNearestPixelSize( 1, PixelUtil.GetPixelToUIUnitFactor(), 1 )
@@ -2314,8 +2323,11 @@ do
         end
 
         if Hekili.DB.profile.enabled and not Hekili.Pause then
-            self.refreshRate = self.refreshRate or 0.5
-            self.combatRate = self.combatRate or 0.2
+            local mode = Hekili.DB.profile.performance.mode or 2
+            local pset = performanceSettings[ mode ] or performanceSettings[2]
+
+            self.refreshRate = self.refreshRate or pset.refreshRate
+            self.combatRate  = self.combatRate  or pset.combatRate
 
             local thread = self.activeThread
 
@@ -2335,17 +2347,19 @@ do
                 self.activeThreadTime = 0
                 self.activeThreadStart = debugprofilestop()
                 self.activeThreadFrames = 0
+                local ceiling = pset.frameCeiling
 
                 if not self.firstThreadCompleted then
-                    Hekili.maxFrameTime = 16.67
+                    Hekili.maxFrameTime = ceiling
                 else
                     local rate = GetFramerate()
                     local spf = 1000 / ( rate > 0 and rate or 100 )
 
                     if HekiliEngine.threadUpdates then
-                        Hekili.maxFrameTime = 0.8 * max( 7, min( 16.667, spf, 1.1 * HekiliEngine.threadUpdates.meanWorkTime / floor( HekiliEngine.threadUpdates.meanFrames ) ) )
+                        local dyn = 1.1 * HekiliEngine.threadUpdates.meanWorkTime / floor( HekiliEngine.threadUpdates.meanFrames )
+                        Hekili.maxFrameTime = 0.8 * max( ceiling, min( 16.667, spf, dyn ) )
                     else
-                        Hekili.maxFrameTime = 0.8 * max( 7, min( 16.667, spf ) )
+                        Hekili.maxFrameTime = 0.8 * max( ceiling, min( 16.667, spf ) )
                     end
                 end
 

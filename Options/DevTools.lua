@@ -23,12 +23,12 @@ local IsPassiveSpell = C_Spell.IsSpellPassive or _G.IsPassiveSpell
 local IsHarmfulSpell = C_Spell.IsSpellHarmful or _G.IsHarmfulSpell
 local IsHelpfulSpell = C_Spell.IsSpellHelpful or _G.IsHelpfulSpell
 local IsPressHoldReleaseSpell = C_Spell.IsPressHoldReleaseSpell or _G.IsPressHoldReleaseSpell
-local GetSpellBookItemInfo = function(index, bookType)
+local GetSpellBookItemInfo = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
     if info then return info.name, info.iconID, info.spellID end
 end
-local GetSpellBookItemName = function(index, bookType)
+local GetSpellBookItemName = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
     return info and info.name
@@ -36,8 +36,8 @@ end
 
 local GetNumSpellTabs = C_SpellBook.GetNumSpellBookSkillLines
 
-local GetSpellTabInfo = function(index)
-    local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(index)
+local GetSpellTabInfo = function( index )
+    local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo( index )
     if skillLineInfo then
         return	skillLineInfo.name,
                 skillLineInfo.iconID,
@@ -55,12 +55,15 @@ local GetSpellCooldown = C_Spell.GetSpellCooldown
 
 local GetSpellDescription = C_Spell.GetSpellDescription
 
-local GetSpellCharges = function(spellID)
-    local spellChargeInfo = C_Spell.GetSpellCharges(spellID)
+local GetSpellCharges = function( spellID )
+    local spellChargeInfo = C_Spell.GetSpellCharges( spellID )
     if spellChargeInfo then
         return spellChargeInfo.currentCharges, spellChargeInfo.maxCharges, spellChargeInfo.cooldownStartTime, spellChargeInfo.cooldownDuration, spellChargeInfo.chargeModRate
     end
 end
+
+local GetSpecialization = C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
 function Hekili:RunStressTest()
     if InCombatLockdown() then

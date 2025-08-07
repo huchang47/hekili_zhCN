@@ -1,3 +1,5 @@
+## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/warlock_demonology.simc
+
 actions.precombat+=/fel_domination,if=time>0&!pet.alive&!buff.grimoire_of_sacrifice.up
 actions.precombat+=/summon_pet,if=!pet.alive&!buff.grimoire_of_sacrifice.up
 # Sets the expected Tyrant Setup on pull to take a total 12 seconds long

@@ -1,173 +1,177 @@
 -- PriestDiscipline.lua
--- January 2025
+-- August 2025
+-- Patch 11.2
 
 if UnitClassBase( "player" ) ~= "PRIEST" then return end
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
 local class, state = Hekili.Class, Hekili.State
-
 local spec = Hekili:NewSpecialization( 256 )
+
+---- Local function declarations for increased performance
+-- Strings
+local strformat = string.format
+-- Tables
+local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
+-- Math
+local abs, ceil, floor, max, sqrt = math.abs, math.ceil, math.floor, math.max, math.sqrt
+
+-- Common WoW APIs, comment out unneeded per-spec
+-- local GetSpellCastCount = C_Spell.GetSpellCastCount
+-- local GetSpellInfo = C_Spell.GetSpellInfo
+-- local GetSpellInfo = ns.GetUnpackedSpellInfo
+-- local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+-- local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
+-- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
+-- local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
+-- local IsActiveSpell = ns.IsActiveSpell
+
+-- Specialization-specific local functions (if any)
 
 spec:RegisterResource( Enum.PowerType.Mana )
 
 -- Talents
 spec:RegisterTalents( {
+
     -- Priest
-    angelic_bulwark            = {  82675, 108945, 1 }, -- When an attack brings you below 30% health, you gain an absorption shield equal to 15% of your maximum health for 20 sec. Cannot occur more than once every 90 sec.
-    angelic_feather            = {  82703, 121536, 1 }, -- Places a feather at the target location, granting the first ally to walk through it 40% increased movement speed for 5 sec. Only 3 feathers can be placed at one time.
-    angels_mercy               = {  82678, 238100, 1 }, -- Reduces the cooldown of Desperate Prayer by 20 sec.
-    apathy                     = {  82689, 390668, 1 }, -- Your Mind Blast critical strikes reduce your target's movement speed by 75% for 4 sec.
-    benevolence                = {  82676, 415416, 1 }, -- Increases the healing of your spells by 3%.
-    binding_heals              = {  82678, 368275, 1 }, -- 20% of Flash Heal healing on other targets also heals you.
-    blessed_recovery           = {  82720, 390767, 1 }, -- After being struck by a melee or ranged critical hit, heal 20% of the damage taken over 6 sec.
-    body_and_soul              = {  82706,  64129, 1 }, -- Power Word: Shield and Leap of Faith increase your target's movement speed by 40% for 3 sec.
-    cauterizing_shadows        = {  82687, 459990, 1 }, -- When your Shadow Word: Pain expires or is refreshed with less than 5 sec remaining, a nearby ally within 40 yards is healed for 183,145.
-    crystalline_reflection     = {  82681, 373457, 2 }, -- Power Word: Shield instantly heals the target for 31,116 and reflects 10% of damage absorbed.
-    death_and_madness          = {  82711, 321291, 1 }, -- If your Shadow Word: Death fails to kill a target at or below 20% health, its cooldown is reset. Cannot occur more than once every 10 sec.
-    dispel_magic               = {  82715,    528, 1 }, -- Dispels Magic on the enemy target, removing 1 beneficial Magic effect.
-    divine_star                = {  82682, 110744, 1 }, -- Throw a Divine Star forward 27 yds, healing allies in its path for 53,417 and dealing 49,786 Holy damage to enemies. After reaching its destination, the Divine Star returns to you, healing allies and damaging enemies in its path again. Healing reduced beyond 6 targets.
-    dominate_mind              = {  82710, 205364, 1 }, -- Controls a mind up to 1 level above yours for 30 sec while still controlling your own mind. Does not work versus Demonic, Mechanical, or Undead beings or players. This spell shares diminishing returns with other disorienting effects.
-    essence_devourer           = {  82674, 415479, 1 }, -- Attacks from your Shadowfiend siphon life from enemies, healing a nearby injured ally for 137,359. Attacks from your Mindbender siphon life from enemies, healing a nearby injured ally for 45,786.
-    focused_mending            = {  82719, 372354, 1 }, -- Prayer of Mending does 45% increased healing to the initial target.
-    from_darkness_comes_light  = {  82707, 390615, 1 }, -- Each time Shadow Word: Pain or Purge the Wicked deals damage, the healing of your next Flash Heal is increased by 3%, up to a maximum of 60%.
-    halo                       = {  82682, 120517, 1 }, -- Creates a ring of Holy energy around you that quickly expands to a 30 yd radius, healing allies for 122,860 and dealing 128,201 Holy damage to enemies. Healing reduced beyond 6 targets.
-    holy_nova                  = {  82701, 132157, 1 }, -- An explosion of holy light around you deals up to 126,695 Holy damage to enemies and up to 120,189 healing to allies within 12 yds, reduced if there are more than 5 targets.
-    improved_fade              = {  82686, 390670, 2 }, -- Reduces the cooldown of Fade by 5 sec.
-    improved_flash_heal        = {  82714, 393870, 1 }, -- Increases healing done by Flash Heal by 15%.
-    improved_purify            = {  82705, 390632, 1 }, -- Purify additionally removes all Disease effects.
-    inspiration                = {  82696, 390676, 1 }, -- Reduces your target's physical damage taken by 5% for 15 sec after a critical heal with Flash Heal or Penance.
-    leap_of_faith              = {  82716,  73325, 1 }, -- Pulls the spirit of a party or raid member, instantly moving them directly in front of you.
-    lights_inspiration         = {  82679, 373450, 2 }, -- Increases the maximum health gained from Desperate Prayer by 8%.
-    manipulation               = {  82672, 459985, 1 }, -- You take 2% less damage from enemies affected by your Shadow Word: Pain.
-    mass_dispel                = {  82699,  32375, 1 }, -- Dispels magic in a 15 yard radius, removing all harmful Magic from 5 friendly targets and 1 beneficial Magic effect from 5 enemy targets. Potent enough to remove Magic that is normally undispellable.
-    mental_agility             = {  82698, 341167, 1 }, -- Reduces the mana cost of Purify and Mass Dispel by 50% and Dispel Magic by 10%.
-    mind_control               = {  82710,    605, 1 }, -- Controls a mind up to 1 level above yours for 30 sec. Does not work versus Demonic, Undead, or Mechanical beings. Shares diminishing returns with other disorienting effects.
-    move_with_grace            = {  82702, 390620, 1 }, -- Reduces the cooldown of Leap of Faith by 30 sec.
-    petrifying_scream          = {  82695,  55676, 1 }, -- Psychic Scream causes enemies to tremble in place instead of fleeing in fear.
-    phantasm                   = {  82556, 108942, 1 }, -- Activating Fade removes all snare effects.
-    phantom_reach              = {  82673, 459559, 1 }, -- Increases the range of most spells by 15%.
-    power_infusion             = {  82694,  10060, 1 }, -- Infuses the target with power for 15 sec, increasing haste by 20%. Can only be cast on players.
-    power_word_life            = {  82676, 373481, 1 }, -- A word of holy power that heals the target for 789,815. Only usable if the target is below 35% health.
-    prayer_of_mending          = {  82718,  33076, 1 }, -- Places a ward on an ally that heals them for 46,549 the next time they take damage, and then jumps to another ally within 30 yds. Jumps up to 4 times and lasts 30 sec after each jump.
-    protective_light           = {  82707, 193063, 1 }, -- Casting Flash Heal on yourself reduces all damage you take by 10% for 10 sec.
-    psychic_voice              = {  82695, 196704, 1 }, -- Reduces the cooldown of Psychic Scream by 15 sec.
-    renew                      = {  82717,    139, 1 }, -- Fill the target with faith in the light, healing for 208,473 over 15 sec.
-    rhapsody                   = {  82700, 390622, 1 }, -- Every 1 sec, the damage of your next Holy Nova is increased by 12% and its healing is increased by 20%. Stacks up to 20 times.
-    sanguine_teachings         = {  82691, 373218, 1 }, -- Increases your Leech by 4%.
-    sanlayn                    = {  82690, 199855, 1 }, --  Sanguine Teachings Sanguine Teachings grants an additional 2% Leech.  Vampiric Embrace Reduces the cooldown of Vampiric Embrace by 30 sec, increases its healing done by 25%.
-    shackle_undead             = {  82693,   9484, 1 }, -- Shackles the target undead enemy for 50 sec, preventing all actions and movement. Damage will cancel the effect. Limit 1.
-    shadow_word_death          = {  82712,  32379, 1 }, -- A word of dark binding that inflicts 75,569 Shadow damage to your target. If your target is not killed by Shadow Word: Death, you take backlash damage equal to 5% of your maximum health. Damage increased by 150% to targets below 20% health.
-    shadowfiend                = {  82713,  34433, 1 }, -- Summons a shadowy fiend to attack the target for 15 sec. Generates 0.5% Mana each time the Shadowfiend attacks.
-    sheer_terror               = {  82708, 390919, 1 }, -- Increases the amount of damage required to break your Psychic Scream by 75%.
-    spell_warding              = {  82720, 390667, 1 }, -- Reduces all magic damage taken by 3%.
-    surge_of_light             = {  82677, 109186, 1 }, -- Your healing spells and Smite have a 8% chance to make your next Flash Heal instant and cost no mana. Stacks to 2.
-    throes_of_pain             = {  82709, 377422, 2 }, -- Shadow Word: Pain and Purge the Wicked deal an additional 3% damage. When an enemy dies while afflicted by your Shadow Word: Pain or Purge the Wicked, you gain 0.5% Mana.
-    tithe_evasion              = {  82688, 373223, 1 }, -- Shadow Word: Death deals 50% less damage to you.
-    translucent_image          = {  82685, 373446, 1 }, -- Fade reduces damage you take by 10%.
-    twins_of_the_sun_priestess = {  82683, 373466, 1 }, -- Power Infusion also grants you its effect at 100% value when used on an ally. If no ally is targeted, it will grant its effect at 100% value to a nearby ally, preferring damage dealers.
-    twist_of_fate              = {  82684, 390972, 2 }, -- After damaging or healing a target below 35% health, gain 5% increased damage and healing for 8 sec.
-    unwavering_will            = {  82697, 373456, 2 }, -- While above 75% health, the cast time of your Flash Heal and Smite are reduced by 5%.
-    vampiric_embrace           = {  82691,  15286, 1 }, -- Fills you with the embrace of Shadow energy for 12 sec, causing you to heal a nearby ally for 50% of any single-target Shadow spell damage you deal.
-    void_shield                = {  82692, 280749, 1 }, -- When cast on yourself, 30% of damage you deal refills your Power Word: Shield.
-    void_shift                 = {  82674, 108968, 1 }, -- Swap health percentages with your ally. Increases the lower health percentage of the two to 25% if below that amount.
-    void_tendrils              = {  82708, 108920, 1 }, -- Summons shadowy tendrils, rooting all enemies within 8 yards for 15 sec or until the tendril is killed.
-    words_of_the_pious         = {  82721, 377438, 1 }, -- For 12 sec after casting Power Word: Shield, you deal 10% additional damage and healing with Smite and Holy Nova.
+    angelic_bulwark                = {  82675,  108945, 1 }, -- When an attack brings you below $s1% health, you gain an absorption shield equal to $s2% of your maximum health for $s3 sec. Cannot occur more than once every $s4 sec
+    angelic_feather                = {  82703,  121536, 1 }, -- Places a feather at the target location, granting the first ally to walk through it $s1% increased movement speed for $s2 sec. Only $s3 feathers can be placed at one time
+    angels_mercy                   = {  82678,  238100, 1 }, -- Reduces the cooldown of Desperate Prayer by $s1 sec
+    apathy                         = {  82689,  390668, 1 }, -- Your Mind Blast critical strikes reduce your target's movement speed by $s1% for $s2 sec
+    benevolence                    = {  82676,  415416, 1 }, -- Increases the healing of your spells by $s1%
+    binding_heals                  = {  82678,  368275, 1 }, -- $s1% of Flash Heal healing on other targets also heals you
+    blessed_recovery               = {  82720,  390767, 1 }, -- After being struck by a melee or ranged critical hit, heal $s1% of the damage taken over $s2 sec
+    body_and_soul                  = {  82706,   64129, 1 }, -- Power Word: Shield and Leap of Faith increase your target's movement speed by $s1% for $s2 sec
+    cauterizing_shadows            = {  82687,  459990, 1 }, -- When your Shadow Word: Pain expires or is refreshed with less than $s1 sec remaining, a nearby ally within $s2 yards is healed for $s3
+    crystalline_reflection         = {  82681,  373457, 2 }, -- Power Word: Shield instantly heals the target for $s1 and reflects $s2% of damage absorbed
+    death_and_madness              = {  82711,  321291, 1 }, -- If your Shadow Word: Death fails to kill a target at or below $s1% health, its cooldown is reset. Cannot occur more than once every $s2 sec
+    dispel_magic                   = {  82715,     528, 1 }, -- Dispels Magic on the enemy target, removing $s1 beneficial Magic effect
+    divine_star                    = {  82682,  110744, 1 }, -- Throw a Divine Star forward $s2 yds, healing allies in its path for $s3 and dealing $s$s4 Holy damage to enemies. After reaching its destination, the Divine Star returns to you, healing allies and damaging enemies in its path again. Healing reduced beyond $s5 targets
+    dominate_mind                  = {  82710,  205364, 1 }, -- Controls a mind up to $s1 level above yours for $s2 sec while still controlling your own mind. Does not work versus Demonic, Mechanical, or Undead beings or players. This spell shares diminishing returns with other disorienting effects
+    essence_devourer               = {  82674,  415479, 1 }, -- Attacks from your Shadowfiend siphon life from enemies, healing a nearby injured ally for $s1. Attacks from your Mindbender siphon life from enemies, healing a nearby injured ally for $s2
+    focused_mending                = {  82719,  372354, 1 }, -- Prayer of Mending does $s1% increased healing to the initial target
+    from_darkness_comes_light      = {  82707,  390615, 1 }, -- Each time Shadow Word: Pain deals damage, the healing of your next Flash Heal is increased by $s1%, up to a maximum of $s2%
+    halo                           = {  82682,  120517, 1 }, -- Creates a ring of Holy energy around you that quickly expands to a $s2 yd radius, healing allies for $s3 and dealing $s$s4 Holy damage to enemies. Healing reduced beyond $s5 targets
+    holy_nova                      = {  82701,  132157, 1 }, -- An explosion of holy light around you deals up to $s$s2 Holy damage to enemies and up to $s3 healing to allies within $s4 yds, reduced if there are more than $s5 targets
+    improved_fade                  = {  82686,  390670, 2 }, -- Reduces the cooldown of Fade by $s1 sec
+    improved_flash_heal            = {  82714,  393870, 1 }, -- Increases healing done by Flash Heal by $s1%
+    improved_purify                = {  82705,  390632, 1 }, -- Purify additionally removes all Disease effects
+    inspiration                    = {  82696,  390676, 1 }, -- Reduces your target's physical damage taken by $s1% for $s2 sec after a critical heal with Flash Heal or Penance
+    leap_of_faith                  = {  82716,   73325, 1 }, -- Pulls the spirit of a party or raid member, instantly moving them directly in front of you
+    lights_inspiration             = {  82679,  373450, 2 }, -- Increases the maximum health gained from Desperate Prayer by $s1%
+    manipulation                   = {  82672,  459985, 1 }, -- You take $s1% less damage from enemies affected by your Shadow Word: Pain
+    mass_dispel                    = {  82699,   32375, 1 }, -- Dispels magic in a $s1 yard radius, removing all harmful Magic from $s2 friendly targets and $s3 beneficial Magic effect from $s4 enemy targets. Potent enough to remove Magic that is normally undispellable
+    mental_agility                 = {  82698,  341167, 1 }, -- Reduces the mana cost of Purify and Mass Dispel by $s1% and Dispel Magic by $s2%
+    mind_control                   = {  82710,     605, 1 }, -- Controls a mind up to $s1 level above yours for $s2 sec. Does not work versus Demonic, Undead, or Mechanical beings. Shares diminishing returns with other disorienting effects
+    move_with_grace                = {  82702,  390620, 1 }, -- Reduces the cooldown of Leap of Faith by $s1 sec
+    petrifying_scream              = {  82695,   55676, 1 }, -- Psychic Scream causes enemies to tremble in place instead of fleeing in fear
+    phantasm                       = {  82556,  108942, 1 }, -- Activating Fade removes all snare effects
+    phantom_reach                  = {  82673,  459559, 1 }, -- Increases the range of most spells by $s1%
+    power_infusion                 = {  82694,   10060, 1 }, -- Infuses the target with power for $s1 sec, increasing haste by $s2%. Can only be cast on players
+    power_word_life                = {  82676,  373481, 1 }, -- A word of holy power that heals the target for $s1 million. Only usable if the target is below $s2% health
+    prayer_of_mending              = {  82718,   33076, 1 }, -- Places a ward on an ally that heals them for $s1 the next time they take damage, and then jumps to another ally within $s2 yds. Jumps up to $s3 times and lasts $s4 sec after each jump
+    protective_light               = {  82707,  193063, 1 }, -- Casting Flash Heal on yourself reduces all damage you take by $s1% for $s2 sec
+    psychic_voice                  = {  82695,  196704, 1 }, -- Reduces the cooldown of Psychic Scream by $s1 sec
+    renew                          = {  82717,     139, 1 }, -- Fill the target with faith in the light, healing for $s1 over $s2 sec
+    rhapsody                       = {  82700,  390622, 1 }, -- Every $s1 sec, the damage of your next Holy Nova is increased by $s2% and its healing is increased by $s3%. Stacks up to $s4 times
+    sanguine_teachings             = {  82691,  373218, 1 }, -- Increases your Leech by $s1%
+    sanlayn                        = {  82690,  199855, 1 }, --  Sanguine Teachings Sanguine Teachings grants an additional $s3% Leech.  Vampiric Embrace Reduces the cooldown of Vampiric Embrace by $s6 sec, increases its healing done by $s7%
+    shackle_undead                 = {  82693,    9484, 1 }, -- Shackles the target undead enemy for $s1 sec, preventing all actions and movement. Damage will cancel the effect. Limit $s2
+    shadow_word_death              = {  82712,   32379, 1 }, -- A word of dark binding that inflicts $s$s2 Shadow damage to your target. If your target is not killed by Shadow Word: Death, you take backlash damage equal to $s3% of your maximum health. Damage increased by $s4% to targets below $s5% health
+    shadowfiend                    = {  82713,   34433, 1 }, -- Summons a shadowy fiend to attack the target for $s1 sec. Generates $s2% Mana each time the Shadowfiend attacks
+    sheer_terror                   = {  82708,  390919, 1 }, -- Increases the amount of damage required to break your Psychic Scream by $s1%
+    spell_warding                  = {  82720,  390667, 1 }, -- Reduces all magic damage taken by $s1%
+    surge_of_light                 = {  82677,  109186, 1 }, -- Your healing spells and Smite have a $s1% chance to make your next Flash Heal instant and cost $s2% less mana. Stacks to $s3
+    throes_of_pain                 = {  82709,  377422, 2 }, -- Shadow Word: Pain deals an additional $s1% damage. When an enemy dies while afflicted by your Shadow Word: Pain, you gain $s2% Mana
+    tithe_evasion                  = {  82688,  373223, 1 }, -- Shadow Word: Death deals $s1% less damage to you
+    translucent_image              = {  82685,  373446, 1 }, -- Fade reduces damage you take by $s1%
+    twins_of_the_sun_priestess     = {  82683,  373466, 1 }, -- Power Infusion also grants you its effect at $s1% value when used on an ally. If no ally is targeted, it will grant its effect at $s2% value to a nearby ally, preferring damage dealers
+    twist_of_fate                  = {  82684,  390972, 2 }, -- After damaging or healing a target below $s1% health, gain $s2% increased damage and healing for $s3 sec
+    unwavering_will                = {  82697,  373456, 2 }, -- While above $s1% health, the cast time of your Flash Heal and Smite are reduced by $s2%
+    vampiric_embrace               = {  82691,   15286, 1 }, -- Fills you with the embrace of Shadow energy for $s1 sec, causing you to heal a nearby ally for $s2% of any single-target Shadow spell damage you deal
+    void_shield                    = {  82692,  280749, 1 }, -- When cast on yourself, $s1% of damage you deal refills your Power Word: Shield
+    void_shift                     = {  82674,  108968, 1 }, -- Swap health percentages with your ally. Increases the lower health percentage of the two to $s1% if below that amount
+    void_tendrils                  = {  82708,  108920, 1 }, -- Summons shadowy tendrils, rooting all enemies within $s1 yards for $s2 sec or until the tendril is killed
+    words_of_the_pious             = {  82721,  377438, 1 }, -- For $s1 sec after casting Power Word: Shield, you deal $s2% additional damage and healing with Smite and Holy Nova
 
     -- Discipline
-    abyssal_reverie            = {  82583, 373054, 2 }, -- Atonement heals for 10% more when activated by Shadow spells.
-    atonement                  = {  82594,  81749, 1 }, -- Power Word: Shield, Flash Heal, Renew, Power Word: Radiance, and Power Word: Life apply Atonement to your target for 15 sec. Your spell damage heals all targets affected by Atonement for 35% of the damage done. Healing increased by 100% when not in a raid.
-    blaze_of_light             = {  82568, 215768, 2 }, -- The damage of Smite and Penance is increased by 8%, and Penance increases or decreases your target's movement speed by 25% for 2 sec.
-    borrowed_time              = {  82600, 390691, 2 }, -- Casting Power Word: Shield increases your Haste by 4% for 4 sec.
-    bright_pupil               = {  82591, 390684, 1 }, -- Reduces the cooldown of Power Word: Radiance by 3 sec.
-    castigation                = {  82575, 193134, 1 }, -- Penance fires one additional bolt of holy light over its duration.
-    dark_indulgence            = {  82596, 372972, 1 }, -- Mind Blast has a 100% chance to grant Power of the Dark Side and its mana cost is reduced by 40%.
-    divine_aegis               = {  82602,  47515, 1 }, -- Direct critical heals create a protective shield on the target, absorbing 30% of the amount healed. Lasts 15 sec.
-    divine_procession          = {  82599, 472361, 1 }, -- Smite extends the duration of an active Atonement by 3.0 sec.
-    encroaching_shadows        = {  82590, 472568, 1 }, -- Shadow Word: Pain Spreads to 2 nearby enemies when you cast Penance on the target.
-    enduring_luminescence      = {  82591, 390685, 1 }, -- Reduces the cast time of Power Word: Radiance by 30% and causes it to apply Atonement at an additional 10% of its normal duration.
-    eternal_barrier            = {  86730, 238135, 1 }, -- Power Word: Shield absorbs 20% additional damage and lasts 5 sec longer.
-    evangelism                 = {  82598, 472433, 1 }, -- Extends Atonement on all allies by 6 sec and heals for 3.2 million, split evenly among them.
-    expiation                  = {  82585, 390832, 2 }, -- Increases the damage of Mind Blast and Shadow Word: Death by 10%. Mind Blast and Shadow Word: Death consume 3 sec of Shadow Word: Pain, instantly dealing that damage.
-    harsh_discipline           = {  82572, 373180, 2 }, -- Power Word: Radiance causes your next Penance to fire 3 additional bolts, stacking up to 2 times.
-    indemnity                  = {  82576, 373049, 1 }, -- Atonements granted by Power Word: Shield last an additional 4 sec.
-    inescapable_torment        = {  82586, 373427, 1 }, -- Penance, Mind Blast and Shadow Word: Death cause your Mindbender or Shadowfiend to teleport behind your target, slashing up to 5 nearby enemies for 104,966 Shadow damage and extending its duration by 0.7 sec.
-    inner_focus                = {  82601, 390693, 1 }, -- Flash Heal, Power Word: Shield, Penance, Power Word: Radiance, and Power Word: Life have a 20% increased chance to critically heal.
-    lenience                   = {  82567, 238063, 1 }, -- Atonement reduces damage taken by 3%.
-    lights_promise             = {  82592, 322115, 1 }, -- Power Word: Radiance gains an additional charge.
-    luminous_barrier           = {  82564, 271466, 1 }, -- Create a shield on all allies within 40 yards, absorbing 877,572 damage on each of them for 10 sec. Absorption decreased beyond 5 targets.
-    malicious_intent           = {  82580, 372969, 1 }, -- Increases the duration of Schism by 6 sec.
-    mindbender                 = {  82584, 123040, 1 }, -- Summons a Mindbender to attack the target for 12 sec. Generates 0.2% Mana each time the Mindbender attacks.
-    overloaded_with_light      = {  82573, 421557, 1 }, -- Ultimate Penitence emits an explosion of light, healing up to 10 allies around you for 137,359 and applying Atonement at 50% of normal duration.
-    pain_and_suffering         = {  82578, 390689, 2 }, -- Increases the damage of Shadow Word: Pain by 8%.
-    pain_suppression           = {  82587,  33206, 1 }, -- Reduces all damage taken by a friendly target by 40% for 8 sec. Castable while stunned.
-    pain_transformation        = {  82588, 372991, 1 }, -- Pain Suppression also heals your target for 15% of their maximum health and applies Atonement.
-    painful_punishment         = {  82597, 390686, 1 }, -- Each Penance bolt extends the duration of Shadow Word: Pain on enemies hit by 1.5 sec.
-    power_of_the_dark_side     = {  82595, 198068, 1 }, -- Shadow Word: Pain and Purge the Wicked have a chance to empower your next Penance with Shadow, increasing its effectiveness by 50%.
-    power_word_barrier         = {  82564,  62618, 1 }, -- Summons a holy barrier to protect all allies at the target location for 10 sec, reducing all damage taken by 20% and preventing damage from delaying spellcasting.
-    power_word_radiance        = {  82593, 194509, 1 }, -- A burst of light heals the target and 4 injured allies within 40 yards for 412,443, and applies Atonement for 60% of its normal duration.
-    protector_of_the_frail     = {  82588, 373035, 1 }, -- Pain Suppression gains an additional charge. Power Word: Shield reduces the cooldown of Pain Suppression by 3 sec.
-    revel_in_darkness          = {  82566, 373003, 1 }, -- Shadow Word: Pain deals 5% additional damage and spreads to 1 additional target when casting Penance.
-    sanctuary                  = {  92225, 231682, 1 }, -- Smite prevents the next 74,087 damage dealt by the enemy.
-    schism                     = {  82579, 424509, 1 }, -- Mind Blast fractures the enemy's mind, increasing your spell damage to the target by 10% for 9 sec.
-    shadow_covenant            = {  82581, 314867, 1 }, -- Casting Mindbender enters you into a shadowy pact, transforming Halo, Divine Star, and Penance into Shadow spells and increasing the damage and healing of your Shadow spells by 20% while active.
-    shield_discipline          = {  82589, 197045, 1 }, -- When your Power Word: Shield is completely absorbed, you restore 0.5% of your maximum mana.
-    twilight_corruption        = {  82582, 373065, 1 }, -- Shadow Covenant increases Shadow spell damage and healing by an additional 10%.
-    twilight_equilibrium       = {  82571, 390705, 1 }, -- Your damaging Shadow spells increase the damage of your next Holy spell cast within 6 sec by 15%. Your damaging Holy spells increase the damage of your next Shadow spell cast within 6 sec by 15%.
-    ultimate_penitence         = {  82577, 421453, 1 }, -- Ascend into the air and unleash a massive barrage of Penance bolts, causing 2.4 million Holy damage to enemies or 6 million healing to allies over 5.1 sec. While ascended, gain a shield for 100% of your health. In addition, you are unaffected by knockbacks or crowd control effects.
-    void_summoner              = {  82570, 390770, 1 }, -- Mind Blast and Penance casts reduce the cooldown of Mindbender by 4.0 sec.
-    weal_and_woe               = {  82569, 390786, 1 }, -- Your Penance bolts increase the damage of your next Smite by 20%, or the absorb of your next Power Word: Shield by 10%. Stacks up to 8 times.
+    abyssal_reverie                = {  82583,  373054, 2 }, -- Atonement heals for $s1% more when activated by Shadow spells
+    atonement                      = {  82594,   81749, 1 }, -- Power Word: Shield, Flash Heal, Renew, Power Word: Radiance, and Power Word: Life apply Atonement to your target for $s1 sec. Your spell damage heals all targets affected by Atonement for $s2% of the damage done. Healing increased by $s3% when not in a raid
+    blaze_of_light                 = {  82568,  215768, 2 }, -- The damage of Smite and Penance is increased by $s1%, and Penance increases or decreases your target's movement speed by $s2% for $s3 sec
+    borrowed_time                  = {  82600,  390691, 2 }, -- Casting Power Word: Shield increases your Haste by $s1% for $s2 sec
+    bright_pupil                   = {  82591,  390684, 1 }, -- Reduces the cooldown of Power Word: Radiance by $s1 sec
+    castigation                    = {  82575,  193134, 1 }, -- Penance fires one additional bolt of holy light over its duration
+    dark_indulgence                = {  82596,  372972, 1 }, -- Mind Blast has a $s1% chance to grant Power of the Dark Side and its mana cost is reduced by $s2%
+    divine_aegis                   = {  82602,   47515, 1 }, -- Direct critical heals create a protective shield on the target, absorbing $s1% of the amount healed. Lasts $s2 sec
+    divine_procession              = {  82599,  472361, 1 }, -- Smite extends the duration of an active Atonement by $s1 sec
+    encroaching_shadows            = {  82590,  472568, 1 }, -- Shadow Word: Pain Spreads to $s1 nearby enemies when you cast Penance on the target
+    enduring_luminescence          = {  82591,  390685, 1 }, -- Reduces the cast time of Power Word: Radiance by $s1% and causes it to apply Atonement at an additional $s2% of its normal duration
+    eternal_barrier                = {  86730,  238135, 1 }, -- Power Word: Shield absorbs $s1% additional damage and lasts $s2 sec longer
+    evangelism                     = {  82598,  472433, 1 }, -- Extends Atonement on all allies by $s1 sec and heals for $s2 million, split evenly among them
+    expiation                      = {  82585,  390832, 2 }, -- Mind Blast and Shadow Word: Death consume $s1 sec of Shadow Word: Pain, dealing damage equal to $s2% of the amount consumed
+    harsh_discipline               = {  82572,  373180, 2 }, -- Power Word: Radiance causes your next Penance to fire $s1 additional bolts, stacking up to $s2 charges
+    indemnity                      = {  82576,  373049, 1 }, -- Atonements granted by Power Word: Shield last an additional $s1 sec
+    inescapable_torment            = {  82586,  373427, 1 }, -- Penance, Mind Blast and Shadow Word: Death cause your Mindbender or Shadowfiend to teleport behind your target, slashing up to $s2 nearby enemies for $s$s3 Shadow damage and extending its duration by $s4 sec
+    inner_focus                    = {  82601,  390693, 1 }, -- Flash Heal, Power Word: Shield, Penance, Power Word: Radiance, and Power Word: Life have a $s1% increased chance to critically heal
+    lenience                       = {  82567,  238063, 1 }, -- Atonement reduces damage taken by $s1%
+    lights_promise                 = {  82592,  322115, 1 }, -- Power Word: Radiance gains an additional charge
+    luminous_barrier               = {  82564,  271466, 1 }, -- Create a shield on all allies within $s2 yards, absorbing $s$s3 million damage on each of them for $s4 sec. Absorption decreased beyond $s5 targets
+    malicious_intent               = {  82580,  372969, 1 }, -- Increases the duration of Schism by $s1 sec
+    mindbender                     = {  82584,  123040, 1 }, -- Summons a Mindbender to attack the target for $s1 sec. Generates $s2% Mana each time the Mindbender attacks
+    overloaded_with_light          = {  82573,  421557, 1 }, -- Ultimate Penitence emits an explosion of light, healing up to $s1 allies around you for $s2 and applying Atonement at $s3% of normal duration
+    pain_and_suffering             = {  82578,  390689, 2 }, -- Increases the damage of Shadow Word: Pain by $s1% and increases its duration by $s2 sec
+    pain_suppression               = {  82587,   33206, 1 }, -- Reduces all damage taken by a friendly target by $s1% for $s2 sec. Castable while stunned
+    pain_transformation            = {  82588,  372991, 1 }, -- Pain Suppression also heals your target for $s1% of their maximum health and applies Atonement
+    painful_punishment             = {  82597,  390686, 1 }, -- Each Penance bolt extends the duration of Shadow Word: Pain on enemies hit by $s1 sec
+    power_of_the_dark_side         = {  82595,  198068, 1 }, -- Shadow Word: Pain has a chance to empower your next Penance with Shadow, increasing its effectiveness by $s1%
+    power_word_barrier             = {  82564,   62618, 1 }, -- Summons a holy barrier to protect all allies at the target location for $s1 sec, reducing all damage taken by $s2% and preventing damage from delaying spellcasting
+    power_word_radiance            = {  82593,  194509, 1 }, -- A burst of light heals the target and $s1 injured allies within $s2 yards for $s3, and applies Atonement for $s4% of its normal duration
+    protector_of_the_frail         = {  82588,  373035, 1 }, -- Pain Suppression gains an additional charge. Power Word: Shield reduces the cooldown of Pain Suppression by $s1 sec
+    revel_in_darkness              = {  82566,  373003, 1 }, -- Shadow Word: Pain deals $s1% additional damage and spreads to $s2 additional target when you cast Penance to its target
+    sanctuary                      = {  92225,  231682, 1 }, -- Smite prevents the next $s1 damage dealt by the enemy
+    schism                         = {  82579,  424509, 1 }, -- Mind Blast fractures the enemy's mind, increasing your spell damage to the target by $s1% for $s2 sec
+    shadow_covenant                = {  82581,  314867, 1 }, -- Casting Mindbender enters you into a shadowy pact, transforming Halo, Divine Star, and Penance into Shadow spells and increasing the damage and healing of your Shadow spells by $s1% while active
+    shield_discipline              = {  82589,  197045, 1 }, -- When your Power Word: Shield is completely absorbed, you restore $s1% of your maximum mana
+    twilight_corruption            = {  82582,  373065, 1 }, -- Shadow Covenant increases Shadow spell damage and healing by an additional $s1%
+    twilight_equilibrium           = {  82571,  390705, 1 }, -- Your damaging Shadow spells increase the damage of your next Holy spell cast within $s1 sec by $s2%. Your damaging Holy spells increase the damage of your next Shadow spell cast within $s3 sec by $s4%
+    ultimate_penitence             = {  82577,  421453, 1 }, -- Ascend into the air and unleash a massive barrage of Penance bolts, causing $s1 million Holy damage to enemies or $s2 million healing to allies over $s3 sec. While ascended, gain a shield for $s4% of your health. In addition, you are unaffected by knockbacks or crowd control effects
+    void_summoner                  = {  82570,  390770, 1 }, -- Reduces the cooldown of Shadowfiend or Mindbender by $s1%
+    weal_and_woe                   = {  82569,  390786, 1 }, -- Your Penance bolts increase the damage of your next Smite by $s1%, or the absorb of your next Power Word: Shield by $s2%. Stacks up to $s3 times
 
     -- Oracle
-    assured_safety             = {  94691, 440766, 1 }, -- Power Word: Shield casts apply 4 stacks of Prayer of Mending to your target.
-    clairvoyance               = {  94687, 428940, 1 }, -- Casting Premonition of Solace invokes Clairvoyance, expanding your mind and opening up all possibilities of the future.  Premonition of Clairvoyance Grants Premonition of Insight, Piety, and Solace at 100% effectiveness.
-    desperate_measures         = {  94690, 458718, 1 }, -- Desperate Prayer lasts an additional 10 sec. Angelic Bulwark's absorption effect is increased by 15% of your maximum health.
-    divine_feathers            = {  94675, 440670, 1 }, -- Your Angelic Feathers increase movement speed by an additional 10%. When an ally walks through your Angelic Feather, you are also granted 100% of its effect.
-    fatebender                 = {  94700, 440743, 1 }, -- Increases the effects of Premonition by 40%.
-    foreseen_circumstances     = {  94689, 440738, 1 }, -- Pain Suppression reduces damage taken by an additional 10%.
-    miraculous_recovery        = {  94679, 440674, 1 }, -- Reduces the cooldown of Power Word: Life by 3 sec and allows it to be usable on targets below 50% health.
-    perfect_vision             = {  94700, 440661, 1 }, -- Reduces the cooldown of Premonition by 15 sec.
-    preemptive_care            = {  94674, 440671, 1 }, -- Increases the duration of Atonement and Renew by 4 sec.
-    premonition                = {  94683, 428924, 1, "oracle" }, -- Gain access to a spell that gives you an advantage against your fate. Premonition rotates to the next spell when cast.  Premonition of Insight Reduces the cooldown of your next 3 spell casts by 7 sec.  Premonition of Piety Increases your healing done by 15% and causes 70% of overhealing on players to be redistributed to up to 4 nearby allies for 15 sec.  Premonition of Solace Your next single target healing spell grants your target a shield that absorbs 301,473 damage and reduces their damage taken by 15% for 15 sec.
-    preventive_measures        = {  94698, 440662, 1 }, -- Power Word: Shield absorbs 40% additional damage. All damage dealt by Penance, Smite and Holy Nova increased by 40%.
-    prophets_will              = {  94690, 433905, 1 }, -- Your Flash Heal and Power Word: Shield are 30% more effective when cast on yourself.
-    save_the_day               = {  94675, 440669, 1 }, -- For 6 sec after casting Leap of Faith you may cast it a second time for free, ignoring its cooldown.
-    twinsight                  = {  94673, 440742, 1 }, -- 3 additional Penance bolts are fired at an enemy within 40 yards when healing an ally with Penance, or fired at an ally within 40 yards when damaging an enemy with Penance.
-    waste_no_time              = {  94679, 440681, 1 }, -- Premonition causes your next Power Word: Radiance cast to be instant and cost 15% less mana.
+    assured_safety                 = {  94691,  440766, 1 }, -- Power Word: Shield casts apply $s1 stacks of Prayer of Mending to your target
+    clairvoyance                   = {  94687,  428940, 1 }, -- Casting Premonition of Solace invokes Clairvoyance, expanding your mind and opening up all possibilities of the future.  Premonition of Clairvoyance Grants Premonition of Insight, Piety, and Solace at $s3% effectiveness
+    desperate_measures             = {  94690,  458718, 1 }, -- Desperate Prayer lasts an additional $s1 sec. Angelic Bulwark's absorption effect is increased by $s2% of your maximum health
+    divine_feathers                = {  94675,  440670, 1 }, -- Your Angelic Feathers increase movement speed by an additional $s1%. When an ally walks through your Angelic Feather, you are also granted $s2% of its effect
+    fatebender                     = {  94700,  440743, 1 }, -- Increases the effects of Premonition by $s1%
+    foreseen_circumstances         = {  94689,  440738, 1 }, -- Pain Suppression reduces damage taken by an additional $s1%
+    miraculous_recovery            = {  94679,  440674, 1 }, -- Reduces the cooldown of Power Word: Life by $s1 sec and allows it to be usable on targets below $s2% health
+    perfect_vision                 = {  94700,  440661, 1 }, -- Reduces the cooldown of Premonition by $s1 sec
+    preemptive_care                = {  94674,  440671, 1 }, -- Increases the duration of Atonement and Renew by $s1 sec
+    premonition                    = {  94683,  428924, 1 }, -- Gain access to a spell that gives you an advantage against your fate. Premonition rotates to the next spell when cast.  Premonition of Insight Reduces the cooldown of your next $s4 spell casts by $s5 sec.  Premonition of Piety Increases your healing done by $s8% and causes $s9% of overhealing on players to be redistributed to up to $s10 nearby allies for $s11 sec.  Premonition of Solace Your next single target healing spell grants your target a shield that absorbs $s$s14 million damage and reduces their damage taken by $s15% for $s16 sec
+    preventive_measures            = {  94698,  440662, 1 }, -- Power Word: Shield absorbs $s2% additional damage$s$s3 All damage dealt by Penance, Smite and Holy Nova increased by $s4%
+    prophets_will                  = {  94690,  433905, 1 }, -- Your Flash Heal and Power Word: Shield are $s1% more effective when cast on yourself
+    save_the_day                   = {  94675,  440669, 1 }, -- For $s1 sec after casting Leap of Faith you may cast it a second time for free, ignoring its cooldown
+    twinsight                      = {  94673,  440742, 1 }, -- $s1 additional Penance bolts are fired at an enemy within $s2 yards when healing an ally with Penance, or fired at an ally within $s3 yards when damaging an enemy with Penance
+    waste_no_time                  = {  94679,  440681, 1 }, -- Premonition causes your next Power Word: Radiance cast to be instant and cost $s1% less mana
 
     -- Voidweaver
-    collapsing_void            = {  94694, 448403, 1 }, -- Each time Penance damages or heals, Entropic Rift is empowered, increasing its damage and size by 10%. After Entropic Rift ends it collapses, dealing 242,533 Shadow damage split amongst enemy targets within 15 yds.
-    dark_energy                = {  94693, 451018, 1 }, -- While Entropic Rift is active, you move 20% faster.
-    darkening_horizon          = {  94668, 449912, 1 }, -- Void Blast increases the duration of Entropic Rift by 1.0 sec, up to a maximum of 3 sec.
-    depth_of_shadows           = { 100212, 451308, 1 }, -- Shadow Word: Death has a high chance to summon a Shadowfiend for 5 sec when damaging targets below 20% health.
-    devour_matter              = {  94668, 451840, 1 }, -- Shadow Word: Death consumes absorb shields from your target, dealing 226,708 extra damage to them and granting you 1% mana if a shield was present.
-    embrace_the_shadow         = {  94696, 451569, 1 }, -- You absorb 3% of all magic damage taken. Absorbing Shadow damage heals you for 100% of the amount absorbed.
-    entropic_rift              = {  94684, 447444, 1, "voidweaver" }, -- Mind Blast tears open an Entropic Rift that follows the enemy for 8 sec. Enemies caught in its path suffer 6,110 Shadow damage every 0.8 sec while within its reach.
-    inner_quietus              = {  94670, 448278, 1 }, -- Power Word: Shield absorbs 20% additional damage.
-    no_escape                  = {  94693, 451204, 1 }, -- Entropic Rift slows enemies by up to 70%, increased the closer they are to its center.
-    void_blast                 = {  94703, 450405, 1 }, -- Entropic Rift upgrades Smite into Void Blast while it is active. Void Blast: Sends a blast of cosmic void energy at the enemy, causing 112,465 Shadow damage.
-    void_empowerment           = {  94695, 450138, 1 }, -- Summoning an Entropic Rift extends the duration of your 5 shortest Atonements by 1 sec.
-    void_infusion              = {  94669, 450612, 1 }, -- Atonement healing with Void Blast is 100% more effective.
-    void_leech                 = {  94696, 451311, 1 }, -- Every 3 sec siphon an amount equal to 4% of your health from an ally within 40 yds if they are higher health than you.
-    voidheart                  = {  94692, 449880, 1 }, -- While Entropic Rift is active, your Atonement healing is increased by 20%.
-    voidwraith                 = { 100212, 451234, 1 }, -- Transform your Shadowfiend or Mindbender into a Voidwraith. Voidwraith Summon a Voidwraith for 15 sec that casts Void Flay from afar. Void Flay deals bonus damage to high health enemies, up to a maximum of 50% if they are full health. Generates 0.5% Mana each time the Voidwraith attacks.
-} )
-
--- PvP Talents
-spec:RegisterPvpTalents( {
-    absolute_faith         = 5480, -- (408853) Leap of Faith also pulls the spirit of the 3 furthest allies within 40 yards and shields you and the affected allies for 555,659.
-    archangel              =  123, -- (197862) Evangelism healing increased by 30%, and Evangelism increases your healing and absorption effects by 20% for 15 sec.
-    catharsis              = 5487, -- (391297) 15% of all damage you take is stored. The stored amount cannot exceed 12% of your maximum health. The initial damage of your next Shadow Word: Pain deals this stored damage to your target.
-    dark_archangel         =  126, -- (1218211) Casting Mindbender increases your damage, and the damage of all allies with your Atonement by 10% for 8 sec.
-    improved_mass_dispel   = 5635, -- (426438) Reduces the cooldown of Mass Dispel by 60 sec.
-    inner_light_and_shadow = 5416, -- (356085) Inner Light: Healing spells cost 10% less mana. Inner Shadow: Spell damage and Atonement healing increased by 10%. Activate to swap from one effect to the other, incurring a 6 sec cooldown.
-    mindgames              = 5640, -- (375901) Assault an enemy's mind, dealing 266,715 Shadow damage and briefly reversing their perception of reality. For 7 sec, the next 777,921 damage they deal will heal their target, and the next 777,921 healing they deal will damage their target.
-    phase_shift            = 5570, -- (408557) Step into the shadows when you cast Fade, avoiding all attacks and spells for 1 sec. Interrupt effects are not affected by Phase Shift.
-    purification           =  100, -- (196439) Purify now has a maximum of 2 charges. Removing harmful effects with Purify grants your target an absorption shield equal to 5% of their maximum health. Lasts 8 sec.
-    strength_of_soul       =  111, -- (197535)
-    thoughtsteal           =  855, -- (316262) Peer into the mind of the enemy, attempting to steal a known spell. If stolen, the victim cannot cast that spell for 20 sec. Can only be used on Humanoids with mana. If you're unable to find a spell to steal, the cooldown of Thoughtsteal is reset.
-    trinity                =  109, -- (214205)
-    ultimate_radiance      =  114, -- (236499)
+    collapsing_void                = {  94694,  448403, 1 }, -- Each time Penance damages or heals, Entropic Rift is empowered, increasing its damage and size by $s2%. After Entropic Rift ends it collapses, dealing $s$s3 Shadow damage split amongst enemy targets within $s4 yds
+    dark_energy                    = {  94693,  451018, 1 }, -- While Entropic Rift is active, you move $s1% faster
+    darkening_horizon              = {  94695,  449912, 1 }, -- Void Blast increases the duration of Entropic Rift by $s1 sec, up to a maximum of $s2 sec
+    depth_of_shadows               = { 100212,  451308, 1 }, -- Shadow Word: Death has a high chance to summon a Shadowfiend for $s1 sec when damaging targets below $s2% health
+    devour_matter                  = {  94668,  451840, 1 }, -- Shadow Word: Death consumes absorb shields from your target, dealing $s$s2 extra damage to them and granting you $s3% mana if a shield was present
+    embrace_the_shadow             = {  94696,  451569, 1 }, -- You absorb $s1% of all magic damage taken. Absorbing Shadow damage heals you for $s2% of the amount absorbed
+    entropic_rift                  = {  94684,  447444, 1 }, -- Mind Blast tears open an Entropic Rift that follows the enemy for $s2 sec. Enemies caught in its path suffer $s$s3 Shadow damage every $s4 sec while within its reach
+    inner_quietus                  = {  94670,  448278, 1 }, -- Power Word: Shield absorbs $s1% additional damage
+    no_escape                      = {  94693,  451204, 1 }, -- Entropic Rift slows enemies by up to $s1%, increased the closer they are to its center
+    void_blast                     = {  94703,  450405, 1 }, -- Entropic Rift upgrades Smite into Void Blast while it is active. Void Blast: Sends a blast of cosmic void energy at the enemy, causing $s$s2 Shadow damage
+    void_empowerment               = {  94695,  450138, 1 }, -- Summoning an Entropic Rift extends the duration of your $s1 shortest Atonements by $s2 sec
+    void_infusion                  = {  94669,  450612, 1 }, -- Atonement healing with Void Blast is $s1% more effective
+    void_leech                     = {  94696,  451311, 1 }, -- Every $s1 sec siphon an amount equal to $s2% of your health from an ally within $s3 yds if they are higher health than you
+    voidheart                      = {  94692,  449880, 1 }, -- While Entropic Rift is active, your Atonement healing is increased by $s1%
+    voidwraith                     = { 100212,  451234, 1 }, -- Transform your Shadowfiend or Mindbender into a Voidwraith. Voidwraith Summon a Voidwraith for $s3 sec that casts Void Flay from afar. Void Flay deals bonus damage to high health enemies, up to a maximum of $s4% if they are full health. Generates $s5% Mana each time the Voidwraith attacks
 } )
 
 -- Auras
@@ -517,29 +521,56 @@ spec:RegisterAuras( {
     },
 } )
 
--- The War Within
-spec:RegisterGear( "tww1", 212084, 212083, 212081, 212086, 212082 )
-spec:RegisterAuras( {
-    darkness_from_light = {
-        id = 455033,
-        duration = 30,
-        max_stack = 3
+spec:RegisterGear({
+    -- The War Within
+    tww3 = {
+        items = { 237710, 237708, 237709, 237712, 237707 },
+        auras = {
+            -- Oracle
+            visionary_velocity = {
+                id = 1239609,
+                duration = 10,
+                max_stack = 10
+            },
+            -- Voidweaver
+            overflowing_void = {
+                id = 1237615,
+                duration = 3600,
+                max_stack = 1
+            },
+        }
+    },
+    tww2 = {
+        items = { 229334, 229332, 229337, 229335, 229333 }
+    },
+    tww1 = {
+        items = { 212084, 212083, 212081, 212086, 212082 },
+        auras = {
+            darkness_from_light = {
+                id = 455033,
+                duration = 30,
+                max_stack = 3
+            }
+        }
+    },
+    -- Dragonflight
+    tier29 = {
+        items = { 200327, 200329, 200324, 200326, 200328 }
+    },
+    tier30 = {
+        items = { 202543, 202542, 202541, 202545, 202540 },
+        auras = {
+            radiant_providence = {
+                id = 410638,
+                duration = 3600,
+                max_stack = 2
+            }
+        }
+    },
+    tier31 = {
+        items = { 207279, 207280, 207281, 207282, 207284, 217202, 217204, 217205, 217201, 217203 }
     }
 } )
-spec:RegisterGear( "tww2", 229334, 229332, 229337, 229335, 229333 )
-
--- Dragonflight
-spec:RegisterGear( "tier29", 200327, 200329, 200324, 200326, 200328 )
-spec:RegisterGear( "tier30", 202543, 202542, 202541, 202545, 202540 )
-spec:RegisterAuras( {
-    radiant_providence = {
-        id = 410638,
-        duration = 3600,
-        max_stack = 2
-    }
-} )
-spec:RegisterGear( "tier31", 207279, 207280, 207281, 207282, 207284, 217202, 217204, 217205, 217201, 217203 )
-
 
 spec:RegisterStateTable( "priest", {
     self_power_infusion = true
@@ -549,7 +580,6 @@ local holy_schools = {
     holy = true,
     holyfire = true
 }
-
 
 local entropic_rift_expires = 0
 local er_extensions = 0
@@ -579,7 +609,6 @@ local premonitions = {
     solace = "premonition_of_solace",
     clairvoyance = "premonition_of_clairvoyance"
 }
-
 
 spec:RegisterHook( "reset_precast", function ()
     if talent.premonition.enabled then
@@ -671,6 +700,7 @@ spec:RegisterHook( "runHandler", function( a )
     if buff.premonition_of_insight.up then
         reduceCooldown( a, insight_value )
         removeStack( "premonition_of_insight" )
+        if set_bonus.tww3_oracle >= 4 then addStack( "visionary_velocity" ) end
     end
 end )
 
@@ -679,7 +709,6 @@ local Solace = setfenv( function ()
     applyBuff( "premonition_of_solace_absorb" )
     removeBuff( "premonition_of_solace" )
 end, state )
-
 
 -- Abilities
 spec:RegisterAbilities( {
@@ -771,7 +800,7 @@ spec:RegisterAbilities( {
         gcd = "spell",
         school = "holy",
 
-        spend = function() return buff.surge_of_light.up and 0 or 0.04 end,
+        spend = function() return 0.04 * ( buff.surge_of_light.up and 0.5 or 1 )end,
         spendType = "mana",
 
         startsCombat = false,
@@ -1124,7 +1153,7 @@ spec:RegisterAbilities( {
         gcd = "spell",
         school = "radiant",
 
-        spend = function() return ( buff.radiant_providence.up and 0.03 or 0.06 ) * ( buff.waste_no_time.up and 0.85 or 1 ) end,
+        spend = function() return 0.05 * ( buff.waste_no_time.up and 0.85 or 1 ) end,
         spendType = "mana",
 
         talent = "power_word_radiance",
@@ -1304,7 +1333,7 @@ spec:RegisterAbilities( {
     smite = {
         id = function() return state.spec.discipline and talent.void_blast.enabled and buff.entropic_rift.up and 450215 or 585 end,
         known = 585,
-        cast = 1.5,
+        cast = function() return 1.5 * haste * ( set_bonus.tww3 >= 2 and state.spec.discipline and talent.void_blast.enabled and buff.entropic_rift.up and 0.8 or 1 ) end,
         cooldown = 0,
         gcd = "spell",
         school = "holy",
@@ -1331,6 +1360,8 @@ spec:RegisterAbilities( {
                 if buff.voidheart.up then buff.voidheart.expires = buff.voidheart.expires + 1 end
                 rift_extensions = rift_extensions + 1
             end
+
+            if set_bonus.tww3_voidweaver >= 4 then removeBuff( "overflowing_void" ) end
         end,
 
         copy = { 585, "void_blast", 450215, 450405, 450983 }
@@ -1357,13 +1388,11 @@ spec:RegisterAbilities( {
     },
 } )
 
-
 spec:RegisterSetting( "experimental_msg", nil, {
     type = "description",
     name = "|cFFFF0000警告|r：插件中的治疗仅专注于DPS输出。这在单人游戏或在团队/副本中你的治疗不太关键的空闲时段更有用。使用时需自行承担风险。",
     width = "full",
 } )
-
 
 spec:RegisterRanges( "penance", "smite", "dispel_magic" )
 

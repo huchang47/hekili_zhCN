@@ -1,4 +1,4 @@
-## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/demonhunter_havoc.simc
+## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/demonhunter_havoc.simc
 ## Up to date with SimC: March 9 2025 - 91f125a
 
 actions.precombat+=/variable,name=trinket1_steroids,value=trinket.1.is.improvised_seaforium_pacemaker

@@ -1,3 +1,5 @@
+## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/warlock_affliction.simc
+
 actions.precombat=fel_domination,if=time>0&!pet.alive
 actions.precombat+=/summon_pet
 actions.precombat+=/variable,name=cleave_apl,value=toggle.funnel

@@ -26,7 +26,7 @@ local mt_resource = ns.metatables.mt_resource
 local GetActiveLossOfControlData, GetActiveLossOfControlDataCount = C_LossOfControl.GetActiveLossOfControlData, C_LossOfControl.GetActiveLossOfControlDataCount
 local GetItemCooldown = C_Item.GetItemCooldown
 local GetSpellDescription, GetSpellTexture = C_Spell.GetSpellDescription, C_Spell.GetSpellTexture
-local GetSpecialization, GetSpecializationInfo = _G.GetSpecialization, _G.GetSpecializationInfo
+local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
 local GetItemSpell, GetItemCount, IsUsableItem = C_Item.GetItemSpell, C_Item.GetItemCount, C_Item.IsUsableItem
 local GetSpellInfo = C_Spell.GetSpellInfo
 local GetSpellLink = C_Spell.GetSpellLink
@@ -1313,7 +1313,7 @@ function Hekili:RestoreDefaults()
                 msg = msg .. ", |cFFFFD100" .. reverted[i] .. "|r"
             end
 
-            msg = "|cFFFFD100" .. msg .. "|r 和 |cFFFFD100" .. reverted[ #reverted ] .. "|r 优先级已更新。"
+            msg = "已恢复 " .. msg .. ", 和 |cFFFFD100" .. reverted[ #reverted ] .. "|r 的优先级。"
         end
 
         if msg then
@@ -1365,6 +1365,8 @@ end
 function Hekili:NewSpecialization( specID, isRanged, icon )
 
     if not specID or specID < 0 then return end
+
+    isRanged = isRanged or ns.Specializations[ specID ].ranged
 
     local id, name, _, texture, role, pClass
 
@@ -1984,7 +1986,7 @@ all:RegisterAuras( {
                 spell, _, _, startCast, endCast, _, notInterruptible, spellID = UnitChannelInfo( unit )
                 startCast = ( startCast or 0 ) / 1000
                 endCast = ( endCast or 0 ) / 1000
-                duration = endCast - startCast
+                local duration = endCast - startCast
 
                 -- Channels greater than 10 seconds are nonsense.  Probably.
                 if spell and duration <= 10 then

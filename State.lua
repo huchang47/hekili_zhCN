@@ -33,6 +33,8 @@ local GetSpellCharges = function(spellID)
 end
 local FindPlayerAuraByID, IsAbilityDisabled, IsDisabledCovenantSpell = ns.FindPlayerAuraByID, ns.IsAbilityDisabled, ns.IsDisabledCovenantSpell
 
+local GetSpecialization = C_SpecializationInfo.GetSpecialization
+
 -- Clean up table_x later.
 ---@diagnostic disable-next-line: deprecated
 local insert, remove, sort, tcopy, unpack, wipe = table.insert, table.remove, table.sort, ns.tableCopy, table.unpack, table.wipe
@@ -650,9 +652,9 @@ state.GetTime = GetTime
 state.GetTotemInfo = GetTotemInfo
 state.InCombatLockdown = InCombatLockdown
 state.IsActiveSpell = ns.IsActiveSpell
-state.IsPlayerSpell = IsPlayerSpell
-state.IsSpellKnown = IsSpellKnown
-state.IsSpellKnownOrOverridesKnown = IsSpellKnownOrOverridesKnown
+state.IsPlayerSpell = C_SpellBook.IsSpellKnown
+state.IsSpellKnown = C_SpellBook.IsSpellInSpellBook
+state.IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
 state.IsUsableItem = C_Item.IsUsableItem
 state.IsUsableSpell = C_Spell.IsSpellUsable
 state.UnitAura = UnitAura
@@ -4845,33 +4847,72 @@ do
 end
 
 -- Table of set bonuses. Some string manipulation to honor the SimC syntax.
--- Currently returns 1 for true, 0 for false to be consistent with SimC conditionals.
--- Won't catch fake set names. Should revise.
 local mt_set_bonuses = {
     __index = function( t, k )
         if type( k ) == "number" then return 0 end
 
-        -- Aliases to account for syntax differences across specs in SimC
         local aliasMap = {
+            -- For specs with APLs that don't use the normal tier/season identifier that the majority uses
             thewarwithin_season_2 = "tww2",
-            -- room for more in future tiers
+            thewarwithin_season_3 = "tww3",
         }
 
-        -- Match suffix pattern like tww2_2pc, tww2_4pc, thewarwithin_season_2_2pc, etc.
-        local rawSet, pieces = k:match( "^([%w_]+)_([24])pc$" )
-        if rawSet and pieces then
-            local set = aliasMap[ rawSet ] or rawSet
-            pieces = tonumber( pieces )
+        -- Match hero tree set bonus: e.g. tww3_rider_of_the_apocalypse_2pc
+        local prefix, heroPieces = k:match( "^(.+)_([24])pc$" )
+        if prefix and heroPieces then
+            local heroSet, heroTree = prefix:match( "^([%w]+)_(.+)$" )
 
-            if not t[ set ] then return 0 end
-            return t[ set ] >= pieces and 1 or 0
+            if heroSet and heroTree then
+                heroSet = aliasMap[ heroSet ] or heroSet
+                heroPieces = tonumber( heroPieces )
+
+                local count = rawget( t, heroSet )
+                if not count then return 0 end
+
+                if state.hero_tree and state.hero_tree.current == heroTree then
+                    return count >= heroPieces and 1 or 0
+                end
+                return 0
+            end
         end
 
-        -- Non-matching or malformed key
+        -- Match standard set bonus: e.g. tww2_2pc
+        local rawSet, pieces = k:match( "^([%w_]+)_([24])pc$" )
+        if rawSet and pieces then
+            rawSet = aliasMap[ rawSet ] or rawSet
+            pieces = tonumber( pieces )
+
+            local count = rawget( t, rawSet )
+            if not count then return 0 end
+            return count >= pieces and 1 or 0
+        end
+
+        -- Match hero tree set name only: e.g. tww3_rider_of_the_apocalypse
+        local heroSet, heroTree = k:match( "^([%w]+)_(.+)$" )
+        if heroSet and heroTree then
+            heroSet = aliasMap[ heroSet ] or heroSet
+
+            local count = rawget( t, heroSet )
+            if not count then return 0 end
+
+            if state.hero_tree and state.hero_tree.current == heroTree then
+                return count
+            end
+            return 0
+        end
+
+        -- Match basic set name: e.g. tww3
+        local set = aliasMap[ k ] or k
+        local count = rawget( t, set )
+        if count then
+            return count
+        end
+
         return 0
     end
 }
 ns.metatables.mt_set_bonuses = mt_set_bonuses
+
 
 local mt_equipped = {
     __index = function(t, k)

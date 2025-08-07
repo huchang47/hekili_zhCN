@@ -1,21 +1,36 @@
 -- DeathKnightBlood.lua
--- January 2025
+-- August 2025
+-- Patch 11.2
 
 if UnitClassBase( "player" ) ~= "DEATHKNIGHT" then return end
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
 local class, state = Hekili.Class, Hekili.State
-
 local PTR = ns.PTR
-local FindUnitDebuffByID = ns.FindUnitDebuffByID
+local spec = Hekili:NewSpecialization( 250 )
 
+---- Local function declarations for increased performance
+-- Strings
+local strformat = string.format
+-- Tables
+local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
+-- Math
+local abs, ceil, floor, max, sqrt = math.abs, math.ceil, math.floor, math.max, math.sqrt
+
+-- Common WoW APIs, comment out unneeded per-spec
+-- local GetSpellCastCount = C_Spell.GetSpellCastCount
+-- local GetSpellInfo = C_Spell.GetSpellInfo
+-- local GetSpellInfo = ns.GetUnpackedSpellInfo
+-- local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+-- local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
+-- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
+-- local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
+local IsActiveSpell = ns.IsActiveSpell
+
+-- Specialization-specific local functions (if any)
 local ForEachAura = AuraUtil.ForEachAura
 local GetAuraDataByAuraInstanceID = C_UnitAuras.GetAuraDataByAuraInstanceID
-
-local strformat, insert, remove = string.format, table.insert, table.remove
-
-local spec = Hekili:NewSpecialization( 250 )
 
 spec:RegisterResource( Enum.PowerType.Runes, {
     rune_regen = {
@@ -199,7 +214,6 @@ local spendHook = function( amt, resource )
 
 end
 
-
 local bpUnits = {}
 
 local myName = UnitName( "player" )
@@ -208,7 +222,6 @@ local myRuneWeapon = 0x2111
 local matchThreshold = 0.02
 local MINE = 1
 local RUNE_WEAPON = 2
-
 
 local dnd_damage_ids = {
     [52212] = "death_and_decay",
@@ -221,7 +234,6 @@ local dmg_events = {
 }
 
 local last_dnd_tick, dnd_spell = 0, "death_and_decay"
-
 
 spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellID, spellName )
     if spellID == 55078 and ( subtype == "SPELL_AURA_APPLIED" or subtype == "SPELL_AURA_REFRESH" ) then
@@ -265,7 +277,6 @@ spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, so
     end
 end )
 
-
 local dnd_model = setmetatable( {}, {
     __index = function( t, k )
         if k == "ticking" then
@@ -293,154 +304,151 @@ spec:RegisterStateExpr( "dnd_remains", function ()
     return death_and_decay.remains
 end )
 
-
 spec:RegisterHook( "spend", spendHook )
 
 -- Talents
 spec:RegisterTalents( {
-    -- DeathKnight
-    abomination_limb               = {  76049, 383269, 1 }, -- Sprout an additional limb, dealing 109,767 Shadow damage over 12 sec to all nearby enemies. Deals reduced damage beyond 5 targets. Every 1 sec, an enemy is pulled to your location if they are further than 8 yds from you. The same enemy can only be pulled once every 4 sec.
-    antimagic_barrier              = {  76046, 205727, 1 }, -- Reduces the cooldown of Anti-Magic Shell by 20 sec and increases its duration and amount absorbed by 40%.
-    antimagic_zone                 = {  76065,  51052, 1 }, -- Places an Anti-Magic Zone that reduces spell damage taken by party or raid members by 20%. The Anti-Magic Zone lasts for 8 sec or until it absorbs 1.9 million damage.
-    asphyxiate                     = {  76064, 221562, 1 }, -- Lifts the enemy target off the ground, crushing their throat with dark energy and stunning them for 5 sec.
-    assimilation                   = {  76048, 374383, 1 }, -- The amount absorbed by Anti-Magic Zone is increased by 10% and its cooldown is reduced by 30 sec.
-    blinding_sleet                 = {  76044, 207167, 1 }, -- Targets in a cone in front of you are blinded, causing them to wander disoriented for 5 sec. Damage may cancel the effect. When Blinding Sleet ends, enemies are slowed by 50% for 6 sec.
-    blood_draw                     = {  76056, 374598, 1 }, -- When you fall below 30% health you drain 35,677 health from nearby enemies, the damage you take is reduced by 10% and your Death Strike cost is reduced by 10 for 8 sec. Can only occur every 2 min.
-    blood_scent                    = {  76078, 374030, 1 }, -- Increases Leech by 3%.
-    brittle                        = {  76061, 374504, 1 }, -- Your diseases have a chance to weaken your enemy causing your attacks against them to deal 6% increased damage for 5 sec.
-    cleaving_strikes               = {  76073, 316916, 1 }, -- Heart Strike hits up to 3 additional enemies while you remain in Death and Decay. When leaving your Death and Decay you retain its bonus effects for 4 sec.
-    coldthirst                     = {  76083, 378848, 1 }, -- Successfully interrupting an enemy with Mind Freeze grants 10 Runic Power and reduces its cooldown by 3 sec.
-    control_undead                 = {  76059, 111673, 1 }, -- Dominates the target undead creature up to level 71, forcing it to do your bidding for 5 min.
-    death_pact                     = {  76075,  48743, 1 }, -- Create a death pact that heals you for 50% of your maximum health, but absorbs incoming healing equal to 30% of your max health for 15 sec.
-    death_strike                   = {  76071,  49998, 1 }, -- Focuses dark power into a strike that deals 32,989 Physical damage and heals you for 30.19% of all damage taken in the last 5 sec, minimum 8.5% of maximum health.
-    deaths_echo                    = { 102007, 356367, 1 }, -- Death's Advance, Death and Decay, and Death Grip have 1 additional charge.
-    deaths_reach                   = { 102006, 276079, 1 }, -- Increases the range of Death Grip by 10 yds. Killing an enemy that yields experience or honor resets the cooldown of Death Grip.
-    enfeeble                       = {  76060, 392566, 1 }, -- Your ghoul's attacks have a chance to apply Enfeeble, reducing the enemies movement speed by 30% and the damage they deal to you by 12% for 6 sec.
-    gloom_ward                     = {  76052, 391571, 1 }, -- Absorbs are 15% more effective on you.
-    grip_of_the_dead               = {  76057, 273952, 1 }, -- Death and Decay reduces the movement speed of enemies within its area by 90%, decaying by 10% every sec.
-    ice_prison                     = {  76086, 454786, 1 }, -- Chains of Ice now also roots enemies for 4 sec but its cooldown is increased to 12 sec.
-    icebound_fortitude             = {  76081,  48792, 1 }, -- Your blood freezes, granting immunity to Stun effects and reducing all damage you take by 30% for 8 sec.
-    icy_talons                     = {  76085, 194878, 1 }, -- Your Runic Power spending abilities increase your melee attack speed by 6% for 10 sec, stacking up to 3 times.
-    improved_death_strike          = {  76067, 374277, 1 }, -- Death Strike's cost is reduced by 5, and its healing is increased by 5%.
-    insidious_chill                = {  76051, 391566, 1 }, -- Your auto-attacks reduce the target's auto-attack speed by 5% for 30 sec, stacking up to 4 times.
-    march_of_darkness              = {  76074, 391546, 1 }, -- Death's Advance grants an additional 25% movement speed over the first 3 sec.
-    mind_freeze                    = {  76084,  47528, 1 }, -- Smash the target's mind with cold, interrupting spellcasting and preventing any spell in that school from being cast for 3 sec.
-    null_magic                     = { 102008, 454842, 1 }, -- Magic damage taken is reduced by 8% and the duration of harmful Magic effects against you are reduced by 35%.
-    osmosis                        = {  76088, 454835, 1 }, -- Anti-Magic Shell increases healing received by 15%.
-    permafrost                     = {  76066, 207200, 1 }, -- Your auto attack damage grants you an absorb shield equal to 40% of the damage dealt.
-    proliferating_chill            = { 101708, 373930, 1 }, -- Chains of Ice affects 1 additional nearby enemy.
-    raise_dead                     = {  76072,  46585, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time. Lasts 1 min.
-    rune_mastery                   = {  76079, 374574, 2 }, -- Consuming a Rune has a chance to increase your Strength by 3% for 8 sec.
-    runic_attenuation              = {  76045, 207104, 1 }, -- Auto attacks have a chance to generate 3 Runic Power.
-    runic_protection               = {  76055, 454788, 1 }, -- Your chance to be critically struck is reduced by 3% and your Armor is increased by 6%.
-    sacrificial_pact               = {  76060, 327574, 1 }, -- Sacrifice your ghoul to deal 22,298 Shadow damage to all nearby enemies and heal for 25% of your maximum health. Deals reduced damage beyond 8 targets.
-    soul_reaper                    = {  76063, 343294, 1 }, -- Strike an enemy for 13,343 Shadowfrost damage and afflict the enemy with Soul Reaper. After 5 sec, if the target is below 35% health this effect will explode dealing an additional 61,222 Shadowfrost damage to the target. If the enemy that yields experience or honor dies while afflicted by Soul Reaper, gain Runic Corruption.
-    subduing_grasp                 = {  76080, 454822, 1 }, -- When you pull an enemy, the damage they deal to you is reduced by 6% for 6 sec.
-    suppression                    = {  76087, 374049, 1 }, -- Damage taken from area of effect attacks reduced by 3%. When suffering a loss of control effect, this bonus is increased by an additional 6% for 6 sec.
-    unholy_bond                    = {  76076, 374261, 1 }, -- Increases the effectiveness of your Runeforge effects by 20%.
-    unholy_endurance               = {  76058, 389682, 1 }, -- Increases Lichborne duration by 2 sec and while active damage taken is reduced by 15%.
-    unholy_ground                  = {  76069, 374265, 1 }, -- Gain 5% Haste while you remain within your Death and Decay.
-    unyielding_will                = {  76050, 457574, 1 }, -- Anti-Magic shell now removes all harmful magical effects when activated, but it's cooldown is increased by 20 sec.
-    vestigial_shell                = {  76053, 454851, 1 }, -- Casting Anti-Magic Shell grants 2 nearby allies a Lesser Anti-Magic Shell that Absorbs up to 66,240 magic damage and reduces the duration of harmful Magic effects against them by 50%.
-    veteran_of_the_third_war       = {  76068,  48263, 1 }, -- Stamina increased by 20%.
-    will_of_the_necropolis         = {  76054, 206967, 2 }, -- Damage taken below 30% Health is reduced by 20%.
-    wraith_walk                    = {  76077, 212552, 1 }, -- Embrace the power of the Shadowlands, removing all root effects and increasing your movement speed by 70% for 4 sec. Taking any action cancels the effect. While active, your movement speed cannot be reduced below 170%.
+
+    -- Death Knight
+    antimagic_barrier              = {  76046,  205727, 1 }, -- Reduces the cooldown of Anti-Magic Shell by $s1 sec and increases its duration and amount absorbed by $s2%
+    antimagic_zone                 = {  76065,   51052, 1 }, -- Places an Anti-Magic Zone for $s1 sec, reducing the magic damage taken by party or raid members by $s2%
+    asphyxiate                     = {  76064,  221562, 1 }, -- Lifts the enemy target off the ground, crushing their throat with dark energy and stunning them for $s1 sec
+    assimilation                   = {  76048,  374383, 1 }, --
+    blinding_sleet                 = {  76044,  207167, 1 }, -- Targets in a cone in front of you are blinded, causing them to wander disoriented for $s1 sec. Damage may cancel the effect. When Blinding Sleet ends, enemies are slowed by $s2% for $s3 sec
+    blood_draw                     = {  76056,  374598, 1 }, -- When you fall below $s1% health you drain $s2 health from nearby enemies, the damage you take is reduced by $s3% and your Death Strike cost is reduced by $s4 for $s5 sec. Can only occur every $s6 min
+    blood_scent                    = {  76078,  374030, 1 }, -- Increases Leech by $s1%
+    brittle                        = {  76061,  374504, 1 }, -- Your diseases have a chance to weaken your enemy causing your attacks against them to deal $s1% increased damage for $s2 sec
+    cleaving_strikes               = {  76073,  316916, 1 }, -- Heart Strike hits up to $s1 additional enemies while you remain in Death and Decay. When leaving your Death and Decay you retain its bonus effects for $s2 sec
+    coldthirst                     = {  76083,  378848, 1 }, -- Successfully interrupting an enemy with Mind Freeze grants $s1 Runic Power and reduces its cooldown by $s2 sec
+    control_undead                 = {  76059,  111673, 1 }, -- Dominates the target undead creature up to level $s1, forcing it to do your bidding for $s2 min
+    death_pact                     = {  76075,   48743, 1 }, -- Create a death pact that heals you for $s1% of your maximum health, but absorbs incoming healing equal to $s2% of your max health for $s3 sec
+    death_strike                   = {  76071,   49998, 1 }, -- Focuses dark power into a strike that deals $s$s2 Physical damage and heals you for $s3% of all damage taken in the last $s4 sec, minimum $s5% of maximum health
+    deaths_echo                    = { 102007,  356367, 1 }, -- Death's Advance, Death and Decay, and Death Grip have $s1 additional charge
+    deaths_reach                   = { 102006,  276079, 1 }, --
+    enfeeble                       = {  76060,  392566, 1 }, --
+    gloom_ward                     = {  76052,  391571, 1 }, -- Absorbs are $s1% more effective on you
+    grip_of_the_dead               = {  76057,  273952, 1 }, --
+    ice_prison                     = {  76086,  454786, 1 }, --
+    icebound_fortitude             = {  76081,   48792, 1 }, -- Your blood freezes, granting immunity to Stun effects and reducing all damage you take by $s1% for $s2 sec
+    icy_talons                     = {  76085,  194878, 1 }, -- Your Runic Power spending abilities increase your melee attack speed by $s1% for $s2 sec, stacking up to $s3 times
+    improved_death_strike          = {  76067,  374277, 1 }, -- Death Strike's cost is reduced by $s1, and its healing is increased by $s2%
+    insidious_chill                = {  76051,  391566, 1 }, -- Your auto-attacks reduce the target's auto-attack speed by $s1% for $s2 sec, stacking up to $s3 times
+    march_of_darkness              = {  76074,  391546, 1 }, -- Death's Advance grants an additional $s1% movement speed over the first $s2 sec
+    mind_freeze                    = {  76084,   47528, 1 }, -- Smash the target's mind with cold, interrupting spellcasting and preventing any spell in that school from being cast for $s1 sec
+    null_magic                     = { 102008,  454842, 1 }, -- Magic damage taken is reduced by $s1% and the duration of harmful Magic effects against you are reduced by $s2%
+    osmosis                        = {  76088,  454835, 1 }, --
+    permafrost                     = {  76066,  207200, 1 }, --
+    proliferating_chill            = { 101708,  373930, 1 }, --
+    raise_dead                     = {  76072,   46585, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time. Lasts $s1 min
+    rune_mastery                   = {  76079,  374574, 2 }, -- Consuming a Rune has a chance to increase your Strength by $s1% for $s2 sec
+    runic_attenuation              = {  76045,  207104, 1 }, -- Auto attacks have a chance to generate $s1 Runic Power
+    runic_protection               = {  76055,  454788, 1 }, -- Your chance to be critically struck is reduced by $s1% and your Armor is increased by $s2%
+    sacrificial_pact               = {  76060,  327574, 1 }, -- Sacrifice your ghoul to deal $s$s2 Shadow damage to all nearby enemies and heal for $s3% of your maximum health. Deals reduced damage beyond $s4 targets
+    soul_reaper                    = {  76063,  343294, 1 }, -- Strike an enemy for $s$s3 Shadowfrost damage and afflict the enemy with Soul Reaper. After $s4 sec, if the target is below $s5% health this effect will explode dealing an additional $s$s6 Shadowfrost damage to the target. If the enemy that yields experience or honor dies while afflicted by Soul Reaper, gain Runic Corruption
+    subduing_grasp                 = {  76080,  454822, 1 }, -- When you pull an enemy, the damage they deal to you is reduced by $s1% for $s2 sec
+    suppression                    = {  76087,  374049, 1 }, -- Damage taken from area of effect attacks reduced by $s1%. When suffering a loss of control effect, this bonus is increased by an additional $s2% for $s3 sec
+    unholy_bond                    = {  76076,  374261, 1 }, -- Increases the effectiveness of your Runeforge effects by $s1%
+    unholy_endurance               = {  76058,  389682, 1 }, -- Increases Lichborne duration by $s1 sec and while active damage taken is reduced by $s2%
+    unholy_momentum                = {  76069,  374265, 1 }, -- Increases Haste by $s1%
+    unyielding_will                = {  76050,  457574, 1 }, --
+    vestigial_shell                = {  76053,  454851, 1 }, --
+    veteran_of_the_third_war       = {  76068,   48263, 1 }, -- Stamina increased by $s1%
+    will_of_the_necropolis         = {  76054,  206967, 2 }, -- Damage taken below $s1% Health is reduced by $s2%
+    wraith_walk                    = {  76077,  212552, 1 }, -- Embrace the power of the Shadowlands, removing all root effects and increasing your movement speed by $s1% for $s2 sec. Taking any action cancels the effect. While active, your movement speed cannot be reduced below $s3%
 
     -- Blood
-    blood_boil                     = {  76170,  50842, 1 }, -- Deals 16,740 Shadow damage and infects all enemies within 10 yds with Blood Plague.  Blood Plague A shadowy disease that drains 28,388 health from the target over 24 sec.
-    blood_feast                    = { 102243, 391386, 1 }, -- Anti-Magic Shell heals you for 100% of the damage it absorbs.
-    blood_tap                      = {  76039, 221699, 1 }, -- Consume the essence around you to generate 1 Rune. Recharge time reduced by 2 sec whenever a Bone Shield charge is consumed.
-    blooddrinker                   = { 102244, 206931, 1 }, -- Drains 76,016 health from the target over 2.4 sec. The damage they deal to you is reduced by 15% for the duration and 5 sec after channeling it fully. You can move, parry, dodge, and use defensive abilities while channeling this ability. Generates 20 additional Runic Power over the duration.
-    bloodied_blade                 = { 102242, 458753, 1 }, -- Parrying an attack grants you a charge of Bloodied Blade, increasing your Strength by 0.5%, up to 4.0% for 15 sec. At 8 stacks, your next parry consumes all charges to unleash a Heart Strike at 200% effectiveness, and increases your Strength by 10% for 6 sec.
-    bloodshot                      = {  76125, 391398, 1 }, -- While Blood Shield is active, you deal 25% increased Physical damage.
-    bloodworms                     = {  76174, 195679, 1 }, -- Your auto attacks have a chance to summon a Bloodworm. Bloodworms deal minor damage to your target for 15 sec and then burst, healing you for 15% of your missing health. If you drop below 50% health, your Bloodworms will immediately burst and heal you.
-    bone_collector                 = {  76171, 458572, 1 }, -- When you would pull an enemy generate 1 charge of Bone Shield.  Bone Shield Surrounds you with a barrier of whirling bones, increasing Armor by 10,088. Each melee attack against you consumes a charge. Lasts 30 sec or until all charges are consumed.
-    bonestorm                      = {  76127, 194844, 1 }, -- Consume up to 5 Bone Shield charges to create a whirl of bone and gore that batters all nearby enemies, dealing 8,399 Shadow damage every 1 sec, and healing you for 2% of your maximum health every time it deals damage (up to 10%). Deals reduced damage beyond 8 targets. Lasts 2 sec per Bone Shield charge spent and rapidly regenerates a Bone Shield every 1 sec.
-    carnage                        = { 102245, 458752, 1 }, -- Blooddrinker and Consumption now contribute to your Mastery: Blood Shield. Each time an enemy strikes your Blood Shield, the cooldowns of Blooddrinker and Consumption have a chance to be reset.
-    coagulopathy                   = {  76038, 391477, 1 }, -- Enemies affected by Blood Plague take 5% increased damage from you and Death Strike increases the damage of your Blood Plague by 25% for 8 sec, stacking up to 5 times.
-    consumption                    = { 102244, 274156, 1 }, -- Strikes all enemies in front of you with a hungering attack that deals 23,375 Physical damage and heals you for 150% of that damage. Deals reduced damage beyond 8 targets. Causes your Blood Plague damage to occur 30% more quickly for 6 sec. Generates 2 Runes.
-    dancing_rune_weapon            = {  76138,  49028, 1 }, -- Summons a rune weapon for 14 sec that mirrors your melee attacks and bolsters your defenses. While active, you gain 35% parry chance.
-    everlasting_bond               = {  76130, 377668, 1 }, -- Summons 1 additional copy of Dancing Rune Weapon and increases its duration by 6 sec.
-    foul_bulwark                   = {  76167, 206974, 1 }, -- Each charge of Bone Shield increases your maximum health by 1%.
-    gorefiends_grasp               = {  76042, 108199, 1 }, -- Shadowy tendrils coil around all enemies within 15 yards of a hostile or friendly target, pulling them to the target's location.
-    heart_strike                   = {  76169, 206930, 1 }, -- Instantly strike the target and 1 other nearby enemy, causing 14,123 Physical damage, and reducing enemies' movement speed by 20% for 8 sec, plus 2 Runic Power per additional enemy struck.
-    heartbreaker                   = {  76135, 221536, 1 }, -- Heart Strike generates 2 additional Runic Power per target hit.
-    heartrend                      = {  76131, 377655, 1 }, -- Heart Strike has a chance to increase the damage of your next Death Strike by 20%.
-    hemostasis                     = {  76137, 273946, 1 }, -- Each enemy hit by Blood Boil increases the damage and healing done by your next Death Strike by 8%, stacking up to 5 times.
-    improved_bone_shield           = {  76142, 374715, 1 }, -- Bone Shield increases your Haste by 10%.
-    improved_heart_strike          = {  76126, 374717, 2 }, -- Heart Strike damage increased by 15%.
-    improved_vampiric_blood        = {  76140, 317133, 2 }, -- Vampiric Blood's healing and absorb amount is increased by 5% and duration by 2 sec.
-    insatiable_blade               = {  76129, 377637, 1 }, -- Dancing Rune Weapon generates 5 Bone Shield charges. When a charge of Bone Shield is consumed, the cooldown of Dancing Rune Weapon is reduced by 5 sec.
-    iron_heart                     = {  76172, 391395, 1 }, -- Blood Shield's duration is increased by 2 sec and it absorbs 20% more damage.
-    leeching_strike                = {  76145, 377629, 1 }, -- Heart Strike heals you for 0.25% health for each enemy hit while affected by Blood Plague.
-    mark_of_blood                  = {  76139, 206940, 1 }, -- Places a Mark of Blood on an enemy for 15 sec. The enemy's damaging auto attacks will also heal their victim for 3% of the victim's maximum health.
-    marrowrend                     = {  76168, 195182, 1 }, -- Smash the target, dealing 19,014 Physical damage and generating 3 charges of Bone Shield.  Bone Shield Surrounds you with a barrier of whirling bones, increasing Armor by 10,088. Each melee attack against you consumes a charge. Lasts 30 sec or until all charges are consumed.
-    ossified_vitriol               = {  76146, 458744, 1 }, -- When you lose a Bone Shield charge the damage of your next Marrowrend is increased by 15%, stacking up to 75%.
-    ossuary                        = {  76144, 219786, 1 }, -- While you have at least 5 Bone Shield charges, the cost of Death Strike is reduced by 5 Runic Power. Additionally, your maximum Runic Power is increased by 10.
-    perseverance_of_the_ebon_blade = {  76124, 374747, 1 }, -- When Crimson Scourge is consumed, you gain 6% Versatility for 6 sec.
-    purgatory                      = {  76133, 114556, 1 }, -- An unholy pact that prevents fatal damage, instead absorbing incoming healing equal to the damage prevented, lasting 3 sec. If any healing absorption remains when this effect expires, you will die. This effect may only occur every 4 min.
-    rapid_decomposition            = {  76141, 194662, 1 }, -- Your Blood Plague and Death and Decay deal damage 15% more often. Additionally, your Blood Plague leeches 50% more Health.
-    red_thirst                     = {  76132, 205723, 1 }, -- Reduces the cooldown on Vampiric Blood by 2.0 sec per 10 Runic Power spent.
-    reinforced_bones               = {  76143, 374737, 1 }, -- Increases Armor gained from Bone Shield by 10% and it can stack 2 additional times.
-    relish_in_blood                = {  76147, 317610, 1 }, -- While Crimson Scourge is active, your next Death and Decay heals you for 4,675 health per Bone Shield charge and you immediately gain 10 Runic Power.
-    rune_tap                       = {  76166, 194679, 1 }, -- Reduces all damage taken by 20% for 4 sec.
-    sanguine_ground                = {  76041, 391458, 1 }, -- You deal 6% more damage and receive 5% more healing while standing in your Death and Decay.
-    shattering_bone                = {  76128, 377640, 1 }, -- When Bone Shield is consumed it shatters dealing 1,271 Shadow damage to nearby enemies. This damage is tripled while you are within your Death and Decay.
-    tightening_grasp               = {  76165, 206970, 1 }, -- Gorefiend's Grasp cooldown is reduced by 30 sec and it now also Silences enemies for 3 sec.
-    tombstone                      = {  76139, 219809, 1 }, -- Consume up to 5 Bone Shield charges. For each charge consumed, you gain 6 Runic Power and absorb damage equal to 6% of your maximum health for 8 sec.
-    umbilicus_eternus              = {  76040, 391517, 1 }, -- After Vampiric Blood expires, you absorb damage equal to 5 times the damage your Blood Plague dealt during Vampiric Blood.
-    vampiric_blood                 = {  76173,  55233, 1 }, -- Embrace your undeath, increasing your maximum health by 30% and increasing all healing and absorbs received by 40% for 14 sec.
-    voracious                      = {  76043, 273953, 1 }, -- Death Strike's healing is increased by 15% and grants you 12% Leech for 8 sec.
+    blood_boil                     = {  76170,   50842, 1 }, -- Deals $s$s2 Shadow damage and infects all enemies within $s3 yds with Blood Plague.  Blood Plague A shadowy disease that drains $s6 health from the target over $s7 sec
+    blood_feast                    = { 102243,  391386, 1 }, --
+    blood_tap                      = {  76039,  221699, 1 }, -- Consume the essence around you to generate $s1 Rune. Recharge time reduced by $s2 sec whenever a Bone Shield charge is consumed
+    blooddrinker                   = { 102244,  206931, 1 }, -- Drains $s2 health from the target over $s3 sec$s$s4 The damage they deal to you is reduced by $s5% for the duration and $s6 sec after channeling it fully. You can move, parry, dodge, and use defensive abilities while channeling this ability. Generates $s7 additional Runic Power over the duration
+    bloodied_blade                 = { 102242,  458753, 1 }, --
+    bloodshot                      = {  76125,  391398, 1 }, --
+    bloodworms                     = {  76174,  195679, 1 }, --
+    bone_collector                 = {  76171,  458572, 1 }, -- When you would pull an enemy generate $s1 charge of Bone Shield.  Bone Shield Surrounds you with a barrier of whirling bones, increasing Armor by $s4. Each melee attack against you consumes a charge. Lasts $s5 sec or until all charges are consumed
+    bonestorm                      = {  76127,  194844, 1 }, -- Consume up to $s2 Bone Shield charges to create a whirl of bone and gore that batters all nearby enemies, dealing $s$s3 Shadow damage every $s4 sec, and healing you for $s5% of your maximum health every time it deals damage (up to $s6%). Deals reduced damage beyond $s7 targets. Lasts $s8 sec per Bone Shield charge spent and rapidly regenerates a Bone Shield every $s9 sec
+    carnage                        = { 102245,  458752, 1 }, --
+    coagulopathy                   = {  76038,  391477, 1 }, -- Enemies affected by Blood Plague take $s1% increased damage from you and Death Strike increases the damage of your Blood Plague by $s2% for $s3 sec, stacking up to $s4 times
+    consumption                    = { 102244,  274156, 1 }, -- Strikes all enemies in front of you with a hungering attack that deals $s$s2 Physical damage and heals you for $s3% of that damage. Deals reduced damage beyond $s4 targets. Causes your Blood Plague damage to occur $s5% more quickly for $s6 sec. Generates $s7 Runes
+    dancing_rune_weapon            = {  76138,   49028, 1 }, -- Summons a rune weapon for $s1 sec that mirrors your melee attacks and bolsters your defenses. While active, you gain $s2% parry chance
+    everlasting_bond               = {  76130,  377668, 1 }, -- Summons $s1 additional copy of Dancing Rune Weapon and increases its duration by $s2 sec
+    foul_bulwark                   = {  76167,  206974, 1 }, -- Each charge of Bone Shield increases your maximum health by $s1%
+    gorefiends_grasp               = {  76042,  108199, 1 }, -- Shadowy tendrils coil around all enemies within $s1 yards of a hostile or friendly target, pulling them to the target's location
+    heart_strike                   = {  76169,  206930, 1 }, -- Instantly strike the target and $s2 other nearby enemy, causing $s$s3 Physical damage, and reducing enemies' movement speed by $s4% for $s5 sec, plus $s6 Runic Power per additional enemy struck
+    heartbreaker                   = {  76135,  221536, 1 }, -- Heart Strike generates $s1 additional Runic Power per target hit
+    heartrend                      = {  76131,  377655, 1 }, -- Heart Strike has a chance to increase the damage of your next Death Strike by $s1%
+    hemostasis                     = {  76137,  273946, 1 }, --
+    improved_bone_shield           = {  76142,  374715, 1 }, -- Bone Shield increases your Haste by $s1%
+    improved_heart_strike          = {  76126,  374717, 2 }, --
+    improved_vampiric_blood        = {  76140,  317133, 2 }, -- Vampiric Blood's healing and absorb amount is increased by $s1% and duration by $s2 sec
+    insatiable_blade               = {  76129,  377637, 1 }, -- Dancing Rune Weapon generates $s1 Bone Shield charges. When a charge of Bone Shield is consumed, the cooldown of Dancing Rune Weapon is reduced by $s2 sec
+    iron_heart                     = {  76172,  391395, 1 }, --
+    leeching_strike                = {  76145,  377629, 1 }, --
+    mark_of_blood                  = {  76139,  206940, 1 }, -- Places a Mark of Blood on an enemy for $s1 sec. The enemy's damaging auto attacks will also heal their victim for $s2% of the victim's maximum health
+    marrowrend                     = {  76168,  195182, 1 }, -- Smash the target, dealing $s$s2 Physical damage and generating $s3 charges of Bone Shield.  Bone Shield Surrounds you with a barrier of whirling bones, increasing Armor by $s6. Each melee attack against you consumes a charge. Lasts $s7 sec or until all charges are consumed
+    ossified_vitriol               = {  76146,  458744, 1 }, -- When you lose a Bone Shield charge the damage of your next Marrowrend is increased by $s1%, stacking up to $s2%
+    ossuary                        = {  76144,  219786, 1 }, -- While you have at least $s1 Bone Shield charges, the cost of Death Strike is reduced by $s2 Runic Power. Additionally, your maximum Runic Power is increased by $s3
+    perseverance_of_the_ebon_blade = {  76124,  374747, 1 }, -- When Crimson Scourge is consumed, you gain $s1% Versatility for $s2 sec
+    purgatory                      = {  76133,  114556, 1 }, -- An unholy pact that prevents fatal damage, instead absorbing incoming healing equal to the damage prevented, lasting $s1 sec. If any healing absorption remains when this effect expires, you will die. This effect may only occur every $s2 min
+    rapid_decomposition            = {  76141,  194662, 1 }, -- Your Blood Plague and Death and Decay deal damage $s1% more often. Additionally, your Blood Plague leeches $s2% more Health
+    red_thirst                     = {  76132,  205723, 1 }, -- Reduces the cooldown on Vampiric Blood by $s1 sec per $s2 Runic Power spent
+    reinforced_bones               = {  76143,  374737, 1 }, -- Increases Armor gained from Bone Shield by $s1% and it can stack $s2 additional times
+    relish_in_blood                = {  76147,  317610, 1 }, --
+    rune_tap                       = {  76166,  194679, 1 }, -- Reduces all damage taken by $s1% for $s2 sec
+    sanguine_ground                = {  76041,  391458, 1 }, -- You deal $s1% more damage and receive $s2% more healing while standing in your Death and Decay
+    shattering_bone                = {  76128,  377640, 1 }, -- When Bone Shield is consumed it shatters dealing $s$s3 Shadow damage to nearby enemies$s$s4 This damage is tripled while you are within your Death and Decay
+    tightening_grasp               = {  76165,  206970, 1 }, --
+    tombstone                      = {  76139,  219809, 1 }, -- Consume up to $s1 Bone Shield charges. For each charge consumed, you gain $s2 Runic Power and absorb damage equal to $s3% of your maximum health for $s4 sec
+    umbilicus_eternus              = {  76040,  391517, 1 }, -- After Vampiric Blood expires, you absorb damage equal to $s1 times the damage your Blood Plague dealt during Vampiric Blood
+    vampiric_blood                 = {  76173,   55233, 1 }, -- Embrace your undeath, increasing your maximum health by $s1% and increasing all healing and absorbs received by $s2% for $s3 sec
+    voracious                      = {  76043,  273953, 1 }, -- Death Strike's healing is increased by $s1% and grants you $s2% Leech for $s3 sec
 
     -- Deathbringer
-    bind_in_darkness               = {  95043, 440031, 1 }, -- Blood Boil deals 10% increased damage, and is now Shadowfrost. Shadowfrost damage applies 2 stacks to Reaper's Mark and 4 stacks when it is a critical strike.
-    dark_talons                    = {  95057, 436687, 1 }, -- Marrowrend and Heart Strike have a 25% chance to grant 3 stacks of Icy Talons and increase its maximum stacks by the same amount for 6 sec. Runic Power spending abilities count as Shadowfrost while Icy Talons is active.
-    deaths_messenger               = {  95049, 437122, 1 }, -- Reduces the cooldowns of Lichborne and Raise Dead by 30 sec.
-    expelling_shield               = {  95049, 439948, 1 }, -- When an enemy deals direct damage to your Anti-Magic Shell, their cast speed is reduced by 10% for 6 sec.
-    exterminate                    = {  95068, 441378, 1 }, -- After Reaper's Mark explodes, your next 2 Marrowrends cost 1 Rune and summon 2 scythes to strike your enemies. The first scythe strikes your target for 63,866 Shadowfrost damage and has a 30% chance to apply Reaper's Mark, the second scythe strikes all enemies around your target for 34,062 Shadowfrost damage. Deals reduced damage beyond 8 targets.
-    grim_reaper                    = {  95034, 434905, 1 }, -- Reaper's Mark initial strike grants 3 charges of Bone Shield. Reaper's Mark explosion deals up to 30% increased damage based on your target's missing health.
-    pact_of_the_deathbringer       = {  95035, 440476, 1 }, -- When you suffer a damaging effect equal to 25% of your maximum health, you instantly cast Death Pact at 50% effectiveness. May only occur every 2 min. When a Reaper's Mark explodes, the cooldowns of this effect and Death Pact are reduced by 5 sec.
-    reaper_of_souls                = {  95034, 440002, 1 }, -- When you apply Reaper's Mark, the cooldown of Soul Reaper is reset, your next Soul Reaper costs no runes, and it explodes on the target regardless of their health. Soul Reaper damage is increased by 20%.
-    reapers_mark                   = {  95062, 439843, 1, "deathbringer" }, -- Viciously slice into the soul of your enemy, dealing 34,785 Shadowfrost damage and applying Reaper's Mark. Each time you deal Shadow or Frost damage, add a stack of Reaper's Mark. After 12 sec or reaching 40 stacks, the mark explodes, dealing 2,532 damage per stack. Reaper's Mark travels to an unmarked enemy nearby if the target dies, or explodes below 35% health when there are no enemies to travel to. This explosion cannot occur again on a target for 3 min.
-    reapers_onslaught              = {  95057, 469870, 1 }, -- Reduces the cooldown of Reaper's Mark by 15 sec, but the amount of Marrowrends empowered by Exterminate is reduced by 1.
-    rune_carved_plates             = {  95035, 440282, 1 }, -- Each Rune spent reduces the magic damage you take by 1.5% and each Rune generated reduces the physical damage you take by 1.5% for 5 sec, up to 5 times.
-    soul_rupture                   = {  95061, 437161, 1 }, -- When Reaper's Mark explodes, it deals 20% of the damage dealt to nearby enemies and causes them to deal 5% reduced Physical damage to you for 10 sec.
-    swift_and_painful              = {  95032, 443560, 1 }, -- If no enemies are struck by Soul Rupture, you gain 10% Strength for 8 sec. Wave of Souls is 100% more effective on the main target of your Reaper's Mark.
-    wave_of_souls                  = {  95036, 439851, 1 }, -- Reaper's Mark sends forth bursts of Shadowfrost energy and back, dealing 16,001 Shadowfrost damage both ways to all enemies caught in its path. Wave of Souls critical strikes cause enemies to take 5% increased Shadowfrost damage for 15 sec, stacking up to 2 times, and it is always a critical strike on its way back.
-    wither_away                    = {  95058, 441894, 1 }, -- Blood Plague deals its damage 100% faster, and the second scythe of Exterminate applies Blood Plague.
+    bind_in_darkness               = {  95043,  440031, 1 }, --
+    dark_talons                    = {  95057,  436687, 1 }, --
+    deaths_messenger               = {  95049,  437122, 1 }, --
+    expelling_shield               = {  95049,  439948, 1 }, --
+    exterminate                    = {  95068,  441378, 1 }, --
+    grim_reaper                    = {  95034,  434905, 1 }, --
+    pact_of_the_deathbringer       = {  95035,  440476, 1 }, --
+    reaper_of_souls                = {  95034,  440002, 1 }, --
+    reapers_mark                   = {  95062,  439843, 1 }, -- Viciously slice into the soul of your enemy, dealing $s$s2 Shadowfrost damage and applying Reaper's Mark. Each time you deal Shadow or Frost damage, add a stack of Reaper's Mark. After $s3 sec or reaching $s4 stacks, the mark explodes, dealing $s5 damage per stack. Reaper's Mark travels to an unmarked enemy nearby if the target dies
+    reapers_onslaught              = {  95057,  469870, 1 }, --
+    rune_carved_plates             = {  95035,  440282, 1 }, --
+    soul_rupture                   = {  95061,  437161, 1 }, --
+    swift_and_painful              = {  95032,  443560, 1 }, --
+    wave_of_souls                  = {  95036,  439851, 1 }, --
+    wither_away                    = {  95058,  441894, 1 }, --
 
-    -- San'layn
-    bloodsoaked_ground             = {  95048, 434033, 1 }, -- While you are within your Death and Decay, your physical damage taken is reduced by 5% and your chance to gain Vampiric Strike is increased by 5%.
-    bloody_fortitude               = {  95056, 434136, 1 }, -- Icebound Fortitude reduces all damage you take by up to an additional 20% based on your missing health. Killing an enemy that yields experience or honor reduces the cooldown of Icebound Fortitude by 3 sec.
-    frenzied_bloodthirst           = {  95065, 434075, 1 }, -- Essence of the Blood Queen stacks 2 additional times and increases the damage of your Death Coil and Death Strike by 6% per stack.
-    gift_of_the_sanlayn            = {  95053, 434152, 1 }, -- While Dancing Rune Weapon is active you gain Gift of the San'layn. Gift of the San'layn increases the effectiveness of your Essence of the Blood Queen by 150%, and Vampiric Strike replaces your Heart Strike for the duration.
-    incite_terror                  = {  95040, 434151, 1 }, -- Vampiric Strike and Heart Strike cause your targets to take 1% increased Shadow damage, up to 5% for 15 sec. Vampiric Strike benefits from Incite Terror at 400% effectiveness.
-    infliction_of_sorrow           = {  95033, 434143, 1 }, -- When Vampiric Strike damages an enemy affected by your Blood Plague, it extends the duration of the disease by 3 sec, and deals 20% of the remaining damage to the enemy. After Gift of the San'layn ends, your next Heart Strike consumes the disease to deal 130% of their remaining damage to the target.
-    newly_turned                   = {  95064, 433934, 1 }, -- Raise Ally revives players at full health and grants you and your ally an absorb shield equal to 20% of your maximum health.
-    pact_of_the_sanlayn            = {  95055, 434261, 1 }, -- You store 50% of all Shadow damage dealt into your Blood Beast to explode for additional damage when it expires.
-    sanguine_scent                 = {  95055, 434263, 1 }, -- Your Death Coil and Death Strike have a 15% increased chance to trigger Vampiric Strike when damaging enemies below 35% health.
-    the_blood_is_life              = {  95046, 434260, 1 }, -- Vampiric Strike has a chance to summon a Blood Beast to attack your enemy for 10 sec. Each time the Blood Beast attacks, it stores a portion of the damage dealt. When the Blood Beast dies, it explodes, dealing 50% of the damage accumulated to nearby enemies and healing the Death Knight for the same amount. Deals reduced damage beyond 8 targets.
-    vampiric_aura                  = {  95056, 434100, 1 }, -- Your Leech is increased by 2%. While Lichborne is active, the Leech bonus of this effect is increased by 100%, and it affects 4 allies within 12 yds.
-    vampiric_speed                 = {  95064, 434028, 1 }, -- Death's Advance and Wraith Walk movement speed bonuses are increased by 10%. Activating Death's Advance or Wraith Walk increases 4 nearby allies movement speed by 20% for 5 sec.
-    vampiric_strike                = {  95051, 433901, 1, "sanlayn" }, -- Your Death Coil and Death Strike have a 25% chance to make your next Heart Strike become Vampiric Strike. Vampiric Strike heals you for 1% of your maximum health and grants you Essence of the Blood Queen, increasing your Haste by 1.0%, up to 5.0% for 20 sec.
-    visceral_strength              = {  95045, 434157, 1 }, -- When Crimson Scourge is consumed, you gain 12% Strength for 12 sec.
+    -- Sanlayn
+    bloodsoaked_ground             = {  95048,  434033, 1 }, -- While you are within your Death and Decay, your physical damage taken is reduced by $s1% and your chance to gain Vampiric Strike is increased by $s2%
+    bloody_fortitude               = {  95056,  434136, 1 }, -- Icebound Fortitude reduces all damage you take by up to an additional $s1% based on your missing health. Killing an enemy that yields experience or honor reduces the cooldown of Icebound Fortitude by $s2 sec
+    frenzied_bloodthirst           = {  95065,  434075, 1 }, -- Essence of the Blood Queen stacks $s1 additional times and increases the damage of your Death Coil and Death Strike by $s2% per stack
+    gift_of_the_sanlayn            = {  95053,  434152, 1 }, -- While Dancing Rune Weapon is active you gain Gift of the San'layn. Gift of the San'layn increases the effectiveness of your Essence of the Blood Queen by $s1%, and Vampiric Strike replaces your Heart Strike for the duration
+    incite_terror                  = {  95040,  434151, 1 }, -- Vampiric Strike and Heart Strike cause your targets to take $s1% increased Shadow damage, up to $s2% for $s3 sec. Vampiric Strike benefits from Incite Terror at $s4% effectiveness
+    infliction_of_sorrow           = {  95033,  434143, 1 }, -- When Vampiric Strike damages an enemy affected by your Blood Plague, it extends the duration of the disease by $s1 sec, and deals $s2% of the remaining damage to the enemy. After Gift of the San'layn ends, you gain a charge of Death and Decay, and your next Heart Strike consumes the disease to deal $s3% of their remaining damage to the target
+    newly_turned                   = {  95064,  433934, 1 }, --
+    pact_of_the_sanlayn            = {  95055,  434261, 1 }, -- You store $s1% of all Shadow damage dealt into your Blood Beast to explode for additional damage when it expires
+    sanguine_scent                 = {  95055,  434263, 1 }, --
+    the_blood_is_life              = {  95046,  434260, 1 }, -- Dancing Rune Weapon summons a Blood Beast to attack your enemy for $s1 sec. Each time the Blood Beast attacks, it stores a portion of the damage dealt. When the Blood Beast dies, it explodes, dealing $s2% of the damage accumulated to nearby enemies and healing the Death Knight for the same amount. Deals reduced damage beyond $s3 targets
+    vampiric_aura                  = {  95056,  434100, 1 }, -- Your Leech is increased by $s1%. While Lichborne is active, the Leech bonus of this effect is increased by $s2%, and it affects $s3 allies within $s4 yds
+    vampiric_speed                 = {  95064,  434028, 1 }, -- Death's Advance and Wraith Walk movement speed bonuses are increased by $s1%. Activating Death's Advance or Wraith Walk increases $s2 nearby allies movement speed by $s3% for $s4 sec
+    vampiric_strike                = {  95051,  433901, 1 }, -- Your Death Coil and Death Strike have a $s1% chance to make your next Heart Strike become Vampiric Strike. Vampiric Strike heals you for $s2% of your maximum health and grants you Essence of the Blood Queen, increasing your Haste by $s3%, up to $s4% for $s5 sec
+    visceral_strength              = {  95045,  434157, 1 }, -- When Crimson Scourge is consumed, you gain $s1% Strength for $s2 sec. When Blood Boil hits $s3 or more targets, it generates $s4 charge of Bone Shield
 } )
-
 
 -- PvP Talents
 spec:RegisterPvpTalents( {
-    bloodforged_armor = 5587, -- (410301) Death Strike reduces all Physical damage taken by 20% for 3 sec.
-    dark_simulacrum   = 3511, -- (77606) Places a dark ward on an enemy player that persists for 12 sec, triggering when the enemy next spends mana on a spell, and allowing the Death Knight to unleash an exact duplicate of that spell.
-    death_chain       =  609, -- (203173) Chains 3 enemies together, dealing 5275.8 Shadow damage and causing 20% of all damage taken to also be received by the others in the chain. Lasts for 10 sec.
-    decomposing_aura  = 3441, -- (199720) All enemies within 8 yards slowly decay, losing up to 3% of their max health every 2 sec. Max 5 stacks. Lasts 6 sec.
-    last_dance        =  608, -- (233412) Reduces the cooldown of Dancing Rune Weapon by 50% and its duration by 25%.
-    murderous_intent  =  841, -- (207018) You focus the assault on this target, increasing their damage taken by 3% for 6 sec. Each unique player that attacks the target increases the damage taken by an additional 3%, stacking up to 5 times. Your melee attacks refresh the duration of Focused Assault.
-    rot_and_wither    =  204, -- (202727) Your Death's Due rots enemies each time it deals damage, absorbing healing equal to 100% of damage dealt.
-    spellwarden       = 5592, -- (410320) Anti-Magic Shell is now usable on allies and its cooldown is reduced by 10 sec.
-    strangulate       =  206, -- (47476) Shadowy tendrils constrict an enemy's throat, silencing them for 4 sec.
-    walking_dead      =  205, -- (202731) Your Death Grip causes the target to be unable to move faster than normal movement speed for 8 sec.
+    bloodforged_armor              = 5587, -- (410301)
+    dark_simulacrum                = 3511, -- (77606) Places a dark ward on an enemy player that persists for $s1 sec, triggering when the enemy next spends mana on a spell, and allowing the Death Knight to unleash an exact duplicate of that spell
+    death_chain                    =  609, -- (203173) Chains $s2 enemies together, dealing $s$s3 Shadow damage and causing $s4% of all damage taken to also be received by the others in the chain. Lasts for $s5 sec
+    decomposing_aura               = 3441, -- (199720)
+    last_dance                     =  608, -- (233412)
+    murderous_intent               =  841, -- (207018)
+    price_of_progress              = 5712, -- (1233429)
+    rot_and_wither                 =  204, -- (202727)
+    spellwarden                    = 5592, -- (410320)
+    strangulate                    =  206, -- (47476) Shadowy tendrils constrict an enemy's throat, silencing them for $s1 sec
 } )
-
 
 -- Auras
 spec:RegisterAuras( {
@@ -451,23 +459,11 @@ spec:RegisterAuras( {
     },
     -- Pulling enemies to your location and dealing $323798s1 Shadow damage to nearby enemies every $t1 sec.
     -- https://wowhead.com/beta/spell=315443
-    abomination_limb_covenant = {
+    abomination_limb = {
         id = 315443,
         duration = function () return legendary.abominations_frenzy.enabled and 16 or 12 end,
         tick_time = 1,
         max_stack = 1
-    },
-    abomination_limb_talent = {
-        id = 383269,
-        duration = function () return legendary.abominations_frenzy.enabled and 16 or 12 end,
-        tick_time = 1,
-        max_stack = 1
-    },
-    abomination_limb = {
-        alias = { "abomination_limb_covenant", "abomination_limb_talent" },
-        aliasMode = "first",
-        aliasType = "buff",
-        duration = 3600,
     },
     -- Talent: Recently pulled  by Abomination Limb and can't be pulled again.
     -- https://wowhead.com/beta/spell=323710
@@ -482,6 +478,11 @@ spec:RegisterAuras( {
     antimagic_shell = {
         id = 48707,
         duration = function () return ( legendary.deaths_embrace.enabled and 2 or 1 ) * ( ( azerite.runic_barrier.enabled and 1 or 0 ) + ( talent.antimagic_barrier.enabled and 7 or 5 ) ) + ( conduit.reinforced_shell.mod * 0.001 ) end,
+        max_stack = 1
+    },
+    antimagic_zone = {
+        id = 145629,
+        duration = function () return 6 + ( 2 * talent.assimilation.rank ) end,
         max_stack = 1
     },
     -- Talent: Stunned.
@@ -850,7 +851,7 @@ spec:RegisterAuras( {
     },
     infliction_of_sorrow = {
         id = 460049,
-        duration = 15,
+        duration = 30,
         max_stack = 1
     },
     -- Time between auto-attacks increased by $w1%.
@@ -959,8 +960,14 @@ spec:RegisterAuras( {
         id = 434765,
         duration = 12.0,
         tick_time = 1.0,
-        max_stack = 40,
-        copy = "reapers_mark_debuff"
+        max_stack = function() if set_bonus.tww3 >= 4 then return 55 else
+            return 40 end end,
+        copy = "reapers_mark_debuff",
+        onRemove = function()
+            if set_bonus.tww3 >= 4 then
+                applyBuff( "empowered_soul" )
+            end
+        end,
     },
     -- Magical damage taken reduced by $w1%.
     rune_carved_plates = {
@@ -1184,140 +1191,150 @@ spec:RegisterAuras( {
     },
 } )
 
-
--- The War Within
-spec:RegisterGear( "tww2", 229253, 229251, 229256, 229254, 229252 )
-spec:RegisterAuras( {
-    -- https://www.wowhead.com/spell=1218601
-    -- Luck of the Draw! Damage increased by 15%. Death Strike costs 10 less Runic Power and strikes 2 additional nearby targets.
-    luck_of_the_draw = {
-        id = 1218601,
-        duration = function() if set_bonus.tww2 >= 4 then return 12 end
-            return 10
-        end,
-        max_stack = 1,
+-- Pets
+spec:RegisterPets({
+    blood_beast = {
+        id = 217228,
+        spell = "dancing_rune_weapon",
+        duration = 12,
     },
-    -- https://www.wowhead.com/spell=1222698
-    -- Murderous Frenzy Your Haste is increased by 12%.
-    murderous_frenzy = {
-        id = 1222698,
-        duration = 6,
-        max_stack = 1,
+    ghoul = {
+        id = 26125,
+        spell = "raise_dead",
+        duration = 60
     },
-} )
-spec:RegisterGear( "tww1", 212005, 212003, 212002, 212001, 212000 )
-spec:RegisterAuras( {
-    unbreakable = {
-        id = 457468,
-        duration = 3600,
-        max_stack = 1
-    },
-    unbroken = {
-        id = 457473,
-        duration = 6,
-        max_stack = 1
-    },
-    piledriver = {
-        id = 457506,
-        duration = 3600,
-        max_stack = 10
-    },
-
-    icy_vigor = {
-        id = 457189,
-        duration = 8,
-        max_stack = 1
-    },
-
-    unholy_commander = {
-        id = 456698,
-        duration = 8,
-        max_stack = 1
-    }
 })
 
--- Tier 29
-spec:RegisterGear( "tier29", 200405, 200407, 200408, 200409, 200410 )
--- TODO: Proactively count Bone Shields consumed and proactively model Vigorous Lifeblood proc.
-spec:RegisterAura( "vigorous_lifeblood", {
-    id = 394570,
-    duration = 10,
-    max_stack = 1
-} )
-
--- Tier 30
-spec:RegisterGear( "tier30", 202464, 202462, 202461, 202460, 202459, 217223, 217225, 217221, 217222, 217224 )
--- 2 pieces (Blood) : Heart Strike and Blood Boil deal 20% increased damage and have a 10% chance to grant Vampiric Blood for 5 sec.
--- 4 pieces (Blood) : When you would gain Vampiric Blood you are infused with Vampiric Strength, granting you 10% Strength for 5 sec. Your Heart Strike and Blood Boil extend the duration of Vampiric Strength by 0.5 sec.
-spec:RegisterAura( "vampiric_strength", {
-    id = 408356,
-    duration = 5,
-    max_stack = 1
-} )
-
-spec:RegisterGear( "tier31", 207198, 207199, 207200, 207201, 207203 )
--- (2) Consuming Runic Power has a chance to cause your next Heart Strike to apply Ashen Decay, reducing damage dealt to you by $425719s1% and increasing your damage dealt to afflicted targets by $425719s2% for $425719d.
--- (4) Soul Reaper's execute damage and Abomination Limb's damage applies Ashen Decay to enemy targets, and Heart Strike and Blood Boil's direct damage extends Ashen Decay by ${$s1/1000}.1 sec.
-spec:RegisterAuras( {
-    ashen_decay_proc = {
-        id = 425721,
-        duration = 20,
-        max_stack = 1
+spec:RegisterGear({
+    -- The War Within
+    tww3 = {
+        items = { 237631, 237629, 237627, 237628, 237626 },
+        auras = {
+            -- Deathbringer
+            -- Crit Buff
+            empowered_soul = {
+                id = 1236996,
+                duration = 8,
+                max_stack = 1
+            },
+        }
     },
-    ashen_decay = {
-        id = 425719,
-        duration = 8,
-        max_stack = 1,
-        copy = "ashen_decay_debuff"
-    }
+    tww2 = {
+        items = { 229253, 229251, 229256, 229254, 229252 },
+        auras = {
+            luck_of_the_draw = {
+                id = 1218601,
+                duration = function()
+                    if set_bonus.tww2 >= 4 then return 12 end
+                    return 10
+                end,
+                max_stack = 1
+            },
+            murderous_frenzy = {
+                id = 1222698,
+                duration = 6,
+                max_stack = 1
+            }
+        }
+    },
+    tww1 = {
+        items = { 212005, 212003, 212002, 212001, 212000 },
+        auras = {
+            unbreakable = {
+                id = 457468,
+                duration = 3600,
+                max_stack = 1
+            },
+            unbroken = {
+                id = 457473,
+                duration = 6,
+                max_stack = 1
+            },
+            piledriver = {
+                id = 457506,
+                duration = 3600,
+                max_stack = 10
+            },
+            icy_vigor = {
+                id = 457189,
+                duration = 8,
+                max_stack = 1
+            },
+            unholy_commander = {
+                id = 456698,
+                duration = 8,
+                max_stack = 1
+            }
+        }
+    },
+    -- Dragonflight
+    tier31 = {
+        items = { 207198, 207199, 207200, 207201, 207203 },
+        auras = {
+            ashen_decay_proc = {
+                id = 425721,
+                duration = 20,
+                max_stack = 1
+            },
+            ashen_decay = {
+                id = 425719,
+                duration = 8,
+                max_stack = 1,
+                copy = "ashen_decay_debuff"
+            }
+        }
+    },
+    tier30 = {
+        items = { 202464, 202462, 202461, 202460, 202459, 217223, 217225, 217221, 217222, 217224 },
+        auras = {
+            vampiric_strength = {
+                id = 408356,
+                duration = 5,
+                max_stack = 1
+            }
+        }
+    },
+    tier29 = {
+        items = { 200405, 200407, 200408, 200409, 200410 },
+        auras = {
+            vigorous_lifeblood = {
+                id = 394570,
+                duration = 10,
+                max_stack = 1
+            }
+        }
+    },
+    -- Legacy
+    acherus_drapes = { items = { 132376 } },
+    cold_heart = { items = { 151796 } }, -- chilled_heart stacks NYI
+    consorts_cold_core = { items = { 144293 } },
+    death_march = { items = { 144280 } },
+    draugr_girdle_of_the_everlasting_king = { items = { 132441 } },
+    koltiras_newfound_will = { items = { 132366 } },
+    lanathels_lament = { items = { 133974 } },
+    perseverance_of_the_ebon_martyr = { items = { 132459 } },
+    rethus_incessant_courage = { items = { 146667 } },
+    seal_of_necrofantasia = { items = { 137223 } },
+    service_of_gorefiend = { items = { 132367 } },
+    shackles_of_bryndaor = { items = { 132365 } }, -- NYI (Death Strike heals refund RP...)
+    skullflowers_haemostasis = {
+        items = { 144281 },
+        auras = {
+            haemostasis = {
+                id = 235559,
+                duration = 3600,
+                max_stack = 5
+            }
+        }
+    },
+    soul_of_the_deathlord = { items = { 151740 } },
+    soulflayers_corruption = { items = { 151795 } },
+    the_instructors_fourth_lesson = { items = { 132448 } },
+    toravons_whiteout_bindings = { items = { 132458 } },
+    uvanimor_the_unbeautiful = { items = { 137037 } }
 } )
-
-
-
-
--- Legacy Legendaries
-spec:RegisterGear( "acherus_drapes", 132376 )
-spec:RegisterGear( "cold_heart", 151796 ) -- chilled_heart stacks NYI
-spec:RegisterGear( "consorts_cold_core", 144293 )
-spec:RegisterGear( "death_march", 144280 )
--- spec:RegisterGear( "death_screamers", 151797 )
-spec:RegisterGear( "draugr_girdle_of_the_everlasting_king", 132441 )
-spec:RegisterGear( "koltiras_newfound_will", 132366 )
-spec:RegisterGear( "lanathels_lament", 133974 )
-spec:RegisterGear( "perseverance_of_the_ebon_martyr", 132459 )
-spec:RegisterGear( "rethus_incessant_courage", 146667 )
-spec:RegisterGear( "seal_of_necrofantasia", 137223 )
-spec:RegisterGear( "service_of_gorefiend", 132367 )
-spec:RegisterGear( "shackles_of_bryndaor", 132365 ) -- NYI (Death Strike heals refund RP...)
-spec:RegisterGear( "skullflowers_haemostasis", 144281 )
-    spec:RegisterAura( "haemostasis", {
-        id = 235559,
-        duration = 3600,
-        max_stack = 5
-    } )
-
-spec:RegisterGear( "soul_of_the_deathlord", 151740 )
-spec:RegisterGear( "soulflayers_corruption", 151795 )
-spec:RegisterGear( "the_instructors_fourth_lesson", 132448 )
-spec:RegisterGear( "toravons_whiteout_bindings", 132458 )
-spec:RegisterGear( "uvanimor_the_unbeautiful", 137037 )
-
 
 spec:RegisterTotem( "ghoul", 1100170 ) -- Texture ID
-
-local TriggerInflictionOfSorrow = setfenv( function ()
-    applyBuff( "infliction_of_sorrow" )
-end, state )
-
-local TriggerUmbilicusEternus = setfenv( function()
-    applyBuff( "umbilicus_eternus" )
-end, state )
-
-local BonestormShield = setfenv( function()
-    addStack( "bone_shield" )
-    gain( min( 0.1, 0.02 * active_enemies ) * health.max, "health" )
-end, state )
-
 
 spec:RegisterHook( "TALENTS_UPDATED", function()
     class.abilityList.any_dnd = "|T136144:0|t |cff00ccff[Any " .. class.abilities.death_and_decay.name .. "]|r"
@@ -1331,6 +1348,20 @@ spec:RegisterHook( "TALENTS_UPDATED", function()
     if dnd == "defile" then rawset( cooldown, "death_and_decay", cooldown.defile )
     else rawset( cooldown, "defile", cooldown.death_and_decay ) end
 end )
+
+local TriggerInflictionOfSorrow = setfenv( function ()
+    applyBuff( "infliction_of_sorrow" )
+    gainCharges( "death_and_decay", 1 )
+end, state )
+
+local TriggerUmbilicusEternus = setfenv( function()
+    applyBuff( "umbilicus_eternus" )
+end, state )
+
+local BonestormShield = setfenv( function()
+    addStack( "bone_shield" )
+    gain( min( 0.1, 0.02 * active_enemies ) * health.max, "health" )
+end, state )
 
 spec:RegisterHook( "reset_precast", function ()
     if UnitExists( "pet" ) then
@@ -1362,9 +1393,7 @@ spec:RegisterHook( "reset_precast", function ()
         state:QueueAuraExpiration( "gift_of_the_sanlayn", TriggerInflictionOfSorrow, buff.gift_of_the_sanlayn.expires )
     end
 
-    if IsActiveSpell( 433899 ) or IsActiveSpell( 433895 ) then
-        applyBuff( "vampiric_strike" )
-    end
+    if IsActiveSpell( 433895 ) then applyBuff( "vampiric_strike" ) end
 
     if buff.bonestorm.up then
         local tick_time = buff.bonestorm.expires
@@ -1433,7 +1462,6 @@ spec:RegisterStateExpr( "vb_damage", function ()
     return health.max * ( settings.vb_damage or 0 ) * 0.01
 end )
 
-
 spec:RegisterStateTable( "death_and_decay", setmetatable(
 { onReset = function( self ) end },
 { __index = function( t, k )
@@ -1447,7 +1475,6 @@ spec:RegisterStateTable( "death_and_decay", setmetatable(
 
     return false
 end } ) )
-
 
 spec:RegisterStateFunction( "applyRunePlagues", function()
     -- Should only reach here when DRW is active.
@@ -1476,13 +1503,11 @@ spec:RegisterStateTable( "drw", setmetatable(
     return false
 end } ) )
 
-
-
 -- Abilities
 spec:RegisterAbilities( {
     -- Sprout an additional limb, dealing ${$383313s1*13} Shadow damage over $d to all nearby enemies. Deals reduced damage beyond $s5 targets. Every $t1 sec, an enemy is pulled to your location if they are further than $383312s3 yds from you. The same enemy can only be pulled once every $383312d.
     abomination_limb = {
-        id = function() return talent.abomination_limb.enabled and 383269 or 315443 end,
+        id = 315443,
         cast = 0,
         cooldown = 120,
         gcd = "spell",
@@ -1496,7 +1521,6 @@ spec:RegisterAbilities( {
             if soulbind.kevins_oozeling.enabled then applyBuff( "kevins_oozeling" ) end
         end,
 
-        copy = { 383269, 315443, "abomination_limb_talent", "abomination_limb_covenant" }
     },
 
     -- Talent: Surrounds you in an Anti-Magic Shell for $d, absorbing up to $<shield> magic damage and preventing application of harmful magical effects.$?s207188[][ Damage absorbed generates Runic Power.]
@@ -1519,7 +1543,7 @@ spec:RegisterAbilities( {
     antimagic_zone = {
         id = 51052,
         cast = 0,
-        cooldown = function() return 120 - ( talent.assimilation.enabled and 30 or 0 ) end,
+        cooldown = function() return 240 - ( talent.assimilation.enabled and 60 or 0 ) end,
         gcd = "spell",
 
         talent = "antimagic_zone",
@@ -1588,6 +1612,8 @@ spec:RegisterAbilities( {
             if buff.dancing_rune_weapon.up then applyRunePlagues() end
 
             if talent.bind_in_darkness.enabled and debuff.reapers_mark.up then applyDebuff( "target", "reapers_mark", nil, debuff.reapers_mark.stack + 2 ) end
+
+            if talent.visceral_strength.enabled and true_active_enemies > 1 then addStack( "bone_shield", 1 ) end
 
             if talent.hemostasis.enabled then
                 addStack( "hemostasis", nil, min( 5, active_enemies ) )
@@ -1765,6 +1791,7 @@ spec:RegisterAbilities( {
             applyBuff( "dancing_rune_weapon" )
             if talent.gift_of_the_sanlayn.enabled then applyBuff( "gift_of_the_sanlayn", buff.dancing_rune_weapon.remains ) end
             if talent.insatiable_blade.enabled then addStack( "bone_shield", nil, buff.dancing_rune_weapon.up and 10 or 5 ) end
+            if talent.the_blood_is_life.enabled then summonPet( "blood_beast" ) end
 
             if set_bonus.tww1_4pc > 0 then
                 if buff.bone_shield.up then applyBuff( "piledriver", nil, buff.bone_shield.stack )
@@ -2200,6 +2227,7 @@ spec:RegisterAbilities( {
                 removeStack( "exterminate" )
                 applyDebuff( "target", "blood_plague" )
                 if buff.dancing_rune_weapon.up then applyRunePlagues() end
+                applyBuff( "bonestorm", 2 )
             end
 
             if talent.ossified_vitriol.enabled then removeBuff( "ossified_vitriol" ) end
@@ -2334,6 +2362,7 @@ spec:RegisterAbilities( {
                 setCooldown( "soul_reaper", 0 )
                 applyBuff( "reaper_of_souls" )
             end
+            if set_bonus.tww3 >= 2 then addStack( "exterminate", 2 ) end
         end,
 
         -- Effects:
@@ -2524,7 +2553,6 @@ spec:RegisterAbilities( {
     },
 } )
 
-
 spec:RegisterRanges( "death_strike", "mind_freeze", "death_coil" )
 
 spec:RegisterOptions( {
@@ -2605,4 +2633,4 @@ spec:RegisterSetting( "vb_damage", 50, {
     width = "full",
 } )
 
-spec:RegisterPack( "鲜血Simc", 20250429, [[Hekili:DR1xVnoUr8plbfWNDsoxl7OSzlI8d3wuGDF4EO(U23SmTeDSqKLeOOIVuyOp7DiPSePejLCs2Rl6l5UvKZF4W5p)MHETZ6FB9QqefV(xNpBU7S7M)5PZND39U3VEf91m86vzOGNrpb)pjOdWF)L400q2xFnoffYOopTGeaRSk6qrmIgLM8fcAhD9QTfrX0VMSERgj44SWfindhaF2D26v7JcdXI9IZdwVIT3FE2D)88p)3k38pX5VMeuU5yeDF5gqqFz9Q4OCAot(7JEAVFgjk1hfWKE(0q8ourmfw8x5NpCcABmoC9VSEvajIIjrO1RgxUHuKGl38Ox5M5LBgj(3tPrhW(0u)fLBwwU5PGWPhq)bF5G9iYt4C)DeHGqXWwaIDM(q5MjRxj(kCUzMiFkkB9QICSF6UD(aBy6cfoSdtHC6vHgQaxWeyRpxtjbfbReIHBsjLcO6oJQ52ID7MUnnb7NVpchhoLGpGIsYb9ws7UgSPnIbeaDFUFaIGZZzS31o7dsrpveNMbu960ImUTO7cnc2ZUK9ZPKONXmbFVrbFvLieuGscbZsaIj(gUHsE1pmjKXOpzKrHP0PIBKSyqBXdXaj2)20OygVFWiVz7)fSpobFicdCS2tbCEOmVtAT7swa1FHlxOWFNW3vRTegH5(uaXmLgcKJ9jyugM0OZ3iroSpWkThts9PemEAokjg9As5MtNk3KbmoeLeeL8KpZV1)iWP0eLtVRIBRK8yN6pB8ulclafDHKNlte6D5HupHB9dcZRtautexy5(hqKNB5WpxEFAohT2(IHhFKtHmOImfUsMrkkgNag99ikJsqAmIMwXtHnTTVink4zyNQb)av50uYHlmSvsTE4dtTe5jttJdtpMy3DGj45UnNdA6HTW5ibBp)qDyQgEReQUn9qucVCKFC0HTv(fTQmCE3WwdH86y8)bRZVqstKuxMBhW7N2tZbdXlPIfAzYJssWeWlppkocNeG5kPOuQjwOX9Q(YgUQbRxCku6RIlkFQB6)7KpMSLbT7qERdzpPJ7ZwlYETRG8Q9uSdJzqakMW8NSNMDqmdwgmpeumu7jUNCRdIH7Iiy(X1EgRbXRS6RBNzg5efLiITGaROKaMt9t(HOdaKmF3QWOx2w9f(UUIhkBrdebXcVZa820cMVFkHgrlcX81LsV8c6qwejkWV(u70gtvkCMYXuzAavhwL9)fxa)hhxEHeqTCMXl9vLLHGbuC79JseCVjlZKZ7FHY2lsafHLykPGhzRHaaszCSVOqx(09yeHwv(xMt8VVfkh8muRRMjxZbcoHFa8frxKmiUCxuqe1NUhII3dP24gHbIJ7ppGLoMlj9DczPZDVjOLo9KT59IT0PNeqF)ax6yoB1fIU0XCAQ3p8shZ5T()z8LZBNK98(6Meu0ekjktSHFphohFTAxLB(hN3gKrEx5Mxtl(jcMD4fjQZH7ziHbKMbo2vPLrm6GnYmej)eSWE0lWN)7IZd0Glp88FZprLBsjLB(xv5Dl3W74UCtr20lTUq02DV1cdQP9RkkWmITt(3fpExtN409BOSVpgSB7yTUvyd1EL9gSJqjejZyt3iFew1(lfZS6MR2OjAzupqKzjScOQjRlsQMEIpBUkIPRuvce4RFi5ixpmxJPJEOvomuywfeRRnMGm3iZWeuphioDm5yTrJHjkRNPQgrzIY6OhgMOSDQ4vw2Y6yJNUdwmJGb)5TOUT7OwZ0Edp9JU7tYaMKQEd5E3XGm5l2hxNoFhBD0CVJE8(G7JVB56MWlDntFUf)b2cmuDvQd4b2jVOkP1eoJmI24CP2EpbcS2zPhHI1viGfjdxm7YoHM6XN2YL1QhHwTbk4F2xCQoC6NBjWeYbbyhowPfsDqu1Ia(fmjgX6TMpcKqL2ewOa0OnoqZzR5MD8Fa)lUJlwXD(aIqspsWciGx(eMa7X9NljXrjE2F68aAmjkZ(A9z6Qeg540Tz(DKIkSZEG9laQXMhcd3w(z)4H4NzeY3aM2R5iO2yHBANZs3cQdPKBacbh8Nf6ZN6Ke(SxJAwPhK3xqAsEXHk8ukBZmoEZDu6ASRaZZGOcXJOzagGfLUhNl35rd3LB9MZFLkqsYUv3HkjWvysRnAoarFUl42BMuTdsaIHynLarbuodV8HNcNBhhtLvRR3Xapzn72BTuJHshwhnrBV6MlvUKIlcEMfds3d9UtqhLkz8MYbBojP5RVbNr5Ub6Q4oWWU7hwy3NgIJmTbNz)39rj7IJ4muK)JLCwP0q7GPEQWu3NHGcRSY69W)dYrAok8d2b0k0FT1pTgqkRigbbBbALA6j1c03pqhyZZFQUPvhZEcxsvN(C)RkN0FWjpsbGALZ2N4xia8N1RoIijGjhQT)1dzqhXmGxpiC4yJiH)6)tl)giIc6(uc)NFWxy98KUlI1BIyJ5tRBc6gV)Qs(5YVPBlNVcVL1nJNX7XB5)17tLFRMnaXsVIK8Np)QlcEA4vFUnANxvUGopyKzMj94p3kniwphDKKl)XM3SPwYgIZLjQ(TzUaIuFdMlGW63A5cOjt1y2pbQJKHry1eHg1DAql9QFPLrxn2IaoDY8iDMOkDz3nD5VQ80CCVzSZSRT)UjtUz8IR77TsGnz(nsU2Y7JC98jDDGOOmvhpMfCmZA8O38rk4exSScJ4OUOtx65m9HlK9ogyVcBAEfcZXhkPfQDD08mepwjHRN3H8k7xn1TEKHrglh(ONwMw9wam(DLj4HDSwS0Wmkm9eb61FPEMyeRwshSYJ1o4)hDNmQ74(xo2WG(Vb2(4R6mLRtN6zS(Gyk)2FPCZpkJGx2W1n8UV0hndKFq5p6mUyjBXpAZuxjORq8wa9zoQNRopsE5I3MrzWjBjQtpvKZTQbTBftBvKGPJB6ObwmP9OGBerqyUDrmefLTVHZf9kJyG0kCPByzVkJ8K76LxniTec3t(NHv7fzju7AN1SRA05AZyZbLV0Zfs6y)x00Ptg(1mnrJmRNFPnz(W7qMJgY4Uw6n3vJY1EA4s1om44kXeP7tV2f000VYJw756MX2NB41laqiggZkSME1IHVUUPOA7V6SuVek7CZ949JUsFBFM4QAvx7NzG3kZ0WitBvoMRRDNn6GCuSR4v9C3NBYivabmyDgbZSCHrrk7uzCtsnDoqJUEOKUgPwgSBLVngO40jfSKZziLgGgmiXyCtQJG0qK2Y5ZSBtTcCv4y74ihR353lVx)yTF7q57kUpiW9AzCVW91sv)2rZaOnZWp0wc0kMlPjbl3dVH2g0YTF8BKWQRZzqRDCjfGtLdHQq05D5LCBXH(q70STUWD6EzpYaKe3bvTyPJRobRG5zS1kfguRjM1lDj88wmBy6ldfKQgdLy9ExgQoSttW842o2vnGO5PtMO7aAh7Konqnm1iqIgc0x(r)rs36ARdRtFADbWIe9AxIv0DM(x4Od1AkrR21x9lAOJ0)mW10iT3nozDmvfPQEaPgCFFS)3FqBaNmcd9NUHCnXZs6OBNM8MKV0AbNsVy4pwW6)l]] )
+spec:RegisterPack( "鲜血Simc", 20250806, [[Hekili:nRvBVnUns4FlbfW1ozxhl7yVj7fBG29(YgSOO4CpCF4WzjAj6yIO3kf1M6db63(nKuVqjrkjNnT79LKylYzgsoZZ8WhLDw7(TDB9qm8UFz(S5lND7SvtTwS4d3SA3w2Py8UTXi3Nqpc)rika(5p7hf5X)2t(rip(StIsPUWtoYyXjF86RFKWoMUFQBuW1jKGuFeJef6srhy8p7E9E)O9xZoIFgrFggkj86FYLpKFLsIOe2PVqsyjx7HpGs9zWVrSJpfsE8iZEp33t5gz329PeF2Nd3TxF4VeIRySl81lNbHgXZdlhlobM87FFMZVDeN58Vqu4hIOiZzlgLeb)Er2dCJ9(z3((zR(yMZNdjmcYpZ5N(1VK9q2dDp75fZ(M3p)oy2)dCYPq3mh(Afgfj4t726ZxII9ouOp6ui8N)I4KahI27J929Z726c7fykbTB74mNlYC2NE4W09rHy7KJeSV3004mNxErZdO4aejmjZ5(mhRPlnmQegCWcJznmOmNjzoJYCqWbXxX24qCabdgyd8W572IeNpWEoF)3EFeXFhd2zngW)jhTvbKi5iX2frXjj8yAHXyYlInvg)X(OhtX187ctRXB66qreKGJXHUy7Od2qoTmf1(3tX4W2RSrNXCkg7xrbXekX1oHrjpPe2tQI5JyeLLpaEuV0yuBAFLFqReGI9vBuONTh2fDQWPk7sGjsyr0aU7wz0D00qiYJJEgtbBEG4syIDJ5ZACgQe8F4SdEWGReXoK3joMlcUPmI7tKWhRCwaIsJEMId94U62UDfj8Gprmr(jvseFQI8ytBtPXvEYnkmjniw8bWv31BIKrVvwp0mvG)WjdlAAMHynZy80edGxYnx4fgI(iMbBQbyBwKDSlZEXsX2)sDp3JaqKBYCglpvG2e(2umkgYfktIVsmxLuzLrjItZOIV6SHZhPZYmu3Rok6aeZYmkwx1VR6T(vma3OiFVONdN6HcDHaXgksX2pdB5rkWpI9JLvbjlkype)HYSNoHf1LaTOk2GXgankTtCbEdpQcOjt11yHnfg4I(wFkzsOWt2EY6ClZaIMZ2LbBe0RWpkgCNIx20UJHhLe(uEoRz8qdLXDuNkqd1cvQ4b(anJLXpFBLG3Yr3P6ivWR6(z(m1XPuM0yywQdRMZQnqgFrji6vsbQeQMahVhOy8)T5ATz1OsoQONQpNSycKA81i5dst4F)b7hD94ojNjRXH3QnqiMcysjeFcVTn)aRjvJ9QZAyvy3l4DXZ4PiINmLlkrwJEqq3TAORLTmLXDA4jEPp3WHyG)anMsscATklyVuS7WFmeHbjn2nBwBuE2c4vG39JaMQ5EU2x12D9K3RB3qn3xMmDiLEAa0a61yyAcMkaA7VrFFgdEmSYPiFaK23V725dYGhiuSy52tV4bzS4OcsgD0TKHcl79rcH7MXTOhkaUzN9YC8(VUp)BkWAlOMOpcuyMqCX7Js51RrugHL6LtoPkilb9Qw2nlJJG1ucMPohi0HNY)l)u4xwlfmgGWYAwMZLCgh(4qgutbxO6Onjm)gI5gv0sro(f1gUGvkIXWHPIlNQzcWLh99TLmAsMQcGPAjX3VhORaq)vg5srlKjIfGTSYHgBNZ)fy8dqjhbeIQw9nXNk2aaGb4jaQVxt0(oBalb8R6KX)CjRSfI2xGNMgG(djHGJ8vzcG1k9l)MU80bRP3w7iuwFYqX90sTwey1Bey0d9aNy6oKLg(YAn8AZYQheMAT(vz9RNtaFXM7AdnS7UlTjQn1XHQO0ygbQZB6Ay3PXn7R1Kxt1V2U9AdgO9uKnd6Ilxy7bAspc0K2Y3tCz1Y25yR2YpyZfirktsEbuTzZDPzk5vUmxDffEXgGsp3ObmSTh9zrGyMSERa5v5iXefmLIPya4EpQnxP6j3DZwQFy2pOICPuMbesoWXUSLJlN9MY5sNQyLtdnZ5gfao(5qE9(5FhRVjrlmFSzs0II9PP6aZlV7sNnmLqHAT(4EDWvIR4nPgIztagZ9f4ZOJl6iVYTu5Hu)KIO9pHR0)AUl23bLhwPwFj)6e7ae9PgLxVkEQLkdqFE6(y7wscuho(BRPrJNna2R4)a(eqqeXWL08g3HMSfNcMfCrzBUUcCwZAbJz4(TNVqqC4HB7fE4nttK(LdVJCHEQoFvYqSqDR18n6TQDlrJ3OVdcFTdrLmJkt3sYHALyM1iOxMATXUmwv3TmjTbM3uxRAe1fX7yfrHeyMSdybxGoB(jRRgGS)N)RkW8g8)33rDXQxtNSbJB25vu0vX99vLYHwomujbVDy1)3nKYFrM(xHwG8rjFvR3m)UDBFgrdHtaiLq8crjbXru4S9qenZ5hZv27hbsp4FpLq53nojkaghkfWoH2lEIBFcChtMM9WxiCcIl(yMZ)eI1yUL4dOq3k5go)nS(VHVuRgy)N)wMduxspbziKer0pL)cB)CqHXwwzfX7GfEmS4tzhJG7KiF3SX0OdeoB4F4hYC(R8DAN9a3JBln)N4MpZ5trbb86LTNcDH9gppm(G7TYb)3H9WpYHOkEB18vB2dYLyY0YlmC16RRDfb9dPG)574m)xBK4)7e)C9hu8emzf5Av)6ItpPnni567ihwl1rQTuRVtrCK1wMnT(mcULhsZ97TE5fUmSJ4sWoQM8R3VE(S(dIeZrMIQPMTtL4NLBggOlOoPsropJjvxmZZyILIwEgZjU(5B)tOUoH8jMRC5O2QwUzDPILJUyCho4LxKzx6uPCsDVRwbO7Ay5j)wlVAS1Sl7w)XjxnEXL9P5imiZAnEzh6mE58AHELwH9LKb33MVVoMVhbj3JQlo3gywJAlj4M1wtVDsFgZsJXQnPAOqLPfAKY7(CHQUCERPNV3uo7gc1nYiJ57xdgTEPGO5l3sxy4EuTxX8MJ8zysMndrE7et1h3ueizcOQ4kVtkD0AlUV1RQw)gmNRQbBLl20ObwQA0fCJ0TluBsPUc45X5scXNh)V3CJXHwY(uBIKGs7M1lh1jxmt2UzMMgkS33PEnV8sxisJ0zVXDAWRwnzIXWv5Ao8OLpQkQP8ICdxuAuBLt2m2GMjxT8BW)AvW5(LVv(xvGgZ5l1QF7605I6xWONSKYSQbbK00gvcIugv1fGPitQvYnS9DHwbxmVpPMwBCqL6A0vD1TDwxnAiKU2SE(YUpSYLZqzFv)5LH8DDnb2SWOlvUJ0aYHmoe1g46BsLF6nilm0sodf4gNEDPmmaXTz(mvO682hMwJ9RvX9wtZXJ7FS6C7BkIFLzhcy)IvAdOAqkgHnQMGcLJXnZAxKN1Qx6Hjaoq9zSzXi9OnfZOVtU(2l09CTfj62qAK4WB73AdB8fToelzRRJuiK(O5PYYP1wtAGda4l6cbXkuLd6BAq0)I2iXXf6MBZkTXdS85Ck1KJZW)PXt0UIEJlevpA6PqKdj1EMA6I2(0zLH(L6mOsEEPfn8VOR(LPk2BFhNgmCEAw7)HbNCoU8VCUzMs8pZtLxz18z6fD2CqeGw9wtaQY)F)AsOEUPq(QDoZG4xzoT3qEDFycdX0IlnQpxXuVRwzR95hHE47(F]] )

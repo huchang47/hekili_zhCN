@@ -21,7 +21,9 @@ local GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
 local UA_GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 local IsUsableItem = C_Item.IsUsableItem
 local GetItemSpell = C_Item.GetItemSpell
-
+local GetTalentInfo = C_SpecializationInfo.GetTalentInfo
+local GetSpecialization= C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 local GetSpellCooldown = function(spellID)
     local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID);
     if spellCooldownInfo then
@@ -2210,7 +2212,7 @@ local function ReadKeybindings( event )
                     end
                 end
             end
-        
+
         -- Use ElvUI's actionbars only if they are actually enabled.
         elseif _G["ElvUI"] and _G[ "ElvUI_Bar1Button1" ] then
             table.wipe( slotsUsed )

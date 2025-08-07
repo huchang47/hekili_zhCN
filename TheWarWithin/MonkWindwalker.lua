@@ -1,16 +1,33 @@
 -- MonkWindwalker.lua
--- January 2025
+-- August 2025
+-- Patch 11.2
 
 if UnitClassBase( "player" ) ~= "MONK" then return end
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
 local class, state = Hekili.Class, Hekili.State
-
-local strformat = string.format
-
 local spec = Hekili:NewSpecialization( 269 )
-local GetSpellCount = C_Spell.GetSpellCastCount
+
+---- Local function declarations for increased performance
+-- Strings
+local strformat = string.format
+-- Tables
+local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
+-- Math
+local abs, ceil, floor, max, sqrt = math.abs, math.ceil, math.floor, math.max, math.sqrt
+
+-- Common WoW APIs, comment out unneeded per-spec
+local GetSpellCastCount = C_Spell.GetSpellCastCount
+-- local GetSpellInfo = C_Spell.GetSpellInfo
+-- local GetSpellInfo = ns.GetUnpackedSpellInfo
+-- local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+-- local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
+-- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
+-- local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
+-- local IsActiveSpell = ns.IsActiveSpell
+
+-- Specialization-specific local functions (if any)
 
 spec:RegisterResource( Enum.PowerType.Energy, {
     crackling_jade_lightning = {
@@ -37,183 +54,168 @@ spec:RegisterResource( Enum.PowerType.Mana )
 
 -- Talents
 spec:RegisterTalents( {
+
     -- Monk
-    ancient_arts                   = { 101184, 344359, 2 }, -- Reduces the cooldown of Paralysis by 15 sec and the cooldown of Leg Sweep by 10 sec.
-    aspect_of_harmony              = { 101223, 450508, 1 }, -- Store vitality from 10% of your damage dealt and 30% of your healing. For 10 sec after casting Thunder Focus Tea your spells and abilities draw upon the stored vitality to deal 40% additional healing over 8 sec.
-    balanced_stratagem             = { 101230, 450889, 1 }, -- Casting a Physical spell or ability increases the damage and healing of your next Fire or Nature spell or ability by 3%, and vice versa. Stacks up to 5.
-    bounce_back                    = { 101177, 389577, 1 }, -- When a hit deals more than 12% of your maximum health, reduce all damage you take by 20% for 4 sec. This effect cannot occur more than once every 30 seconds.
-    bounding_agility               = { 101161, 450520, 1 }, -- Roll and Chi Torpedo travel a small distance further.
-    calming_presence               = { 101153, 388664, 1 }, -- Reduces all damage taken by 3%.
-    celerity                       = { 101183, 115173, 1 }, -- Reduces the cooldown of Roll by 5 sec and increases its maximum number of charges by 1.
-    celestial_determination        = { 101180, 450638, 1 }, -- While your Celestial is active, you cannot be slowed below 90% normal movement speed.
-    chi_burst                      = { 101159, 460485, 1 }, -- Your damaging spells and abilities have a chance to activate Chi Burst, allowing you to hurl a torrent of Chi energy up to 40 yds forward, dealing 33,390 Nature damage to all enemies, and 26,961 healing to the Monk and all allies in its path. Healing and damage reduced beyond 5 targets.
-    chi_proficiency                = { 101169, 450426, 2 }, -- Magical damage done increased by 5% and healing done increased by 5%.
-    chi_torpedo                    = { 101183, 115008, 1 }, -- Torpedoes you forward a long distance and increases your movement speed by 30% for 10 sec, stacking up to 2 times.
-    chi_wave                       = { 101159, 450391, 1 }, -- Every 15 sec, your next Rising Sun Kick or Vivify releases a wave of Chi energy that flows through friends and foes, dealing 5,366 Nature damage or 9,191 healing. Bounces up to 7 times to targets within 25 yards.
-    clarity_of_purpose             = { 101228, 451017, 1 }, -- Casting Vivify stores 13,629 vitality, increased based on your recent Gusts of Mist.
-    clash                          = { 101154, 324312, 1 }, -- You and the target charge each other, meeting halfway then rooting all targets within 6 yards for 4 sec.
-    coalescence                    = { 101227, 450529, 1 }, -- When Aspect of Harmony heals, it has a chance to spread to a nearby ally. When you directly heal an affected target, it has a chance to intensify. Targets damaged or healed by your Aspect of Harmony take 20% increased damage or healing from you.
-    crashing_momentum              = { 101149, 450335, 1 }, -- Targets you Roll through are snared by 40% for 5 sec.
-    dance_of_the_wind              = { 101137, 432181, 1 }, -- Your physical damage taken is reduced by 10% and an additional 10% every 4 sec until you receive a physical attack.
-    detox                          = { 101150, 218164, 1 }, -- Removes all Poison and Disease effects from the target.
-    diffuse_magic                  = { 101165, 122783, 1 }, -- Reduces magic damage you take by 60% for 6 sec, and transfers all currently active harmful magical effects on you back to their original caster if possible.
-    disable                        = { 101149, 116095, 1 }, -- Reduces the target's movement speed by 50% for 15 sec, duration refreshed by your melee attacks. Targets already snared will be rooted for 8 sec instead.
-    elusive_mists                  = { 101144, 388681, 1 }, -- Reduces all damage taken by you and your target while channeling Soothing Mists by 6%.
-    endless_draught                = { 101225, 450892, 1 }, -- Thunder Focus Tea has 1 additional charge.
-    energy_transfer                = { 101151, 450631, 1 }, -- Successfully interrupting an enemy reduces the cooldown of Paralysis and Roll by 5 sec.
-    escape_from_reality            = { 101176, 394110, 1 }, -- After you use Transcendence: Transfer, you can use Transcendence: Transfer again within 10 sec, ignoring its cooldown.
-    expeditious_fortification      = { 101174, 388813, 1 }, -- Fortifying Brew cooldown reduced by 30 sec.
-    fast_feet                      = { 101185, 388809, 1 }, -- Rising Sun Kick deals 70% increased damage. Spinning Crane Kick deals 10% additional damage.
-    fatal_touch                    = { 101178, 394123, 1 }, -- Touch of Death increases your damage by 5% for 30 sec after being cast and its cooldown is reduced by 90 sec.
-    ferocity_of_xuen               = { 101166, 388674, 1 }, -- Increases all damage dealt by 2%.
-    flow_of_chi                    = { 101170, 450569, 1 }, -- You gain a bonus effect based on your current health. Above 90% health: Movement speed increased by 5%. This bonus stacks with similar effects. Between 90% and 35% health: Damage taken reduced by 5%. Below 35% health: Healing received increased by 10%.
-    fortifying_brew                = { 101173, 115203, 1 }, -- Turns your skin to stone for 15 sec, increasing your current and maximum health by 20%, reducing all damage you take by 20%.
-    grace_of_the_crane             = { 101146, 388811, 1 }, -- Increases all healing taken by 6%.
-    harmonic_gambit                = { 101224, 450870, 1 }, -- During Aspect of Harmony, Rising Sun Kick, Blackout Kick, and Tiger Palm also withdraw vitality to damage enemies.
-    hasty_provocation              = { 101158, 328670, 1 }, -- Provoked targets move towards you at 50% increased speed.
-    healing_winds                  = { 101171, 450560, 1 }, -- Transcendence: Transfer immediately heals you for 10% of your maximum health.
-    improved_touch_of_death        = { 101140, 322113, 1 }, -- Touch of Death can now be used on targets with less than 15% health remaining, dealing 35% of your maximum health in damage.
-    ironshell_brew                 = { 101174, 388814, 1 }, -- Increases your maximum health by an additional 10% and your damage taken is reduced by an additional 10% while Fortifying Brew is active.
-    jade_walk                      = { 101160, 450553, 1 }, -- While out of combat, your movement speed is increased by 15%.
-    lighter_than_air               = { 101168, 449582, 1 }, -- Roll causes you to become lighter than air, allowing you to double jump to dash forward a short distance once within 5 sec, but the cooldown of Roll is increased by 2 sec.
-    manifestation                  = { 101222, 450875, 1 }, -- Chi Burst and Chi Wave deal 50% increased damage and healing.
-    mantra_of_purity               = { 101229, 451036, 1 }, -- When cast on yourself, your single-target healing spells heal for 10% more and restore an additional 21,261 health over 6 sec.
-    mantra_of_tenacity             = { 101229, 451029, 1 }, -- Fortifying Brew grants 20% Stagger.
-    martial_instincts              = { 101179, 450427, 2 }, -- Increases your Physical damage done by 5% and Avoidance increased by 4%.
-    overwhelming_force             = { 101220, 451024, 1 }, -- Rising Sun Kick, Blackout Kick, and Tiger Palm deal 15% additional damage to enemies in a line in front of you. Damage reduced above 5 targets.
-    paralysis                      = { 101142, 115078, 1 }, -- Incapacitates the target for 1 min. Limit 1. Damage may cancel the effect.
-    path_of_resurgence             = { 101226, 450912, 1 }, -- Chi Wave increases vitality stored by 25% for 5 sec.
-    peace_and_prosperity           = { 101163, 450448, 1 }, -- Reduces the cooldown of Ring of Peace by 5 sec and Song of Chi-Ji's cast time is reduced by 0.5 sec.
-    pressure_points                = { 101141, 450432, 1 }, -- Paralysis now removes all Enrage effects from its target.
-    profound_rebuttal              = { 101135, 392910, 1 }, -- Expel Harm's critical healing is increased by 50%.
-    purified_spirit                = { 101224, 450867, 1 }, -- When Aspect of Harmony ends, any remaining vitality is expelled as healing over 8 sec, split among nearby targets.
-    quick_footed                   = { 101158, 450503, 1 }, -- The duration of snare effects on you is reduced by 20%.
-    ring_of_peace                  = { 101136, 116844, 1 }, -- Form a Ring of Peace at the target location for 5 sec. Enemies that enter will be ejected from the Ring.
-    rising_sun_kick                = { 101186, 107428, 1 }, -- Kick upwards, dealing 69,425 Physical damage, and reducing the effectiveness of healing on the target for 10 sec.
-    roar_from_the_heavens          = { 101221, 451043, 1 }, -- Tiger's Lust grants 20% movement speed to up to 2 allies near its target.
-    rushing_reflexes               = { 101154, 450154, 1 }, -- Your heightened reflexes allow you to react swiftly to the presence of enemies, causing you to quickly lunge to the nearest enemy in front of you within 10 yards after you Roll.
-    save_them_all                  = { 101157, 389579, 1 }, -- When your healing spells heal an ally whose health is below 35% maximum health, you gain an additional 10% healing for the next 4 sec.
-    song_of_chiji                  = { 101136, 198898, 1 }, -- Conjures a cloud of hypnotic mist that slowly travels forward. Enemies touched by the mist fall asleep, Disoriented for 20 sec.
-    soothing_mist                  = { 101143, 115175, 1 }, -- Heals the target for 158,707 over 7.4 sec. While channeling, Enveloping Mist and Vivify may be cast instantly on the target.
-    spear_hand_strike              = { 101152, 116705, 1 }, -- Jabs the target in the throat, interrupting spellcasting and preventing any spell from that school of magic from being cast for 3 sec.
-    spirits_essence                = { 101138, 450595, 1 }, -- Transcendence: Transfer snares targets within 10 yds by 70% for 4 sec when cast.
-    strength_of_spirit             = { 101135, 387276, 1 }, -- Expel Harm's healing is increased by up to 100%, based on your missing health.
-    summon_white_tiger_statue      = { 101162, 450639, 1 }, -- Invoking Xuen, the White Tiger also spawns a White Tiger Statue at your location that pulses 7,530 damage to all enemies every 2 sec for 10 sec.
-    swift_art                      = { 101155, 450622, 1 }, -- Roll removes a snare effect once every 30 sec.
-    tiger_tail_sweep               = { 101182, 264348, 1 }, -- Increases the range of Leg Sweep by 4 yds.
-    tigers_lust                    = { 101147, 116841, 1 }, -- Increases a friendly target's movement speed by 70% for 6 sec and removes all roots and snares.
-    tigers_vigor                   = { 101221, 451041, 1 }, -- Casting Tiger's Lust reduces the remaining cooldown on Roll by 5 sec.
-    transcendence                  = { 101167, 101643, 1 }, -- Split your body and spirit, leaving your spirit behind for 15 min. Use Transcendence: Transfer to swap locations with your spirit.
-    transcendence_linked_spirits   = { 101176, 434774, 1 }, -- Transcendence now tethers your spirit onto an ally for 1 |4hour:hrs;. Use Transcendence: Transfer to teleport to your ally's location.
-    vigorous_expulsion             = { 101156, 392900, 1 }, -- Expel Harm's healing increased by 5% and critical strike chance increased by 15%.
-    vivacious_vivification         = { 101145, 388812, 1 }, -- Every 10 sec, your next Vivify becomes instant and its healing is increased by 40%. This effect also reduces the energy cost of Vivify by 75%.
-    way_of_a_thousand_strikes      = { 101226, 450965, 1 }, -- Rising Sun Kick, Blackout Kick, and Tiger Palm contribute 30% additional vitality.
-    winds_reach                    = { 101148, 450514, 1 }, -- The range of Disable is increased by 5 yds. The duration of Crashing Momentum is increased by 3 sec and its snare now reduces movement speed by an additional 20%.
-    windwalking                    = { 101175, 157411, 1 }, -- You and your allies within 10 yards have 10% increased movement speed. Stacks with other similar effects.
-    yulons_grace                   = { 101165, 414131, 1 }, -- Find resilience in the flow of chi in battle, gaining a magic absorb shield for 0.6% of your max health every 3 sec in combat, stacking up to 6%.
+    ancient_arts                   = { 101184,  344359, 2 }, -- Reduces the cooldown of Paralysis by $s1 sec and the cooldown of Leg Sweep by $s2 sec
+    bounce_back                    = { 101177,  389577, 1 }, -- When a hit deals more than $s1% of your maximum health, reduce all damage you take by $s2% for $s3 sec. This effect cannot occur more than once every $s4 seconds
+    bounding_agility               = { 101161,  450520, 1 }, -- Roll and Chi Torpedo travel a small distance further
+    calming_presence               = { 101153,  388664, 1 }, -- Reduces all damage taken by $s1%
+    celerity                       = { 101183,  115173, 1 }, -- Reduces the cooldown of Roll by $s1 sec and increases its maximum number of charges by $s2
+    celestial_determination        = { 101180,  450638, 1 }, -- While your Celestial is active, you cannot be slowed below $s1% normal movement speed
+    chi_burst                      = { 101159,  460485, 1 }, -- Your damaging spells and abilities have a chance to activate Chi Burst, allowing you to hurl a torrent of Chi energy up to $s2 yds forward, dealing $s$s3 Nature damage to all enemies, and $s4 healing to the Monk and all allies in its path. Healing and damage reduced beyond $s5 targets
+    chi_proficiency                = { 101169,  450426, 2 }, -- Magical damage done increased by $s1% and healing done increased by $s2%
+    chi_torpedo                    = { 101183,  115008, 1 }, -- Torpedoes you forward a long distance and increases your movement speed by $s1% for $s2 sec, stacking up to $s3 times
+    chi_wave                       = { 101159,  450391, 1 }, -- Every $s2 sec, your next Rising Sun Kick or Vivify releases a wave of Chi energy that flows through friends and foes, dealing $s$s3 Nature damage or $s4 healing. Bounces up to $s5 times to targets within $s6 yards
+    clash                          = { 101154,  324312, 1 }, -- You and the target charge each other, meeting halfway then rooting all targets within $s1 yards for $s2 sec
+    crashing_momentum              = { 101149,  450335, 1 }, -- Targets you Roll through are snared by $s1% for $s2 sec
+    dance_of_the_wind              = { 101137,  432181, 1 }, -- Your physical damage taken is reduced by $s1% and an additional $s2% every $s3 sec until you receive a physical attack
+    detox                          = { 101150,  218164, 1 }, -- Removes all Poison and Disease effects from the target
+    diffuse_magic                  = { 101165,  122783, 1 }, -- Reduces magic damage you take by $s1% for $s2 sec, and transfers all currently active harmful magical effects on you back to their original caster if possible
+    disable                        = { 101149,  116095, 1 }, -- Reduces the target's movement speed by $s1% for $s2 sec, duration refreshed by your melee attacks. Targets already snared will be rooted for $s3 sec instead
+    elusive_mists                  = { 101144,  388681, 1 }, -- Reduces all damage taken by you and your target while channeling Soothing Mists by $s1%
+    energy_transfer                = { 101151,  450631, 1 }, -- Successfully interrupting an enemy reduces the cooldown of Paralysis and Roll by $s1 sec
+    escape_from_reality            = { 101176,  394110, 1 }, -- After you use Transcendence: Transfer, you can use Transcendence: Transfer again within $s1 sec, ignoring its cooldown
+    expeditious_fortification      = { 101174,  388813, 1 }, -- Fortifying Brew cooldown reduced by $s1 sec
+    fast_feet                      = { 101185,  388809, 1 }, -- Rising Sun Kick deals $s1% increased damage. Spinning Crane Kick deals $s2% additional damage
+    fatal_touch                    = { 101178,  394123, 1 }, -- Touch of Death increases your damage by $s1% for $s2 sec after being cast and its cooldown is reduced by $s3 sec
+    ferocity_of_xuen               = { 101166,  388674, 1 }, -- Increases all damage dealt by $s1%
+    flow_of_chi                    = { 101170,  450569, 1 }, -- You gain a bonus effect based on your current health. Above $s1% health: Movement speed increased by $s2%. This bonus stacks with similar effects. Between $s3% and $s4% health: Damage taken reduced by $s5%. Below $s6% health: Healing received increased by $s7%
+    fortifying_brew                = { 101173,  115203, 1 }, -- Turns your skin to stone for $s1 sec, increasing your current and maximum health by $s2%, reducing all damage you take by $s3%
+    grace_of_the_crane             = { 101146,  388811, 1 }, -- Increases all healing taken by $s1%
+    hasty_provocation              = { 101158,  328670, 1 }, -- Provoked targets move towards you at $s1% increased speed
+    healing_winds                  = { 101171,  450560, 1 }, -- Transcendence: Transfer immediately heals you for $s1% of your maximum health
+    improved_touch_of_death        = { 101140,  322113, 1 }, -- Touch of Death can now be used on targets with less than $s1% health remaining, dealing $s2% of your maximum health in damage
+    ironshell_brew                 = { 101174,  388814, 1 }, -- Increases your maximum health by an additional $s1% and your damage taken is reduced by an additional $s2% while Fortifying Brew is active
+    jade_walk                      = { 101160,  450553, 1 }, -- While out of combat, your movement speed is increased by $s1%
+    lighter_than_air               = { 101168,  449582, 1 }, -- Roll causes you to become lighter than air, allowing you to double jump to dash forward a short distance once within $s1 sec, but the cooldown of Roll is increased by $s2 sec
+    martial_instincts              = { 101179,  450427, 2 }, -- Increases your Physical damage done by $s1% and Avoidance increased by $s2%
+    paralysis                      = { 101142,  115078, 1 }, -- Incapacitates the target for $s1 min. Limit $s2. Damage may cancel the effect
+    peace_and_prosperity           = { 101163,  450448, 1 }, -- Reduces the cooldown of Ring of Peace by $s1 sec and Song of Chi-Ji's cast time is reduced by $s2 sec
+    pressure_points                = { 101141,  450432, 1 }, -- Paralysis now removes all Enrage effects from its target
+    profound_rebuttal              = { 101135,  392910, 1 }, -- Expel Harm's critical healing is increased by $s1%
+    quick_footed                   = { 101158,  450503, 1 }, -- The duration of snare effects on you is reduced by $s1%
+    ring_of_peace                  = { 101136,  116844, 1 }, -- Form a Ring of Peace at the target location for $s1 sec. Enemies that enter will be ejected from the Ring
+    rising_sun_kick                = { 101186,  107428, 1 }, -- Kick upwards, dealing $s$s2 Physical damage, and reducing the effectiveness of healing on the target for $s3 sec
+    rushing_reflexes               = { 101154,  450154, 1 }, -- Your heightened reflexes allow you to react swiftly to the presence of enemies, causing you to quickly lunge to the nearest enemy in front of you within $s1 yards after you Roll
+    save_them_all                  = { 101157,  389579, 1 }, -- When your healing spells heal an ally whose health is below $s1% maximum health, you gain an additional $s2% healing for the next $s3 sec
+    song_of_chiji                  = { 101136,  198898, 1 }, -- Conjures a cloud of hypnotic mist that slowly travels forward. Enemies touched by the mist fall asleep, Disoriented for $s1 sec
+    soothing_mist                  = { 101143,  115175, 1 }, -- Heals the target for $s1 over $s2 sec. While channeling, Enveloping Mist and Vivify may be cast instantly on the target
+    spear_hand_strike              = { 101152,  116705, 1 }, -- Jabs the target in the throat, interrupting spellcasting and preventing any spell from that school of magic from being cast for $s1 sec
+    spirits_essence                = { 101138,  450595, 1 }, -- Transcendence: Transfer snares targets within $s1 yds by $s2% for $s3 sec when cast
+    strength_of_spirit             = { 101135,  387276, 1 }, -- Expel Harm's healing is increased by up to $s1%, based on your missing health
+    summon_white_tiger_statue      = { 101162,  450639, 1 }, -- Invoking Xuen, the White Tiger also spawns a White Tiger Statue at your location that pulses $s1 damage to all enemies every $s2 sec for $s3 sec
+    swift_art                      = { 101155,  450622, 1 }, -- Roll removes a snare effect once every $s1 sec
+    tiger_tail_sweep               = { 101182,  264348, 1 }, -- Increases the range of Leg Sweep by $s1 yds
+    tigers_lust                    = { 101147,  116841, 1 }, -- Increases a friendly target's movement speed by $s1% for $s2 sec and removes all roots and snares
+    transcendence                  = { 101167,  101643, 1 }, -- Split your body and spirit, leaving your spirit behind for $s1 min. Use Transcendence: Transfer to swap locations with your spirit
+    transcendence_linked_spirits   = { 101176,  434774, 1 }, -- Transcendence now tethers your spirit onto an ally for $s1 |$s2hour:hrs;. Use Transcendence: Transfer to teleport to your ally's location
+    vigorous_expulsion             = { 101156,  392900, 1 }, -- Expel Harm's healing increased by $s1% and critical strike chance increased by $s2%
+    vivacious_vivification         = { 101145,  388812, 1 }, -- After casting Rising Sun Kick, your next Vivify becomes instant and its healing is increased by $s1%. This effect also reduces the energy cost of Vivify by $s2%
+    winds_reach                    = { 101148,  450514, 1 }, -- The range of Disable is increased by $s1 yds. The duration of Crashing Momentum is increased by $s2 sec and its snare now reduces movement speed by an additional $s3%
+    windwalking                    = { 101175,  157411, 1 }, -- You and your allies within $s1 yards have $s2% increased movement speed. Stacks with other similar effects
+    yulons_grace                   = { 101165,  414131, 1 }, -- Find resilience in the flow of chi in battle, gaining a magic absorb shield for $s1% of your max health every $s2 sec in combat, stacking up to $s3%
 
     -- Windwalker
-    acclamation                    = { 101036, 451432, 1 }, -- Rising Sun Kick increases the damage your target receives from you by 3% for 12 sec. Multiple instances may overlap.
-    ascension                      = { 101037, 115396, 1 }, -- Increases your maximum Chi by 1, maximum Energy by 20, and your Energy regeneration by 10%.
-    brawlers_intensity             = { 101038, 451485, 1 }, -- The cooldown of Rising Sun Kick is reduced by 1.0 sec and the damage of Blackout Kick is increased by 12%.
-    combat_wisdom                  = { 101217, 121817, 1 }, -- While out of combat, your Chi balances to 2 instead of depleting to empty. Every 15 sec, your next Tiger Palm also casts Expel Harm and deals 30% additional damage.  Expel Harm Expel negative chi from your body, healing for 67,608 and dealing 10% of the amount healed as Nature damage to an enemy within 20 yards.
-    communion_with_wind            = { 101041, 451576, 1 }, -- Strike of the Windlord's cooldown is reduced by 10 sec and its damage is increased by 100%.
-    courageous_impulse             = { 101061, 451495, 1 }, -- The Blackout Kick! effect also increases the damage of your next Blackout Kick by 350%.
-    crane_vortex                   = { 101055, 388848, 1 }, -- Spinning Crane Kick damage increased by 30% and its radius is increased by 15%.
-    dance_of_chiji                 = { 101060, 325201, 1 }, -- Spending Chi has a chance to make your next Spinning Crane Kick free and deal an additional 200% damage.
-    drinking_horn_cover            = { 101052, 391370, 1 }, -- The duration of Storm, Earth, and Fire is extended by 0.25 sec for every Chi you spend.
-    dual_threat                    = { 101213, 451823, 1 }, -- Your auto attacks have a 20% chance to instead kick your target dealing 18,513 Physical damage and increasing your damage dealt by 5% for 5 sec.
-    energy_burst                   = { 101056, 451498, 1 }, -- When you consume Blackout Kick!, you have a 100% chance to generate 1 Chi.
-    ferociousness                  = { 101035, 458623, 1 }, -- Critical Strike chance increased by 2%. This effect is increased by 100% while Xuen, the White Tiger is active.
-    fists_of_fury                  = { 101218, 113656, 1 }, -- Pummels all targets in front of you, dealing 102,854 Physical damage to your primary target and 55,541 damage to all other enemies over 3.7 sec. Deals reduced damage beyond 5 targets. Can be channeled while moving.
-    flurry_of_xuen                 = { 101216, 452137, 1 }, -- Your spells and abilities have a chance to activate Flurry of Xuen, unleashing a barrage of deadly swipes to deal 58,433 Physical damage in a 10 yd cone, damage reduced beyond 5 targets. Invoking Xuen, the White Tiger activates Flurry of Xuen.
-    fury_of_xuen                   = { 101211, 396166, 1 }, -- Your Combo Strikes grant a stacking 1% chance for your next Fists of Fury to grant 3% critical strike, haste, and mastery and invoke Xuen, The White Tiger for 10 sec.
-    gale_force                     = { 101045, 451580, 1 }, -- Targets hit by Strike of the Windlord have a 100% chance to be struck for 10% additional Nature damage from your spells and abilities for 10 sec.
-    glory_of_the_dawn              = { 101039, 392958, 1 }, -- Rising Sun Kick has a chance equal to 100% of your haste to trigger a second time, dealing 49,264 Physical damage and restoring 1 Chi.
-    hardened_soles                 = { 101047, 391383, 1 }, -- Blackout Kick critical strike chance increased by 10% and critical damage increased by 18%.
-    hit_combo                      = { 101216, 196740, 1 }, -- Each successive attack that triggers Combo Strikes in a row grants 1% increased damage, stacking up to 5 times.
-    inner_peace                    = { 101214, 397768, 1 }, -- Increases maximum Energy by 30. Tiger Palm's Energy cost reduced by 5.
-    invoke_xuen                    = { 101206, 123904, 1 }, -- Summons an effigy of Xuen, the White Tiger for 20 sec. Xuen attacks your primary target, and strikes 3 enemies within 10 yards every 0.9 sec with Tiger Lightning for 3,870 Nature damage. Every 4 sec, Xuen strikes your enemies with Empowered Tiger Lightning dealing 8% of the damage you have dealt to those targets in the last 4 sec.
-    invoke_xuen_the_white_tiger    = { 101206, 123904, 1 }, -- Summons an effigy of Xuen, the White Tiger for 20 sec. Xuen attacks your primary target, and strikes 3 enemies within 10 yards every 0.9 sec with Tiger Lightning for 3,870 Nature damage. Every 4 sec, Xuen strikes your enemies with Empowered Tiger Lightning dealing 8% of the damage you have dealt to those targets in the last 4 sec.
-    invokers_delight               = { 101207, 388661, 1 }, -- You gain 15% haste for 20 sec after summoning your Celestial.
-    jade_ignition                  = { 101050, 392979, 1 }, -- Whenever you deal damage to a target with Fists of Fury, you gain a stack of Chi Energy up to a maximum of 30 stacks. Using Spinning Crane Kick will cause the energy to detonate in a Chi Explosion, dealing 26,831 Nature damage to all enemies within 8 yards, reduced beyond 5 targets. The damage is increased by 5% for each stack of Chi Energy.
-    jadefire_fists                 = { 101044, 457974, 1 }, -- At the end of your Fists of Fury channel, you release a Jadefire Stomp. This can occur once every 25 sec.  Jadefire Stomp Strike the ground fiercely to expose a path of jade for 30 sec that increases your movement speed by 20% while inside, dealing 6,201 Nature damage to up to 5 enemies, and restoring 12,767 health to up to 5 allies within 30 yds caught in the path. Up to 5 enemies caught in the path suffer an additional 9,689 damage.
-    jadefire_harmony               = { 101042, 391412, 1 }, -- Enemies and allies hit by Jadefire Stomp are affected by Jadefire Brand, increasing your damage and healing against them by 6% for 10 sec.
-    jadefire_stomp                 = { 101044, 388193, 1 }, -- Strike the ground fiercely to expose a path of jade for 30 sec that increases your movement speed by 20% while inside, dealing 6,201 Nature damage to up to 5 enemies, and restoring 12,767 health to up to 5 allies within 30 yds caught in the path. Up to 5 enemies caught in the path suffer an additional 9,689 damage.
-    knowledge_of_the_broken_temple = { 101203, 451529, 1 }, -- Whirling Dragon Punch grants 4 stacks of Teachings of the Monastery and its damage is increased by 20%. Teachings of the Monastery can now stack up to 8 times.
-    last_emperors_capacitor        = { 104129, 392989, 1 }, -- Chi spenders increase the damage of your next Crackling Jade Lightning by 400% and reduce its cost by 5%, stacking up to 20 times.
-    martial_mixture                = { 101057, 451454, 1 }, -- Blackout Kick increases the damage of your next Tiger Palm by 8%, stacking up to 30 times.
-    memory_of_the_monastery        = { 101209, 454969, 1 }, -- Tiger Palm's chance to activate Blackout Kick! is increased by 25% and consuming Teachings of the Monastery grants you 1.0% haste for 5 sec equal to the amount of stacks consumed.
-    meridian_strikes               = { 101038, 391330, 1 }, -- When you Combo Strike, the cooldown of Touch of Death is reduced by 0.60 sec. Touch of Death deals an additional 15% damage.
-    momentum_boost                 = { 101048, 451294, 1 }, -- Fists of Fury's damage is increased by 100% of your haste and Fists of Fury does 10% more damage each time it deals damage, resetting when Fists of Fury ends. Your auto attack speed is increased by 60% for 8 sec after Fists of Fury ends.
-    ordered_elements               = { 101051, 451463, 1 }, -- During Storm, Earth, and Fire, Rising Sun Kick reduces Chi costs by 1 for 7 sec and Blackout Kick reduces the cooldown of affected abilities by an additional 1 sec. Activating Storm, Earth, and Fire resets the remaining cooldown of Rising Sun Kick and grants 2 Chi.
-    path_of_jade                   = { 101043, 392994, 1 }, -- Increases the initial damage of Jadefire Stomp by 10% per target hit by that damage, up to a maximum of 50% additional damage.
-    power_of_the_thunder_king      = { 104128, 459809, 1 }, -- Crackling Jade Lightning now chains to 4 additional targets at 80% effectiveness and its channel time is reduced by 50%.
-    revolving_whirl                = { 101203, 451524, 1 }, -- Whirling Dragon Punch has a 100% chance to activate Dance of Chi-Ji and its cooldown is reduced by 5 sec.
-    rising_star                    = { 101205, 388849, 1 }, -- Rising Sun Kick damage increased by 15% and critical strike damage increased by 10%.
-    rushing_jade_wind              = { 101046, 451505, 1 }, -- Strike of the Windlord summons a whirling tornado around you, causing 69,013 Physical damage over 12.0 sec to all enemies within 8 yards. Deals reduced damage beyond 5 targets.
-    sequenced_strikes              = { 101059, 451515, 1 }, -- You have a 100% chance to gain Blackout Kick! after consuming Dance of Chi-Ji.
-    shadowboxing_treads            = { 101062, 392982, 1 }, -- Blackout Kick damage increased by 10% and strikes an additional 2 targets at 80% effectiveness.
-    singularly_focused_jade        = { 101043, 451573, 1 }, -- Jadefire Stomp's initial hit now strikes 1 target, but deals 500% increased damage and healing.
-    slicing_winds                  = { 102250, 1217413, 1 }, -- Envelop yourself in razor-sharp winds, then lunge forward dealing 119,251 Nature damage to enemies in your path. Damage reduced beyond 5 enemies. Hold to increase lunge distance.
-    spiritual_focus                = { 101052, 280197, 1 }, -- Every 2 Chi you spend reduces the cooldown of Storm, Earth, and Fire by 0.5 sec.
-    storm_earth_and_fire           = { 101053, 137639, 1 }, -- Split into 3 elemental spirits for 15 sec, each spirit dealing 40% of normal damage and healing. You directly control the Storm spirit, while Earth and Fire spirits mimic your attacks on nearby enemies. While active, casting Storm, Earth, and Fire again will cause the spirits to fixate on your target.
-    strike_of_the_windlord         = { 101215, 392983, 1 }, -- Strike with both fists at all enemies in front of you, dealing 185,487 Physical damage and reducing movement speed by 50% for 6 sec.
-    teachings_of_the_monastery     = { 101054, 116645, 1 }, -- Tiger Palm causes your next Blackout Kick to strike an additional time, stacking up to 8. Blackout Kick has a 12% chance to reset the remaining cooldown on Rising Sun Kick.
-    thunderfist                    = { 101040, 392985, 1 }, -- Strike of the Windlord grants you 4 stacks of Thunderfist and an additional stack for each additional enemy struck. Thunderfist discharges upon melee strikes, dealing 23,999 Nature damage.
-    touch_of_the_tiger             = { 101049, 388856, 1 }, -- Tiger Palm damage increased by 40%.
-    transfer_the_power             = { 101212, 195300, 1 }, -- Blackout Kick, Rising Sun Kick, and Spinning Crane Kick increase damage dealt by your next Fists of Fury by 3%, stacking up to 10 times.
-    whirling_dragon_punch          = { 101204, 152175, 1 }, -- Performs a devastating whirling upward strike, dealing 86,397 damage to all nearby enemies and an additional 53,663 damage to the first target struck. Damage reduced beyond 5 targets. Only usable while both Fists of Fury and Rising Sun Kick are on cooldown.
-    xuens_battlegear               = { 101210, 392993, 1 }, -- Rising Sun Kick critical strikes reduce the cooldown of Fists of Fury by 4 sec. When Fists of Fury ends, the critical strike chance of Rising Sun Kick is increased by 40% for 5 sec.
-    xuens_bond                     = { 101208, 392986, 1 }, -- Invoke Xuen, the White Tiger's damage is increased by 30% and its cooldown is reduced by 30 sec.
+    acclamation                    = { 101036,  451432, 1 }, -- Rising Sun Kick increases the damage your target receives from you by $s1% for $s2 sec. Multiple instances may overlap
+    ascension                      = { 101037,  115396, 1 }, -- Increases your maximum Chi by $s1, maximum Energy by $s2, and your Energy regeneration by $s3%
+    brawlers_intensity             = { 101038,  451485, 1 }, -- The cooldown of Rising Sun Kick is reduced by $s1 sec and the damage of Blackout Kick is increased by $s2%
+    combat_wisdom                  = { 101217,  121817, 1 }, -- While out of combat, your Chi balances to $s1 instead of depleting to empty. Every $s2 sec, your next Tiger Palm also casts Expel Harm and deals $s3% additional damage.  Expel Harm Expel negative chi from your body, healing for $s6 and dealing $s7% of the amount healed as Nature damage to an enemy within $s8 yards
+    communion_with_wind            = { 101041,  451576, 1 }, -- Strike of the Windlord's cooldown is reduced by $s1 sec and its damage is increased by $s2%
+    courageous_impulse             = { 101061,  451495, 1 }, -- The Blackout Kick! effect also increases the damage of your next Blackout Kick by $s1%
+    crane_vortex                   = { 101055,  388848, 1 }, -- Spinning Crane Kick damage increased by $s1% and its radius is increased by $s2%
+    dance_of_chiji                 = { 101060,  325201, 1 }, -- Spending Chi has a chance to make your next Spinning Crane Kick free and deal an additional $s1% damage
+    drinking_horn_cover            = { 101052,  391370, 1 }, -- The duration of Storm, Earth, and Fire is extended by $s1 sec for every Chi you spend
+    dual_threat                    = { 101213,  451823, 1 }, -- Your auto attacks have a $s2% chance to instead kick your target dealing $s$s3 Physical damage and increasing your damage dealt by $s4% for $s5 sec
+    energy_burst                   = { 101056,  451498, 1 }, -- When you consume Blackout Kick!, you have a $s1% chance to generate $s2 Chi
+    ferociousness                  = { 101035,  458623, 1 }, -- Critical Strike chance increased by $s1%. This effect is increased by $s2% while Xuen, the White Tiger is active
+    fists_of_fury                  = { 101218,  113656, 1 }, -- Pummels all targets in front of you, dealing $s$s2 Physical damage to your primary target and $s3 damage to all other enemies over $s4 sec. Deals reduced damage beyond $s5 targets. Can be channeled while moving
+    flurry_of_xuen                 = { 101216,  452137, 1 }, -- Your spells and abilities have a chance to activate Flurry of Xuen, unleashing a barrage of deadly swipes to deal $s$s2 Physical damage in a $s3 yd cone, damage reduced beyond $s4 targets. Invoking Xuen, the White Tiger activates Flurry of Xuen
+    fury_of_xuen                   = { 101211,  396166, 1 }, -- Your Combo Strikes grant a stacking $s1% chance for your next Fists of Fury to grant $s2% critical strike, haste, and mastery and invoke Xuen, The White Tiger for $s3 sec
+    gale_force                     = { 101045,  451580, 1 }, -- Targets hit by Strike of the Windlord have a $s1% chance to be struck for $s2% additional Nature damage from your spells and abilities for $s3 sec
+    glory_of_the_dawn              = { 101039,  392958, 1 }, -- Rising Sun Kick has a chance equal to $s2% of your haste to trigger a second time, dealing $s$s3 Physical damage and restoring $s4 Chi
+    hardened_soles                 = { 101047,  391383, 1 }, -- Blackout Kick critical strike chance increased by $s1% and critical damage increased by $s2%
+    hit_combo                      = { 101216,  196740, 1 }, -- Each successive attack that triggers Combo Strikes in a row grants $s1% increased damage, stacking up to $s2 times
+    inner_peace                    = { 101214,  397768, 1 }, -- Increases maximum Energy by $s1. Tiger Palm's Energy cost reduced by $s2
+    invoke_xuen_the_white_tiger    = { 101206,  123904, 1 }, -- Summons an effigy of Xuen, the White Tiger for $s2 sec. Xuen attacks your primary target, and strikes $s3 enemies within $s4 yards every $s5 sec with Tiger Lightning for $s$s6 Nature damage. Every $s7 sec, Xuen strikes your enemies with Empowered Tiger Lightning dealing $s8% of the damage you have dealt to those targets in the last $s9 sec
+    invokers_delight               = { 101207,  388661, 1 }, -- You gain $s1% haste for $s2 sec after summoning your Celestial
+    jade_ignition                  = { 101050,  392979, 1 }, -- Whenever you deal damage to a target with Fists of Fury, you gain a stack of Chi Energy up to a maximum of $s3 stacks. Using Spinning Crane Kick will cause the energy to detonate in a Chi Explosion, dealing $s$s4 Nature damage to all enemies within $s5 yards, reduced beyond $s6 targets$s$s7 The damage is increased by $s8% for each stack of Chi Energy
+    jadefire_fists                 = { 101044,  457974, 1 }, -- At the end of your Fists of Fury channel, you release a Jadefire Stomp. This can occur once every $s2 sec.  Jadefire Stomp Strike the ground fiercely to expose a path of jade for $s5 sec that increases your movement speed by $s6% while inside, dealing $s$s7 Nature damage to up to $s8 enemies, and restoring $s9 health to up to $s10 allies within $s11 yds caught in the path. Up to $s12 enemies caught in the path suffer an additional $s13 damage
+    jadefire_harmony               = { 101042,  391412, 1 }, -- Enemies and allies hit by Jadefire Stomp are affected by Jadefire Brand, increasing your damage and healing against them by $s1% for $s2 sec
+    jadefire_stomp                 = { 101044,  388193, 1 }, -- Strike the ground fiercely to expose a path of jade for $s2 sec that increases your movement speed by $s3% while inside, dealing $s$s4 Nature damage to up to $s5 enemies, and restoring $s6 health to up to $s7 allies within $s8 yds caught in the path. Up to $s9 enemies caught in the path suffer an additional $s10 damage
+    knowledge_of_the_broken_temple = { 101203,  451529, 1 }, -- Whirling Dragon Punch grants $s1 stacks of Teachings of the Monastery and its damage is increased by $s2%. Teachings of the Monastery can now stack up to $s3 times
+    last_emperors_capacitor        = { 104129,  392989, 1 }, -- Chi spenders increase the damage of your next Crackling Jade Lightning by $s1% and reduce its cost by $s2%, stacking up to $s3 times
+    martial_mixture                = { 101057,  451454, 1 }, -- Blackout Kick increases the damage of your next Tiger Palm by $s1%, stacking up to $s2 times
+    memory_of_the_monastery        = { 101209,  454969, 1 }, -- Tiger Palm's chance to activate Blackout Kick! is increased by $s1% and consuming Teachings of the Monastery grants you $s2% haste for $s3 sec equal to the amount of stacks consumed
+    meridian_strikes               = { 101038,  391330, 1 }, -- When you Combo Strike, the cooldown of Touch of Death is reduced by $s1 sec. Touch of Death deals an additional $s2% damage
+    momentum_boost                 = { 101048,  451294, 1 }, -- Fists of Fury's damage is increased by $s1% of your haste and Fists of Fury does $s2% more damage each time it deals damage, resetting when Fists of Fury ends. Your auto attack speed is increased by $s3% for $s4 sec after Fists of Fury ends
+    ordered_elements               = { 101051,  451463, 1 }, -- During Storm, Earth, and Fire, Chi costs are reduced by $s1 and Blackout Kick reduces the cooldown of affected abilities by an additional $s2 sec. Activating Storm, Earth, and Fire resets the remaining cooldown of Rising Sun Kick and grants $s3 Chi
+    path_of_jade                   = { 101043,  392994, 1 }, -- Increases the initial damage of Jadefire Stomp by $s1% per target hit by that damage, up to a maximum of $s2% additional damage
+    power_of_the_thunder_king      = { 104128,  459809, 1 }, -- Crackling Jade Lightning now chains to $s1 additional targets at $s2% effectiveness and its channel time is reduced by $s3%
+    revolving_whirl                = { 101203,  451524, 1 }, -- Whirling Dragon Punch has a $s1% chance to activate Dance of Chi-Ji and its cooldown is reduced by $s2 sec
+    rising_star                    = { 101205,  388849, 1 }, -- Rising Sun Kick damage increased by $s1% and critical strike damage increased by $s2%
+    rushing_jade_wind              = { 101046,  451505, 1 }, -- Strike of the Windlord summons a whirling tornado around you, causing $s$s2 Physical damage over $s3 sec to all enemies within $s4 yards. Deals reduced damage beyond $s5 targets
+    sequenced_strikes              = { 101059,  451515, 1 }, -- You have a $s1% chance to gain Blackout Kick! after consuming Dance of Chi-Ji
+    shadowboxing_treads            = { 101062,  392982, 1 }, -- Blackout Kick damage increased by $s1% and strikes an additional $s2 targets at $s3% effectiveness
+    singularly_focused_jade        = { 101043,  451573, 1 }, -- Jadefire Stomp's initial hit now strikes $s1 target, but deals $s2% increased damage and healing
+    slicing_winds                  = { 102250, 1217413, 1 }, -- Envelop yourself in razor-sharp winds, then lunge forward dealing $s$s2 Nature damage to enemies in your path. Damage reduced beyond $s3 enemies. Hold to increase lunge distance
+    spiritual_focus                = { 101052,  280197, 1 }, -- Every $s1 Chi you spend reduces the cooldown of Storm, Earth, and Fire by $s2 sec
+    storm_earth_and_fire           = { 101053,  137639, 1 }, -- Split into $s1 elemental spirits for $s2 sec, each spirit dealing $s3% of normal damage and healing. You directly control the Storm spirit, while Earth and Fire spirits mimic your attacks on nearby enemies. While active, casting Storm, Earth, and Fire again will cause the spirits to fixate on your target
+    strike_of_the_windlord         = { 101215,  392983, 1 }, -- Strike with both fists at all enemies in front of you, dealing $s$s2 Physical damage and reducing movement speed by $s3% for $s4 sec. Deals reduced damage to secondary targets
+    teachings_of_the_monastery     = { 101054,  116645, 1 }, -- Tiger Palm causes your next Blackout Kick to strike an additional time, stacking up to $s1. Blackout Kick has a $s2% chance to reset the remaining cooldown on Rising Sun Kick
+    thunderfist                    = { 101040,  392985, 1 }, -- Strike of the Windlord grants you $s2 stacks of Thunderfist and an additional stack for each additional enemy struck. Thunderfist discharges upon melee strikes, dealing $s$s3 Nature damage
+    touch_of_the_tiger             = { 101049,  388856, 1 }, -- Tiger Palm damage increased by $s1%
+    transfer_the_power             = { 101212,  195300, 1 }, -- Blackout Kick, Rising Sun Kick, and Spinning Crane Kick increase damage dealt by your next Fists of Fury by $s1%, stacking up to $s2 times
+    whirling_dragon_punch          = { 101204,  152175, 1 }, -- Performs a devastating whirling upward strike, dealing $s1 damage to all nearby enemies and an additional $s2 damage to the first target struck. Damage reduced beyond $s3 targets. Only usable while both Fists of Fury and Rising Sun Kick are on cooldown
+    xuens_battlegear               = { 101210,  392993, 1 }, -- Rising Sun Kick critical strikes reduce the cooldown of Fists of Fury by $s1 sec. When Fists of Fury ends, the critical strike chance of Rising Sun Kick is increased by $s2% for $s3 sec
+    xuens_bond                     = { 101208,  392986, 1 }, -- Invoke Xuen, the White Tiger's damage is increased by $s1% and its cooldown is reduced by $s2 sec
 
-    -- Shado-Pan
-    against_all_odds               = { 101253, 450986, 1 }, -- Flurry Strikes increase your Agility by 1% for 5 sec, stacking up to 20 times.
-    efficient_training             = { 101251, 450989, 1 }, -- Energy spenders deal an additional 20% damage. Every 50 Energy spent reduces the cooldown of Storm, Earth, and Fire by 1 sec.
-    flurry_strikes                 = { 101248, 450615, 1, "shadowpan" }, -- Every 263,060 damage you deal generates a Flurry Charge. For each 240 energy you spend, unleash all Flurry Charges, dealing 25,253 Physical damage per charge.
-    high_impact                    = { 101247, 450982, 1 }, -- Enemies who die within 10 sec of being damaged by a Flurry Strike explode, dealing 15,060 physical damage to uncontrolled enemies within 8 yds.
-    lead_from_the_front            = { 101254, 450985, 1 }, -- Chi Burst, Chi Wave, and Expel Harm now heal you for 20% of damage dealt.
-    martial_precision              = { 101246, 450990, 1 }, -- Your attacks penetrate 12% armor.
-    one_versus_many                = { 101250, 450988, 1 }, -- Damage dealt by Fists of Fury and Keg Smash counts as double towards Flurry Charge generation. Fists of Fury damage increased by 15%. Keg Smash damage increased by 35%.
-    predictive_training            = { 101245, 450992, 1 }, -- When you dodge or parry an attack, reduce all damage taken by 10% for the next 6 sec.
-    pride_of_pandaria              = { 101247, 450979, 1 }, -- Flurry Strikes have 15% additional chance to critically strike.
-    protect_and_serve              = { 101254, 450984, 1 }, -- Your Vivify always heals you for an additional 30% of its total value.
-    veterans_eye                   = { 101249, 450987, 1 }, -- Striking the same target 5 times within 2 sec grants 1% Haste, stacking up to 10 times.
-    vigilant_watch                 = { 101244, 450993, 1 }, -- Blackout Kick deals an additional 20% critical damage and increases the damage of your next set of Flurry Strikes by 10%.
-    whirling_steel                 = { 101245, 450991, 1 }, -- When your health drops below 50%, summon Whirling Steel, increasing your parry chance and avoidance by 15% for 6 sec. This effect can not occur more than once every 180 sec.
-    wisdom_of_the_wall             = { 101252, 450994, 1 }, -- Every 10 Flurry Strikes, become infused with the Wisdom of the Wall, gaining one of the following effects for 16 sec. Critical strike damage increased by 30%. Dodge and Critical Strike chance increased by 25% of your Versatility bonus. Flurry Strikes deal 24,096 Shadow damage to all uncontrolled enemies within 6 yds. Effect of your Mastery increased by 25%.
+    -- Conduit Of The Celestials
+    august_dynasty                 = { 101235,  442818, 1 }, -- Casting Jadefire Stomp increases the damage of your next Rising Sun Kick by $s1%
+    celestial_conduit              = { 101243,  443028, 1 }, -- The August Celestials empower you, causing you to radiate $s$s2 Nature damage onto enemies and $s3 healing onto up to $s4 injured allies within $s5 yds over $s6 sec, split evenly among them. Healing and damage increased by $s7% per enemy struck, up to $s8%. You may move while channeling, but casting other healing or damaging spells cancels this effect
+    chijis_swiftness               = { 101240,  443566, 1 }, -- Your movement speed is increased by $s1% during Celestial Conduit and by $s2% for $s3 sec after being assisted by any Celestial
+    courage_of_the_white_tiger     = { 101242,  443087, 1 }, -- Tiger Palm has a chance to cause Xuen to claw your target for $s$s2 Physical damage, healing a nearby ally for $s3% of the damage done. Invoke Xuen, the White Tiger guarantees your next cast activates this effect
+    flight_of_the_red_crane        = { 101234,  443255, 1 }, -- Rushing Jade Wind and Spinning Crane Kick have a chance to cause Chi-Ji to increase your energy regeneration by $s2% for $s3 sec and quickly rush to $s4 enemies, dealing $s$s5 Physical damage to each target struck
+    heart_of_the_jade_serpent      = { 101237,  443294, 1 }, -- Strike of the Windlord calls upon Yu'lon to increase the cooldown recovery rate of Fists of Fury, Strike of the Windlord, Rising Sun Kick, Flying Serpent Kick, and Whirling Dragon Punch by $s1% for $s2 sec. The channel time of Fists of Fury is reduced by $s3% while Yu'lon is active
+    inner_compass                  = { 101235,  443571, 1 }, -- You switch between alignments after an August Celestial assists you, increasing a corresponding secondary stat by $s1%. Crane Stance: Haste Tiger Stance: Critical Strike Ox Stance: Versatility Serpent Stance: Mastery
+    jade_sanctuary                 = { 101238,  443059, 1 }, -- You heal for $s1% of your maximum health instantly when you activate Celestial Conduit and receive $s2% less damage for its duration. This effect lingers for an additional $s3 sec after Celestial Conduit ends
+    niuzaos_protection             = { 101238,  442747, 1 }, -- Fortifying Brew grants you an absorb shield for $s1% of your maximum health
+    restore_balance                = { 101233,  442719, 1 }, -- Gain Rushing Jade Wind while Xuen, the White Tiger is active
+    strength_of_the_black_ox       = { 101241,  443110, 1 }, -- After Xuen assists you, your next Blackout Kick refunds $s1 stacks of Teachings of the Monastery and causes Niuzao to stomp at your target's location, dealing $s2 damage to nearby enemies, reduced beyond $s3 targets
+    temple_training                = { 101236,  442743, 1 }, -- Fists of Fury and Spinning Crane Kick deal $s1% more damage
+    unity_within                   = { 101239,  443589, 1 }, -- Celestial Conduit can be recast once during its duration to call upon all of the August Celestials to assist you at $s1% effectiveness. Unity Within is automatically cast when Celestial Conduit ends if not used before expiration
+    xuens_guidance                 = { 101236,  442687, 1 }, -- Teachings of the Monastery has a $s2% chance to refund a charge when consumed$s$s3 The damage of Tiger Palm is increased by $s4%
+    yulons_knowledge               = { 101233,  443625, 1 }, -- Rushing Jade Wind's duration is increased by $s1 sec
 
-    -- Conduit of the Celestials
-    august_dynasty                 = { 101235, 442818, 1 }, -- Casting Jadefire Stomp increases the damage of your next Rising Sun Kick by 30%. This effect can only activate once every 8 sec.
-    celestial_conduit              = { 101243, 443028, 1, "conduit_of_the_celestials" }, -- The August Celestials empower you, causing you to radiate 2.3 million Nature damage onto enemies and 222,232 healing onto up to 5 injured allies within 15 yds over 3.8 sec, split evenly among them. Healing and damage increased by 6% per enemy struck, up to 30%. You may move while channeling, but casting other healing or damaging spells cancels this effect.
-    chijis_swiftness               = { 101240, 443566, 1 }, -- Your movement speed is increased by 75% during Celestial Conduit and by 15% for 3 sec after being assisted by any Celestial.
-    courage_of_the_white_tiger     = { 101242, 443087, 1 }, -- Tiger Palm has a chance to cause Xuen to claw your target for 50,309 Physical damage, healing a nearby ally for 25% of the damage done. Invoke Xuen, the White Tiger guarantees your next cast activates this effect.
-    flight_of_the_red_crane        = { 101234, 443255, 1 }, -- Rushing Jade Wind and Spinning Crane Kick have a chance to cause Chi-Ji to increase your energy regeneration by 20% for 6 sec and quickly rush to 5 enemies, dealing 29,812 Physical damage to each target struck.
-    heart_of_the_jade_serpent      = { 101237, 443294, 1 }, -- Strike of the Windlord calls upon Yu'lon to decrease the cooldown time of Fists of Fury, Strike of the Windlord, Rising Sun Kick, Flying Serpent Kick, and Whirling Dragon Punch by 75% for 6 sec. The channel time of Fists of Fury is reduced by 50% while Yu'lon is active.
-    inner_compass                  = { 101235, 443571, 1 }, -- You switch between alignments after an August Celestial assists you, increasing a corresponding secondary stat by 2%. Crane Stance: Haste Tiger Stance: Critical Strike Ox Stance: Versatility Serpent Stance: Mastery
-    jade_sanctuary                 = { 101238, 443059, 1 }, -- You heal for 10% of your maximum health instantly when you activate Celestial Conduit and receive 15% less damage for its duration. This effect lingers for an additional 8 sec after Celestial Conduit ends.
-    niuzaos_protection             = { 101238, 442747, 1 }, -- Fortifying Brew grants you an absorb shield for 25% of your maximum health.
-    restore_balance                = { 101233, 442719, 1 }, -- Gain Rushing Jade Wind while Xuen, the White Tiger is active.
-    strength_of_the_black_ox       = { 101241, 443110, 1 }, -- After Xuen assists you, your next Blackout Kick refunds 2 stacks of Teachings of the Monastery and causes Niuzao to stomp at your target's location, dealing 29,812 damage to nearby enemies, reduced beyond 5 targets.
-    temple_training                = { 101236, 442743, 1 }, -- Fists of Fury and Spinning Crane Kick deal 10% more damage.
-    unity_within                   = { 101239, 443589, 1 }, -- Celestial Conduit can be recast once during its duration to call upon all of the August Celestials to assist you at 200% effectiveness. Unity Within is automatically cast when Celestial Conduit ends if not used before expiration.
-    xuens_guidance                 = { 101236, 442687, 1 }, -- Teachings of the Monastery has a 15% chance to refund a charge when consumed. The damage of Tiger Palm is increased by 10%.
-    yulons_knowledge               = { 101233, 443625, 1 }, -- Rushing Jade Wind's duration is increased by 4 sec.
+    -- Shado Pan
+    against_all_odds               = { 101253,  450986, 1 }, -- Flurry Strikes increase your Agility by $s1% for $s2 sec, stacking up to $s3 times
+    efficient_training             = { 101251,  450989, 1 }, -- Energy spenders deal an additional $s1% damage. Every $s2 Energy spent reduces the cooldown of Storm, Earth, and Fire by $s3 sec
+    flurry_strikes                 = { 101248,  450615, 1 }, -- Every $s2 damage you deal generates a Flurry Charge. For each $s3 energy you spend, unleash all Flurry Charges, dealing $s$s4 Physical damage per charge
+    high_impact                    = { 101247,  450982, 1 }, -- Enemies who die within $s2 sec of being damaged by a Flurry Strike explode, dealing $s$s3 physical damage to uncontrolled enemies within $s4 yds
+    lead_from_the_front            = { 101254,  450985, 1 }, -- Chi Burst, Chi Wave, and Expel Harm now heal you for $s1% of damage dealt
+    martial_precision              = { 101246,  450990, 1 }, -- Your attacks penetrate $s1% armor
+    one_versus_many                = { 101250,  450988, 1 }, -- Damage dealt by Fists of Fury and Keg Smash counts as double towards Flurry Charge generation. Fists of Fury damage increased by $s1%. Keg Smash damage increased by $s2%
+    predictive_training            = { 101245,  450992, 1 }, -- When you dodge or parry an attack, reduce all damage taken by $s1% for the next $s2 sec
+    pride_of_pandaria              = { 101247,  450979, 1 }, -- Flurry Strikes have $s1% additional chance to critically strike
+    protect_and_serve              = { 101254,  450984, 1 }, -- Your Vivify always heals you for an additional $s1% of its total value
+    veterans_eye                   = { 101249,  450987, 1 }, -- Striking the same target $s1 times within $s2 sec grants $s3% Haste, stacking up to $s4 times
+    vigilant_watch                 = { 101244,  450993, 1 }, -- Blackout Kick deals an additional $s1% critical damage and increases the damage of your next set of Flurry Strikes by $s2%
+    whirling_steel                 = { 101245,  450991, 1 }, -- When your health drops below $s1%, summon Whirling Steel, increasing your parry chance and avoidance by $s2% for $s3 sec. This effect can not occur more than once every $s4 sec
+    wisdom_of_the_wall             = { 101252,  450994, 1 }, -- Every $s2 Flurry Strikes, become infused with the Wisdom of the Wall, gaining one of the following effects for $s3 sec. Critical strike damage increased by $s4%. Dodge and Critical Strike chance increased by $s5% of your Versatility bonus. Flurry Strikes deal $s$s6 Shadow damage to all uncontrolled enemies within $s7 yds. Effect of your Mastery increased by $s8%
 } )
 
 -- PvP Talents
 spec:RegisterPvpTalents( {
-    absolute_serenity   = 5641, -- (455945) Celestial Conduit now prevents all crowd control for its duration.
-    grapple_weapon      = 3052, -- (233759) You fire off a rope spear, grappling the target's weapons and shield, returning them to you for 5 sec.
-    perpetual_paralysis = 5448, -- (357495)
-    predestination      = 3744, -- (345829)
-    ride_the_wind       =   77, -- (201372)
-    rising_dragon_sweep = 5643, -- (460276)
-    rodeo               = 5644, -- (355917) Every 3 sec while Clash is off cooldown, your next Clash can be reactivated immediately to wildly Clash an additional enemy. This effect can stack up to 3 times.
-    stormspirit_strikes = 5610, -- (411098)
-    tigereye_brew       =  675, -- (247483) Consumes up to 10 stacks of Tigereye Brew to empower your Physical abilities with wind for 2 sec per stack consumed. Damage of your strikes are reduced, but bypass armor. For each 3 Chi you consume, you gain a stack of Tigereye Brew.
-    turbo_fists         = 3745, -- (287681)
-    wind_waker          = 3737, -- (357633)
+    absolute_serenity              = 5641, -- (455945) Celestial Conduit now prevents all crowd control for its duration
+    grapple_weapon                 = 3052, -- (233759) You fire off a rope spear, grappling the target's weapons and shield, returning them to you for $s1 sec
+    perpetual_paralysis            = 5448, -- (357495)
+    predestination                 = 3744, -- (345829)
+    ride_the_wind                  =   77, -- (201372)
+    rising_dragon_sweep            = 5643, -- (460276)
+    rodeo                          = 5644, -- (355917) Every $s1 sec while Clash is off cooldown, your next Clash can be reactivated immediately to wildly Clash an additional enemy. This effect can stack up to $s2 times
+    stormspirit_strikes            = 5610, -- (411098)
+    tigereye_brew                  =  675, -- (247483) Consumes up to $s1 stacks of Tigereye Brew to empower your Physical abilities with wind for $s2 sec per stack consumed. Damage of your strikes are reduced, but bypass armor. For each $s3 Chi you consume, you gain a stack of Tigereye Brew
+    turbo_fists                    = 3745, -- (287681)
+    wind_waker                     = 3737, -- (357633)
 } )
 
 -- Auras
@@ -529,7 +531,7 @@ spec:RegisterAuras( {
     mystic_touch = {
         id = 113746,
         duration = 3600,
-        max_stack = 1,
+        max_stack = 1
     },
     -- Reduces the Chi Cost of your abilities by $s1.
     ordered_elements = {
@@ -693,7 +695,7 @@ spec:RegisterAuras( {
     -- https://wowhead.com/beta/spell=392883
     vivacious_vivification = {
         id = 392883,
-        duration = 3600,
+        duration = 20,
         max_stack = 1
     },
     -- Talent:
@@ -787,70 +789,86 @@ spec:RegisterAuras( {
     },
 } )
 
--- The War Within
-spec:RegisterGear( "tww2", 229301, 229299, 229298, 229297, 229296 )
-spec:RegisterAuras( {
-    -- 2-set
-    -- https://www.wowhead.com/ptr-2/spell=1216182/winning-streak // https://www.wowhead.com/ptr-2/spell=1215717/monk-windwalker-11-1-class-set-2pc
-    -- [Your spells and abilities have a chance to activate a Winning Streak! increasing the damage of your Rising Sun Kick and Spinning Crane Kick by 3% stacking up to 10 times. Rising Sun Kick and Spinning Crane Kick have a 15% chance to remove Winning Streak!] = {
-    winning_streak = {
-        id = 1216182,
-        duration = 3600,
-        max_stack = 10
+spec:RegisterGear({
+    -- The War Within
+    tww3 = {
+        items = { 237673, 237671, 237676, 237674, 237672 },
+        auras = {
+            -- Conduit of the Celestials
+            jade_serpents_blessing = {
+                id = 1238901,
+                duration = 4,
+                max_stack = 1
+            },
+        }
     },
-    -- https://www.wowhead.com/ptr-2/spell=1216498/cashout // https://www.wowhead.com/ptr-2/spell=1215718/monk-windwalker-11-1-class-set-4pc
-    cashout = {
-        id = 1216498,
-        duration = 30,
-        max_stack = 10
+    tww2 = {
+        items = { 229301, 229299, 229298, 229297, 229296 },
+        auras = {
+            winning_streak = {
+                id = 1216182,
+                duration = 3600,
+                max_stack = 10
+            },
+            cashout = {
+                id = 1216498,
+                duration = 30,
+                max_stack = 10
+            }
+        }
     },
-} )
-
--- Dragonflight
-spec:RegisterGear( "tier31", 207243, 207244, 207245, 207246, 207248 )
-spec:RegisterGear( "tier30", 202509, 202507, 202506, 202505, 202504 )
-spec:RegisterAura( "shadowflame_vulnerability", {
-    id = 411376,
-    duration = 15,
-    max_stack = 1
-} )
-spec:RegisterGear( "tier29", 200360, 200362, 200363, 200364, 200365, 217188, 217190, 217186, 217187, 217189 )
-spec:RegisterAuras( {
-    kicks_of_flowing_momentum = {
-        id = 394944,
-        duration = 30,
-        max_stack = 2,
+    -- Dragonflight
+    tier31 = {
+        items = { 207243, 207244, 207245, 207246, 207248 }
     },
-    fists_of_flowing_momentum = {
-        id = 394949,
-        duration = 30,
-        max_stack = 3,
-    }
+    tier30 = {
+        items = { 202509, 202507, 202506, 202505, 202504 },
+        auras = {
+            shadowflame_vulnerability = {
+                id = 411376,
+                duration = 15,
+                max_stack = 1
+            }
+        }
+    },
+    tier29 = {
+        items = { 200360, 200362, 200363, 200364, 200365, 217188, 217190, 217186, 217187, 217189 },
+        auras = {
+            kicks_of_flowing_momentum = {
+                id = 394944,
+                duration = 30,
+                max_stack = 2
+            },
+            fists_of_flowing_momentum = {
+                id = 394949,
+                duration = 30,
+                max_stack = 3
+            }
+        }
+    },
+    -- Legacy
+    tier21 = { items = { 152145, 152147, 152143, 152142, 152144, 152146 } },
+    tier20 = { items = { 147154, 147156, 147152, 147151, 147153, 147155 } },
+    tier19 = { items = { 138325, 138328, 138331, 138334, 138337, 138367 } },
+    class =  { items = { 139731, 139732, 139733, 139734, 139735, 139736, 139737, 139738 } },
+    cenedril_reflector_of_hatred = { items = { 137019 } },
+    cinidaria_the_symbiote = { items = { 133976 } },
+    drinking_horn_cover = { items = { 137097 } },
+    firestone_walkers = { items = { 137027 } },
+    fundamental_observation = { items = { 137063 } },
+    gai_plins_soothing_sash = { items = { 137079 } },
+    hidden_masters_forbidden_touch = { items = { 137057 } },
+    jewel_of_the_lost_abbey = { items = { 137044 } },
+    katsuos_eclipse = { items = { 137029 } },
+    march_of_the_legion = { items = { 137220 } },
+    prydaz_xavarics_magnum_opus = { items = { 132444 } },
+    salsalabims_lost_tunic = { items = { 137016 } },
+    sephuzs_secret = { items = { 132452 } },
+    the_emperors_capacitor = { items = { 144239 } },
+    soul_of_the_grandmaster = { items = { 151643 } },
+    stormstouts_last_gasp = { items = { 151788 } },
+    the_wind_blows = { items = { 151811 } }
 } )
-
--- Legacy
-spec:RegisterGear( "tier19", 138325, 138328, 138331, 138334, 138337, 138367 )
-spec:RegisterGear( "tier20", 147154, 147156, 147152, 147151, 147153, 147155 )
-spec:RegisterGear( "tier21", 152145, 152147, 152143, 152142, 152144, 152146 )
-spec:RegisterGear( "class", 139731, 139732, 139733, 139734, 139735, 139736, 139737, 139738 )
-spec:RegisterGear( "cenedril_reflector_of_hatred", 137019 )
-spec:RegisterGear( "cinidaria_the_symbiote", 133976 )
-spec:RegisterGear( "drinking_horn_cover", 137097 )
-spec:RegisterGear( "firestone_walkers", 137027 )
-spec:RegisterGear( "fundamental_observation", 137063 )
-spec:RegisterGear( "gai_plins_soothing_sash", 137079 )
-spec:RegisterGear( "hidden_masters_forbidden_touch", 137057 )
-spec:RegisterGear( "jewel_of_the_lost_abbey", 137044 )
-spec:RegisterGear( "katsuos_eclipse", 137029 )
-spec:RegisterGear( "march_of_the_legion", 137220 )
-spec:RegisterGear( "prydaz_xavarics_magnum_opus", 132444 )
-spec:RegisterGear( "salsalabims_lost_tunic", 137016 )
-spec:RegisterGear( "sephuzs_secret", 132452 )
-spec:RegisterGear( "the_emperors_capacitor", 144239 )
-spec:RegisterGear( "soul_of_the_grandmaster", 151643 )
-spec:RegisterGear( "stormstouts_last_gasp", 151788 )
-spec:RegisterGear( "the_wind_blows", 151811 )
-
 
 spec:RegisterStateTable( "combos", {
     blackout_kick = true,
@@ -886,7 +904,6 @@ spec:RegisterStateExpr( "combo_strike", function ()
     return not combos[ this_action ] or this_action ~= last_combo
 end )
 
-
 -- If a Tiger Palm missed, pretend we never cast it.
 -- Use RegisterEvent since we're looking outside the state table.
 spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, _, _, destGUID, destName, destFlags, _, spellID, spellName )
@@ -913,7 +930,6 @@ spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, _,
         end
     end
 end )
-
 
 local chiSpent = 0
 local orderedElementsMod = 0
@@ -954,13 +970,9 @@ spec:RegisterHook( "spend", function( amt, resource )
     end
 end )
 
-
 local noop = function () end
 
 -- local reverse_harm_target
-
-
-
 
 spec:RegisterHook( "runHandler", function( key, noStart )
     if combos[ key ] then
@@ -975,11 +987,10 @@ spec:RegisterHook( "runHandler", function( key, noStart )
     end
 end )
 
-
 spec:RegisterStateTable( "healing_sphere", setmetatable( {}, {
     __index = function( t,  k)
         if k == "count" then
-            t[ k ] = GetSpellCount( action.expel_harm.id )
+            t[ k ] = GetSpellCastCount( action.expel_harm.id )
             return t[ k ]
         end
     end
@@ -1014,7 +1025,6 @@ spec:RegisterHook( "IsUsable", function( spell )
         return false, "would break hit_combo"
     end
 end )
-
 
 --[[spec:RegisterStateTable( "fight_style", setmetatable( { onReset = function( self ) self.count = nil end },
         { __index = function( t, k )
@@ -1052,7 +1062,6 @@ spec:RegisterStateFunction( "weapons_of_order", function( c )
     end
     return c
 end )
-
 
 spec:RegisterPet( "xuen_the_white_tiger", 63508, "invoke_xuen", 24, "xuen" )
 
@@ -1661,6 +1670,7 @@ spec:RegisterAbilities( {
                 applyBuff( "whirling_dragon_punch", min( cooldown.fists_of_fury.remains, cooldown.rising_sun_kick.remains ) )
             end
 
+            if talent.vivacious_vivification.enabled then applyBuff( "vivacious_vivification" ) end
 
             -- Legacy
             if azerite.sunrise_technique.enabled then applyDebuff( "target", "sunrise_technique" ) end
@@ -1758,6 +1768,7 @@ spec:RegisterAbilities( {
         texture = 1029596,
 
         handler = function ()
+            if set_bonus.tww3_conduit_of_the_celestials >= 2 then applyBuff( "heart_of_the_jade_serpent_cdr", 8 ) end
         end,
     },
 
@@ -2104,7 +2115,7 @@ spec:RegisterAbilities( {
         gcd = "spell",
         school = "nature",
 
-        spend = function() return buff.vivacious_vivification.up and 2 or 8 end,
+        spend = function() return 30 * ( buff.vivacious_vivification.up and 0.25 or 1 ) end,
         spendType = "energy",
 
         startsCombat = false,

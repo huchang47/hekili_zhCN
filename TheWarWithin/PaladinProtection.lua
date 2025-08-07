@@ -1,18 +1,34 @@
 -- PaladinProtection.lua
--- April 2025
+-- August 2025
+-- Patch 11.2
 
 if UnitClassBase( "player" ) ~= "PALADIN" then return end
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
 local class, state = Hekili.Class, Hekili.State
-local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
-
 local spec = Hekili:NewSpecialization( 66 )
-local QueenGlyphed = IsSpellKnownOrOverridesKnown
-local strformat = string.format
 
-local GetSpellInfo = ns.GetUnpackedSpellInfo
+---- Local function declarations for increased performance
+-- Strings
+local strformat = string.format
+-- Tables
+local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
+-- Math
+local abs, ceil, floor, max, sqrt = math.abs, math.ceil, math.floor, math.max, math.sqrt
+
+-- Common WoW APIs, comment out unneeded per-spec
+-- local GetSpellCastCount = C_Spell.GetSpellCastCount
+-- local GetSpellInfo = C_Spell.GetSpellInfo
+-- local GetSpellInfo = ns.GetUnpackedSpellInfo
+local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+-- local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
+-- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
+local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
+-- local IsActiveSpell = ns.IsActiveSpell
+
+-- Specialization-specific local functions (if any)
+local QueenGlyphed = IsSpellKnownOrOverridesKnown
 local spellwardingFilters = {}
 
 for zoneID, zoneData in pairs( class.spellFilters ) do
@@ -34,166 +50,166 @@ spec:RegisterResource( Enum.PowerType.Mana )
 
 -- Talents
 spec:RegisterTalents( {
+
     -- Paladin
-    a_just_reward                   = { 103858, 469411, 1 }, -- After Cleanse Toxins successfully removes an effect from an ally, they are healed for 25,016.
-    afterimage                      = {  93188, 385414, 1 }, -- After you spend 20 Holy Power, your next Word of Glory echoes onto a nearby ally at 30% effectiveness.
-    auras_of_the_resolute           = {  81600, 385633, 1 }, -- Learn Concentration Aura, Devotion Aura, and Crusader Aura: Concentration Aura: Interrupt and Silence effects on party and raid members within 40 yds are 30% shorter.  Devotion Aura: Party and raid members within 40 yds are bolstered by their devotion, reducing damage taken by 3%.  Crusader Aura: Increases mounted speed by 20% for all party and raid members within 40 yds.
-    blessed_calling                 = { 103868, 469770, 1 }, -- Allies affected by your Blessings have 15% increased movement speed.
-    blessing_of_freedom             = {  81631,   1044, 1 }, -- Blesses a party or raid member, granting immunity to movement impairing effects for 8 sec.
-    blessing_of_protection          = {  81616,   1022, 1 }, -- Blesses a party or raid member, granting immunity to Physical damage and harmful effects for 10 sec. Cannot be used on a target with Forbearance. Causes Forbearance for 30 sec. Shares a cooldown with Blessing of Spellwarding.
-    blessing_of_sacrifice           = {  81614,   6940, 1 }, -- Blesses a party or raid member, reducing their damage taken by 30%, but you suffer 100% of damage prevented. Last 12 sec, or until transferred damage would cause you to fall below 20% health.
-    blinding_light                  = {  81598, 115750, 1 }, -- Emits dazzling light in all directions, blinding enemies within 10 yds, causing them to wander disoriented for 6 sec.
-    cavalier                        = {  81605, 230332, 1 }, -- Divine Steed now has 2 charges.
-    cleanse_toxins                  = {  81507, 213644, 1 }, -- Cleanses a friendly target, removing all Poison and Disease effects.
-    consecrated_ground              = {  81543, 204054, 1 }, -- Your Consecration is 15% larger, and enemies within it have 50% reduced movement speed.
-    divine_purpose                  = {  93192, 223817, 1 }, -- Holy Power spending abilities have a 15% chance to make your next Holy Power spending ability free and deal 15% increased damage and healing.
-    divine_reach                    = {  93168, 469476, 1 }, -- The radius of your auras is increased by 20 yds.
-    divine_resonance                = {  81479, 386738, 1 }, --
-    divine_spurs                    = { 103857, 469409, 1 }, -- Divine Steed's cooldown is reduced by 20%, but its duration is reduced by 40%.
-    divine_steed                    = {  81632, 190784, 1 }, -- Leap atop your Charger for 5 sec, increasing movement speed by 100%. Usable while indoors or in combat.
-    divine_toll                     = {  81496, 375576, 1 }, -- Instantly cast Avenger's Shield on up to 5 targets within 30 yds. Generates 1 Holy Power per target hit.
-    empyreal_ward                   = { 103859, 387791, 1 }, -- Lay on Hands grants the target 30% increased armor for 8 sec and now ignores healing reduction effects.
-    eye_for_an_eye                  = {  81628, 469309, 1 }, -- Melee and ranged attackers receive 9,385 Holy damage each time they strike you during Ardent Defender and Divine Shield.
-    faiths_armor                    = {  81495, 406101, 1 }, -- Shield of the Righteous grants 5% bonus armor for 4.5 sec.
-    fist_of_justice                 = {  81602, 234299, 1 }, -- Hammer of Justice's cooldown is reduced by 15 sec.
-    golden_path                     = { 103856, 377128, 1 }, -- Consecration heals you and 5 allies within it for 911 every 0.8 sec.
-    greater_judgment                = {  81603, 231663, 1 }, -- Judgment causes the target to take 40% increased damage from your next Holy Power ability. Multiple applications may overlap.
-    hammer_of_wrath                 = {  81510,  24275, 1 }, -- Hurls a divine hammer that strikes an enemy for 54,302 Holy damage. Only usable on enemies that have less than 20% health, or during Avenging Wrath. Generates 1 Holy Power.
-    holy_aegis                      = {  81609, 385515, 1 }, -- Armor and critical strike chance increased by 4%.
-    holy_reprieve                   = { 103860, 469445, 1 }, -- Your Forbearance's duration is reduced by 10 sec.
-    holy_ritual                     = { 103866, 199422, 1 }, -- Allies are healed for 20,013 when you cast a Blessing spell on them and healed again for 20,013 when the blessing ends.
-    improved_blessing_of_protection = {  81617, 384909, 1 }, -- Reduces the cooldown of Blessing of Protection and Blessing of Spellwarding by 60 sec.
-    inspired_guard                  = { 103864, 469439, 1 }, -- Ardent Defender increases healing taken by 15% for its duration.
-    judgment_of_light               = {  81608, 183778, 1 }, -- Judgment causes the next 5 successful attacks against the target to heal the attacker for 3,502.
-    lay_on_hands                    = {  81597,    633, 1 }, -- Heals a friendly target for an amount equal to 100% your maximum health. Grants the target 30% increased armor for 8 sec. Cannot be used on a target with Forbearance. Causes Forbearance for 30 sec.
-    lead_the_charge                 = { 103867, 469780, 1 }, -- Divine Steed reduces the cooldown of 4 nearby ally's major movement ability by 3.0 sec. Your movement speed is increased by 3%.
-    lightbearer                     = { 103861, 469416, 1 }, -- 10% of all healing done to you from other sources heals up to 4 nearby allies, divided evenly among them.
-    lightforged_blessing            = { 103850, 406468, 1 }, -- Shield of the Righteous heals you and up to 2 nearby allies for 2.0% of maximum health.
-    lights_countenance              = { 103854, 469325, 1 }, -- The cooldowns of Repentance and Blinding Light are reduced by 15 sec.
-    lights_revocation               = { 103863, 146956, 1 }, -- Removing harmful effects with Divine Shield heals you for 10% for each effect removed. This heal cannot exceed 30% of your maximum health. Divine Shield may now be cast while Forbearance is active.
-    obduracy                        = {  81630, 385427, 1 }, -- Speed increased by 2% and damage taken from area of effect attacks reduced by 2%.
-    of_dusk_and_dawn                = {  93356, 409441, 1 }, -- When you cast 3 Holy Power generating abilities, you gain Blessing of Dawn. When you consume Blessing of Dawn, you gain Blessing of Dusk. Blessing of Dawn Your next Holy Power spending ability deals 30% additional increased damage and healing. This effect stacks. Blessing of Dusk Damage taken reduced by 4% For 10 sec.
-    punishment                      = {  93165, 403530, 1 }, -- Successfully interrupting an enemy with Rebuke or Avenger's Shield casts an extra Hammer of the Righteous.
-    quickened_invocation            = {  81479, 379391, 1 }, -- Divine Toll's cooldown is reduced by 15 sec.
-    rebuke                          = {  81604,  96231, 1 }, -- Interrupts spellcasting and prevents any spell in that school from being cast for 3 sec.
-    recompense                      = {  81607, 384914, 1 }, -- After your Blessing of Sacrifice ends, 50% of the total damage it diverted is added to your next Judgment as bonus damage, or your next Word of Glory as bonus healing. This effect's bonus damage cannot exceed 30% of your maximum health and its bonus healing cannot exceed 100% of your maximum health.
-    repentance                      = {  81598,  20066, 1 }, -- Forces an enemy target to meditate, incapacitating them for 1 min. Usable against Humanoids, Demons, Undead, Dragonkin, and Giants.
-    righteous_protection            = { 103865, 469321, 1 }, -- Blessing of Sacrifice now removes and prevents all Poison and Disease effects.
-    sacred_strength                 = {  93192, 469337, 1 }, -- Holy Power spending abilities are 2% more effective.
-    sacrifice_of_the_just           = {  81607, 384820, 1 }, -- Reduces the cooldown of Blessing of Sacrifice by 60 sec.
-    sanctified_plates               = {  93009, 402964, 2 }, -- Armor increased by 5%, Stamina increased by 5% and damage taken from area of effect attacks reduced by 3%.
-    seal_of_might                   = {  81621, 385450, 2 }, -- Mastery increased by 2% and strength increased by 2%.
-    seal_of_the_crusader            = {  93683, 416770, 1 }, -- Your auto attacks heal a nearby ally for 13,275.
-    selfless_healer                 = { 103856, 469434, 1 }, -- Flash of Light is 30% more effective on your allies and 40% of the healing done also heals you.
-    stand_against_evil              = { 103855, 469317, 1 }, -- Turn Evil now affects 5 additional enemies.
-    steed_of_liberty                = {  81631, 469304, 1 }, -- Divine Steed also grants Blessing of Freedom for 3.0 sec.  Blessing of Freedom: Blesses a party or raid member, granting immunity to movement impairing effects for 8 sec.
-    stoicism                        = { 103862, 469316, 1 }, -- The duration of stun effects on you is reduced by 20%.
-    turn_evil                       = {  93010,  10326, 1 }, -- The power of the Light compels an Undead, Aberration, or Demon target to flee for up to 40 sec. Damage may break the effect. Lesser creatures have a chance to be destroyed. Only one target can be turned at a time.
-    unbound_freedom                 = {  93187, 305394, 1 }, -- Blessing of Freedom increases movement speed by 30%, and you gain Blessing of Freedom when cast on a friendly target.
-    unbreakable_spirit              = {  81615, 114154, 1 }, -- Reduces the cooldown of your Divine Shield, Ardent Defender, and Lay on Hands by 30%.
-    worthy_sacrifice                = { 103865, 469279, 1 }, -- You automatically cast Blessing of Sacrifice onto an ally within 40 yds when they are below 35% health and you are not in a loss of control effect. This effect activates 100% of Blessing of Sacrifice's cooldown.
-    wrench_evil                     = { 103855, 460720, 1 }, -- Turn Evil's cast time is reduced by 100%.
-    zealots_paragon                 = {  81625, 391142, 2 }, -- Hammer of Wrath and Judgment deal 10% additional damage and extend the duration of Avenging Wrath by 0.5 sec.
+    a_just_reward                  = { 103858,  469411, 1 }, -- After Cleanse Toxins successfully removes an effect from an ally, they are healed for $s1
+    afterimage                     = {  93188,  385414, 1 }, -- After you spend $s1 Holy Power, your next Word of Glory echoes onto a nearby ally at $s2% effectiveness
+    auras_of_the_resolute          = {  81600,  385633, 1 }, -- Learn Concentration Aura, Devotion Aura, and Crusader Aura: Concentration Aura: Interrupt and Silence effects on party and raid members within $s3 yds are $s4% shorter.  Devotion Aura: Party and raid members within $s7 yds are bolstered by their devotion, reducing damage taken by $s8%.  Crusader Aura: Increases mounted speed by $s11% for all party and raid members within $s12 yds
+    blessed_calling                = { 103868,  469770, 1 }, -- Allies affected by your Blessings have $s1% increased movement speed
+    blessing_of_freedom            = {  81631,    1044, 1 }, -- Blesses a party or raid member, granting immunity to movement impairing effects for $s1 sec
+    blessing_of_protection         = {  81616,    1022, 1 }, -- Blesses a party or raid member, granting immunity to Physical damage and harmful effects for $s1 sec. Cannot be used on a target with Forbearance. Causes Forbearance for $s2 sec. Shares a cooldown with Blessing of Spellwarding
+    blessing_of_sacrifice          = {  81614,    6940, 1 }, -- Blesses a party or raid member, reducing their damage taken by $s1%, but you suffer $s2% of damage prevented. Last $s3 sec, or until transferred damage would cause you to fall below $s4% health
+    blinding_light                 = {  81598,  115750, 1 }, -- Emits dazzling light in all directions, blinding enemies within $s1 yds, causing them to wander disoriented for $s2 sec. Damage may cancel the effect
+    cavalier                       = {  81605,  230332, 1 }, -- Divine Steed now has $s1 charges
+    cleanse_toxins                 = {  81507,  213644, 1 }, -- Cleanses a friendly target, removing all Poison and Disease effects
+    consecrated_ground             = {  81543,  204054, 1 }, -- Your Consecration is $s1% larger, and enemies within it have $s2% reduced movement speed
+    divine_purpose                 = {  93192,  223817, 1 }, -- Holy Power spending abilities have a $s1% chance to make your next Holy Power spending ability free and deal $s2% increased damage and healing
+    divine_reach                   = {  93168,  469476, 1 }, -- The radius of your auras is increased by $s1 yds
+    divine_resonance               = {  81479,  386738, 1 }, -- After casting Divine Toll, you instantly cast Avenger's Shield every $s1 sec for $s2 sec
+    divine_spurs                   = { 103857,  469409, 1 }, -- Divine Steed's cooldown is reduced by $s1%, but its duration is reduced by $s2%
+    divine_steed                   = {  81632,  190784, 1 }, -- Leap atop your Charger for $s1 sec, increasing movement speed by $s2%. Usable while indoors or in combat
+    divine_toll                    = {  81496,  375576, 1 }, -- Instantly cast Avenger's Shield on up to $s1 targets within $s2 yds. Generates $s3 Holy Power per target hit
+    empyreal_ward                  = { 103859,  387791, 1 }, -- Lay on Hands grants the target $s1% increased armor for $s2 sec and now ignores healing reduction effects
+    eye_for_an_eye                 = {  81628,  469309, 1 }, -- Melee and ranged attackers receive $s$s2 Holy damage each time they strike you during Ardent Defender and Divine Shield
+    faiths_armor                   = {  81495,  406101, 1 }, -- Shield of the Righteous grants $s1% bonus armor for $s2 sec
+    fist_of_justice                = {  81602,  234299, 1 }, -- Hammer of Justice's cooldown is reduced by $s1 sec
+    golden_path                    = { 103856,  377128, 1 }, -- Consecration heals you and $s1 allies within it for $s2 every $s3 sec
+    greater_judgment               = {  81603,  231663, 1 }, -- Judgment causes the target to take $s1% increased damage from your next Holy Power ability. Multiple applications may overlap
+    hammer_of_wrath                = {  81510,   24275, 1 }, -- Hurls a divine hammer that strikes an enemy for $s$s2 Holy damage. Only usable on enemies that have less than $s3% health, or during Avenging Wrath. Generates $s4 Holy Power
+    holy_aegis                     = {  81609,  385515, 1 }, -- Armor and critical strike chance increased by $s1%
+    holy_reprieve                  = { 103860,  469445, 1 }, -- Your Forbearance's duration is reduced by $s1 sec
+    holy_ritual                    = { 103866,  199422, 1 }, -- Allies are healed for $s1 when you cast a Blessing spell on them and healed again for $s2 when the blessing ends
+    improved_blessing_of_protection = {  81617,  384909, 1 }, -- Reduces the cooldown of Blessing of Protection and Blessing of Spellwarding by $s1 sec
+    inspired_guard                 = { 103864,  469439, 1 }, -- Ardent Defender increases healing taken by $s1% for its duration
+    judgment_of_light              = {  81608,  183778, 1 }, -- Judgment causes the next $s1 successful attacks against the target to heal the attacker for $s2
+    lay_on_hands                   = {  81597,     633, 1 }, -- Heals a friendly target for an amount equal to $s1% your maximum health. Grants the target $s2% increased armor for $s3 sec. Cannot be used on a target with Forbearance. Causes Forbearance for $s4 sec
+    lead_the_charge                = { 103867,  469780, 1 }, -- Divine Steed reduces the cooldown of $s1 nearby ally's major movement ability by $s2 sec. Your movement speed is increased by $s3%
+    lightbearer                    = { 103861,  469416, 1 }, -- $s1% of all healing done to you from other sources heals up to $s2 nearby allies, divided evenly among them
+    lightforged_blessing           = { 103850,  406468, 1 }, -- Shield of the Righteous heals you and up to $s1 nearby allies for $s2% of maximum health
+    lights_countenance             = { 103854,  469325, 1 }, -- The cooldowns of Repentance and Blinding Light are reduced by $s1 sec
+    lights_revocation              = { 103863,  146956, 1 }, -- Removing harmful effects with Divine Shield heals you for $s1% for each effect removed. This heal cannot exceed $s2% of your maximum health. Divine Shield may now be cast while Forbearance is active
+    obduracy                       = {  81630,  385427, 1 }, -- Speed increased by $s1% and damage taken from area of effect attacks reduced by $s2%
+    of_dusk_and_dawn               = {  93356,  409441, 1 }, -- When you cast $s1 Holy Power generating abilities, you gain Blessing of Dawn. When you consume Blessing of Dawn, you gain Blessing of Dusk. Blessing of Dawn Your next Holy Power spending ability deals $s4% additional increased damage and healing. This effect stacks. Blessing of Dusk Damage taken reduced by $s7% For $s8 sec
+    punishment                     = {  93165,  403530, 1 }, -- Successfully interrupting an enemy with Rebuke or Avenger's Shield casts an extra Hammer of the Righteous
+    quickened_invocation           = {  81479,  379391, 1 }, -- Divine Toll's cooldown is reduced by $s1 sec
+    rebuke                         = {  81604,   96231, 1 }, -- Interrupts spellcasting and prevents any spell in that school from being cast for $s1 sec
+    recompense                     = {  81607,  384914, 1 }, -- After your Blessing of Sacrifice ends, $s1% of the total damage it diverted is added to your next Judgment as bonus damage, or your next Word of Glory as bonus healing. This effect's bonus damage cannot exceed $s2% of your maximum health and its bonus healing cannot exceed $s3% of your maximum health
+    repentance                     = {  81598,   20066, 1 }, -- Forces an enemy target to meditate, incapacitating them for $s1 min. Damage may cancel the effect. Usable against Humanoids, Demons, Undead, Dragonkin, and Giants
+    righteous_protection           = { 103865,  469321, 1 }, -- Blessing of Sacrifice now removes and prevents all Poison and Disease effects
+    sacred_strength                = {  93192,  469337, 1 }, -- Holy Power spending abilities have $s1% increased damage and healing
+    sacrifice_of_the_just          = {  81607,  384820, 1 }, -- Reduces the cooldown of Blessing of Sacrifice by $s1 sec
+    sanctified_plates              = {  93009,  402964, 2 }, -- Armor increased by $s1%, Stamina increased by $s2% and damage taken from area of effect attacks reduced by $s3%
+    seal_of_might                  = {  81621,  385450, 2 }, -- Mastery increased by $s1% and strength increased by $s2%
+    seal_of_the_crusader           = {  93683,  416770, 1 }, -- Your auto attacks heal a nearby ally for $s1
+    selfless_healer                = { 103856,  469434, 1 }, -- Flash of Light is $s1% more effective on your allies and $s2% of the healing done also heals you
+    stand_against_evil             = { 103855,  469317, 1 }, -- Turn Evil now affects $s1 additional enemies
+    steed_of_liberty               = {  81631,  469304, 1 }, -- Divine Steed also grants Blessing of Freedom for $s1 sec.  Blessing of Freedom: Blesses a party or raid member, granting immunity to movement impairing effects for $s4 sec
+    stoicism                       = { 103862,  469316, 1 }, -- The duration of stun effects on you is reduced by $s1%
+    turn_evil                      = {  93010,   10326, 1 }, -- The power of the Light compels an Undead, Aberration, or Demon target to flee for up to $s1 sec. Damage may break the effect. Lesser creatures have a chance to be destroyed. Only one target can be turned at a time
+    unbound_freedom                = {  93187,  305394, 1 }, -- Blessing of Freedom increases movement speed by $s1%, and you gain Blessing of Freedom when cast on a friendly target
+    unbreakable_spirit             = {  81615,  114154, 1 }, -- Reduces the cooldown of your Divine Shield, Ardent Defender, and Lay on Hands by $s1%
+    worthy_sacrifice               = { 103865,  469279, 1 }, -- You automatically cast Blessing of Sacrifice onto an ally within $s1 yds when they are below $s2% health and you are not in a loss of control effect. This effect activates $s3% of Blessing of Sacrifice's cooldown
+    wrench_evil                    = { 103855,  460720, 1 }, -- Turn Evil's cast time is reduced by $s1%
+    zealots_paragon                = {  81625,  391142, 2 }, -- Hammer of Wrath and Judgment deal $s1% additional damage and extend the duration of Avenging Wrath by $s2 sec
 
     -- Protection
-    ardent_defender                 = {  81481,  31850, 1 }, -- Reduces all damage you take by 30% for 8 sec. While Ardent Defender is active, the next attack that would otherwise kill you will instead bring you to 20% of your maximum health.
-    avengers_shield                 = {  81502,  31935, 1 }, -- Hurls your shield at an enemy target, dealing 20,007 Holy damage, interrupting and silencing the non-Player target for 3 sec, and then jumping to 2 additional nearby enemies. Shields you for 8 sec, absorbing 60% as much damage as it dealt. Deals 2,135 additional damage to all enemies within 5 yds of each target hit.
-    avenging_wrath                  = {  81483,  31884, 1 }, -- Call upon the Light to become an avatar of retribution, causing Judgment to generate 1 additional Holy Power, allowing Hammer of Wrath to be used on any target, increasing your damage, healing, and critical strike chance by 20% for 25 sec.
-    barricade_of_faith              = {  81501, 385726, 1 }, -- When you use Avenger's Shield, your block chance is increased by 10% for 10 sec.
-    bastion_of_light                = {  81488, 378974, 1 }, -- Your next 5 casts of Judgment generate 2 additional Holy Power.
-    blessed_hammer                  = {  81469, 204019, 1 }, -- Throws a Blessed Hammer that spirals outward, dealing 5,177 Holy damage to enemies and reducing the next damage they deal to you by 5,466. Generates 1 Holy Power.
-    blessing_of_spellwarding        = {  90062, 204018, 1 }, -- Blesses a party or raid member, granting immunity to magical damage and harmful effects for 10 sec. Cannot be used on a target with Forbearance. Causes Forbearance for 30 sec. Shares a cooldown with Blessing of Protection.
-    bulwark_of_order                = {  81499, 209389, 1 }, -- Avenger's Shield also shields you for 8 sec, absorbing 60% as much damage as it dealt, up to 50% of your maximum health.
-    bulwark_of_righteous_fury       = {  81491, 386653, 1 }, -- Avenger's Shield increases the damage of your next Shield of the Righteous by 20% for each target hit by Avenger's Shield, stacking up to 5 times, and increases its radius by 6 yds.
-    consecration_in_flame           = {  81470, 379022, 1 }, -- Consecration lasts 2 sec longer and its damage is increased by 20%.
-    crusaders_judgment              = {  81473, 204023, 1 }, -- Judgment now has 2 charges, and Grand Crusader now also reduces the cooldown of Judgment by 3 sec.
-    crusaders_resolve               = {  81493, 380188, 1 }, -- Enemies hit by Avenger's Shield deal 10% reduced melee damage to you for 10 sec.
-    eye_of_tyr                      = {  81497, 387174, 1 }, -- Releases a blinding flash from your shield, causing 68,430 Holy damage to all nearby enemies within 8 yds and reducing all damage they deal to you by 25% for 6 sec.
-    faith_in_the_light              = {  81485, 379043, 2 }, -- Casting Word of Glory grants you an additional 5% block chance for 6 sec.
-    ferren_marcuss_fervor           = {  81482, 378762, 2 }, -- Avenger's Shield deals 10% increased damage to its primary target.
-    final_stand                     = {  81504, 204077, 1 }, -- During Divine Shield, all targets within 15 yds are taunted.
-    focused_enmity                  = {  81472, 378845, 1 }, -- When Avenger's Shield strikes a single enemy, it deals 100% additional Holy damage.
-    gift_of_the_golden_valkyr       = {  81484, 378279, 1 }, -- Each enemy hit by Avenger's Shield reduces the remaining cooldown on Guardian of Ancient Kings by 1.0 sec. When you drop below 30% health, you become infused with Guardian of Ancient Kings for 4 sec. This cannot occur again for 45 sec.
-    grand_crusader                  = {  81487,  85043, 1 }, -- When you avoid a melee attack or use Hammer of the Righteous, you have a 15% chance to reset the remaining cooldown on Avenger's Shield. Reduces the cooldown of Judgment by 3 sec.
-    guardian_of_ancient_kings       = {  81490,  86659, 1 }, -- Empowers you with the spirit of ancient kings, reducing all damage you take by 50% for 8 sec.
-    hammer_of_the_righteous         = {  81469,  53595, 1 }, -- Hammers the current target for 31,065 Physical damage. While you are standing in your Consecration, Hammer of the Righteous also causes a wave of light that hits all other targets within 8 yds for 4,320 Holy damage. Generates 1 Holy Power.
-    hand_of_the_protector           = {  81475, 315924, 1 }, -- When you cast Word of Glory on someone other than yourself, its healing is increased by up to 100% based on the target's missing health.
-    holy_shield                     = {  81489, 152261, 1 }, -- Your block chance is increased by 20%, you are able to block spells, and your successful blocks deal 2,965 Holy damage to your attacker.
-    improved_ardent_defender        = {  90062, 393114, 1 }, -- Ardent Defender reduces damage taken by an additional 10%.
-    improved_holy_shield            = {  81486, 393030, 1 }, -- Your chance to block spells is increased by 8%.
-    inmost_light                    = {  92953, 405757, 1 }, -- Eye of Tyr deals 300% increased damage and has 33% reduced cooldown.
-    inner_light                     = {  81494, 386568, 1 }, -- When Shield of the Righteous expires, gain 10% block chance and deal 6,034 Holy damage to all attackers for 4 sec.
-    inspiring_vanguard              = {  81476, 393022, 1 }, --
-    light_of_the_titans             = {  81503, 378405, 1 }, -- Word of Glory heals for an additional 20% over 10 sec. Increased by 100% if cast on yourself while you are afflicted by a harmful damage over time effect.
-    moment_of_glory                 = {  81505, 327193, 1 }, -- For the next 15 sec, you generate an absorb shield for 25% of all damage you deal, and Avenger's Shield damage is increased by 20% and its cooldown is reduced by 75%.
-    redoubt                         = {  81494, 280373, 1 }, -- Shield of the Righteous increases your Strength and Stamina by 2% for 10 sec, stacking up to 3.
-    refining_fire                   = {  81492, 469883, 1 }, --
-    relentless_inquisitor           = {  81506, 383388, 1 }, -- Spending Holy Power grants you 1% haste per finisher for 12 sec, stacking up to 3 times.
-    resolute_defender               = {  81471, 385422, 2 }, -- Each 3 Holy Power you spend reduces the cooldown of Ardent Defender and Divine Shield by 1.0 sec.
-    righteous_protector             = {  81477, 204074, 1 }, -- Holy Power abilities reduce the remaining cooldown on Avenging Wrath and Guardian of Ancient Kings by 1.5 sec.
-    sanctified_wrath                = { 103877,  53376, 1 }, -- Avenging Wrath now causes Judgment to generate 1 additional Holy Power. and its duration is increased by 25%.
-    sanctuary                       = { 101927, 379021, 1 }, -- Consecration's benefits persist for 4.0 seconds after you leave it.
-    seal_of_charity                 = {  81612, 384815, 1 }, -- When you cast Word of Glory on someone other than yourself, you are also healed for 50% of the amount healed.
-    seal_of_reprisal                = {  81629, 377053, 1 }, -- Your Hammer of the Righteous deals 20% increased damage.
-    sentinel                        = {  81483, 389539, 1 }, -- Call upon the Light and gain 15 stacks of Divine Resolve, increasing your maximum health by 1% and reducing your damage taken by 2% per stack for 20 sec. After 5 sec, you will begin to lose 1 stack per second, but each 3 Holy Power spent will delay the loss of your next stack by 1 sec. While active, your Judgment generates 1 additional Holy Power, your damage and healing is increased by 20%, and Hammer of Wrath may be cast on any target. Combines with Avenging Wrath.
-    shining_light                   = {  81498, 321136, 1 }, -- Every 3 Shields of the Righteous make your next Word of Glory cost no Holy Power. Maximum 2 stacks.
-    soaring_shield                  = { 101928, 378457, 1 }, -- Avenger's Shield jumps to 2 additional targets.
-    strength_in_adversity           = {  81493, 393071, 1 }, -- For each target hit by Avenger's Shield, gain 5% parry for 15 sec.
-    tirions_devotion                = {  81503, 392928, 1 }, -- Lay on Hands' cooldown is reduced by 1.0 sec per Holy Power spent.
-    tyrs_enforcer                   = {  81474, 378285, 2 }, -- Your Avenger's Shield is imbued with holy fire, causing it to deal 2,135 Holy damage to all enemies within 5 yards of each target hit.
-    uthers_counsel                  = {  81500, 378425, 1 }, -- Your Lay on Hands, Divine Shield, Blessing of Protection, and Blessing of Spellwarding have 30% reduced cooldown.
+    ardent_defender                = {  81481,   31850, 1 }, -- Reduces all damage you take by $s1% for $s2 sec. While Ardent Defender is active, the next attack that would otherwise kill you will instead bring you to $s3% of your maximum health
+    avengers_shield                = {  81502,   31935, 1 }, -- Hurls your shield at an enemy target, dealing $s$s3 Holy damage, interrupting and silencing the non-Player target for $s4 sec, and then jumping to $s5 additional nearby enemies. Shields you for $s6 sec, absorbing $s7% as much damage as it dealt. Deals $s$s8 additional damage to all enemies within $s9 yds of each target hit
+    avenging_wrath                 = {  81483,   31884, 1 }, -- Call upon the Light to become an avatar of retribution, causing Judgment to generate $s1 additional Holy Power, allowing Hammer of Wrath to be used on any target, increasing your damage, healing, and critical strike chance by $s2% for $s3 sec
+    barricade_of_faith             = {  81501,  385726, 1 }, -- When you use Avenger's Shield, your block chance is increased by $s1% for $s2 sec
+    bastion_of_light               = {  81488,  378974, 1 }, -- Your next $s1 casts of Judgment generate $s2 additional Holy Power
+    blessed_hammer                 = {  81469,  204019, 1 }, -- Throws a Blessed Hammer that spirals outward, dealing $s$s2 Holy damage to enemies and reducing the next damage they deal to you by $s3. Generates $s4 Holy Power
+    blessing_of_spellwarding       = {  90062,  204018, 1 }, -- Blesses a party or raid member, granting immunity to magical damage and harmful effects for $s1 sec. Cannot be used on a target with Forbearance. Causes Forbearance for $s2 sec. Shares a cooldown with Blessing of Protection
+    bulwark_of_order               = {  81499,  209389, 1 }, -- Avenger's Shield also shields you for $s1 sec, absorbing $s2% as much damage as it dealt, up to $s3% of your maximum health
+    bulwark_of_righteous_fury      = {  81491,  386653, 1 }, -- Avenger's Shield increases the damage of your next Shield of the Righteous by $s1% for each target hit by Avenger's Shield, stacking up to $s2 times, and increases its radius by $s3 yds
+    consecration_in_flame          = {  81470,  379022, 1 }, -- Consecration lasts $s1 sec longer and its damage is increased by $s2%
+    crusaders_judgment             = {  81473,  204023, 1 }, -- Judgment now has $s1 charges, and Grand Crusader now also reduces the cooldown of Judgment by $s2 sec
+    crusaders_resolve              = {  81493,  380188, 1 }, -- Enemies hit by Avenger's Shield deal $s1% reduced melee damage to you for $s2 sec
+    eye_of_tyr                     = {  81497,  387174, 1 }, -- Releases a blinding flash from your shield, causing $s$s2 Holy damage to all nearby enemies within $s3 yds and reducing all damage they deal to you by $s4% for $s5 sec
+    faith_in_the_light             = {  81485,  379043, 2 }, -- Casting Word of Glory grants you an additional $s1% block chance for $s2 sec
+    ferren_marcuss_fervor          = {  81482,  378762, 2 }, -- Avenger's Shield deals $s1% increased damage to its primary target
+    final_stand                    = {  81504,  204077, 1 }, -- During Divine Shield, all targets within $s1 yds are taunted
+    focused_enmity                 = {  81472,  378845, 1 }, -- When Avenger's Shield strikes a single enemy, it deals $s1% additional Holy damage
+    gift_of_the_golden_valkyr      = {  81484,  378279, 1 }, -- Each enemy hit by Avenger's Shield reduces the remaining cooldown on Guardian of Ancient Kings by $s1 sec. When you drop below $s2% health, you become infused with Guardian of Ancient Kings for $s3 sec. This cannot occur again for $s4 sec
+    grand_crusader                 = {  81487,   85043, 1 }, -- When you avoid a melee attack or use Hammer of the Righteous, you have a $s1% chance to reset the remaining cooldown on Avenger's Shield. Reduces the cooldown of Judgment by $s2 sec
+    guardian_of_ancient_kings      = {  81490,   86659, 1 }, -- Empowers you with the spirit of ancient kings, reducing all damage you take by $s1% for $s2 sec
+    hammer_of_the_righteous        = {  81469,   53595, 1 }, -- Hammers the current target for $s$s3 Physical damage. While you are standing in your Consecration, Hammer of the Righteous also causes a wave of light that hits all other targets within $s4 yds for $s$s5 Holy damage. Generates $s6 Holy Power
+    hand_of_the_protector          = {  81475,  315924, 1 }, -- When you cast Word of Glory on someone other than yourself, its healing is increased by up to $s1% based on the target's missing health
+    holy_shield                    = {  81489,  152261, 1 }, -- Your block chance is increased by $s2%, you are able to block spells, and your successful blocks deal $s$s3 Holy damage to your attacker
+    improved_ardent_defender       = {  90062,  393114, 1 }, -- Ardent Defender reduces damage taken by an additional $s1%
+    improved_holy_shield           = {  81486,  393030, 1 }, -- Your chance to block spells is increased by $s1%
+    inmost_light                   = {  92953,  405757, 1 }, -- Eye of Tyr deals $s1% increased damage and has $s2% reduced cooldown
+    inner_light                    = {  81494,  386568, 1 }, -- When Shield of the Righteous expires, gain $s2% block chance and deal $s$s3 Holy damage to all attackers for $s4 sec
+    inspiring_vanguard             = {  81476,  393022, 1 }, -- Grand Crusader's chance to occur is increased to $s1% and it grants you $s2% strength for $s3 sec
+    light_of_the_titans            = {  81503,  378405, 1 }, -- Word of Glory heals for an additional $s1% over $s2 sec. Increased by $s3% if cast on yourself while you are afflicted by a harmful damage over time effect
+    moment_of_glory                = {  81505,  327193, 1 }, -- For the next $s1 sec, you generate an absorb shield for $s2% of all damage you deal, and Avenger's Shield damage is increased by $s3% and its cooldown is reduced by $s4%
+    redoubt                        = {  81494,  280373, 1 }, -- Shield of the Righteous increases your Strength and Stamina by $s1% for $s2 sec, stacking up to $s3
+    refining_fire                  = {  81492,  469883, 1 }, -- Enemies struck by Avenger's Shield burn with holy fire, suffering $s$s2 Radiant damage over $s3 sec
+    relentless_inquisitor          = {  81506,  383388, 1 }, -- Spending Holy Power grants you $s1% haste per finisher for $s2 sec, stacking up to $s3 times
+    resolute_defender              = {  81471,  385422, 2 }, -- Each $s1 Holy Power you spend reduces the cooldown of Ardent Defender and Divine Shield by $s2 sec
+    righteous_protector            = {  81477,  204074, 1 }, -- Holy Power abilities reduce the remaining cooldown on Avenging Wrath and Guardian of Ancient Kings by $s1 sec
+    sanctified_wrath               = { 103877,   53376, 1 }, -- Avenging Wrath and Sentinel cause Judgment to generate $s1 additional Holy Power, and have $s2% increased duration
+    sanctuary                      = { 101927,  379021, 1 }, -- Consecration's benefits persist for $s1 seconds after you leave it
+    seal_of_charity                = {  81612,  384815, 1 }, -- When you cast Word of Glory on someone other than yourself, you are also healed for $s1% of the amount healed
+    seal_of_reprisal               = {  81629,  377053, 1 }, -- Your Hammer of the Righteous deals $s1% increased damage
+    sentinel                       = {  81483,  389539, 1 }, -- Call upon the Light and gain $s1 stacks of Divine Resolve, increasing your maximum health by $s2% and reducing your damage taken by $s3% per stack for $s4 sec. After $s5 sec, you will begin to lose $s6 stack per second, but each $s7 Holy Power spent will delay the loss of your next stack by $s8 sec. While active, your Judgment generates $s9 additional Holy Power, your damage and healing is increased by $s10%, and Hammer of Wrath may be cast on any target. Combines with Avenging Wrath
+    shining_light                  = {  81498,  321136, 1 }, -- Every $s1 Shields of the Righteous make your next Word of Glory cost no Holy Power. Maximum $s2 stacks
+    soaring_shield                 = { 101928,  378457, 1 }, -- Avenger's Shield jumps to $s1 additional targets
+    strength_in_adversity          = {  81493,  393071, 1 }, -- For each target hit by Avenger's Shield, gain $s1% parry for $s2 sec
+    tirions_devotion               = {  81503,  392928, 1 }, -- Lay on Hands' cooldown is reduced by $s1 sec per Holy Power spent
+    tyrs_enforcer                  = {  81474,  378285, 2 }, -- Your Avenger's Shield is imbued with holy fire, causing it to deal $s$s2 Holy damage to all enemies within $s3 yards of each target hit
+    uthers_counsel                 = {  81500,  378425, 1 }, -- Your Lay on Hands, Divine Shield, Blessing of Protection, and Blessing of Spellwarding have $s1% reduced cooldown
 
     -- Lightsmith
-    authoritative_rebuke            = {  95232, 469886, 1 }, -- Successfully interrupting an enemy spellcast reduces your Rebuke's cooldown by 1.0 sec. Effect increased by 100% while wielding a Holy Armament.
-    blessed_assurance               = {  95235, 433015, 1 }, -- Casting a Holy Power ability increases the damage and healing of your next Hammer of the Righteous by 200%.
-    blessing_of_the_forge           = {  95230, 433011, 1 }, -- Avenging Wrath summons an additional Sacred Weapon, and during Avenging Wrath your Sacred Weapon casts spells on your target and echoes the effects of your Holy Power abilities.
-    divine_guidance                 = {  95235, 433106, 1 }, -- For each Holy Power ability cast, your next Consecration deals 59,443 damage or healing immediately, split across all enemies and allies.
-    divine_inspiration              = {  95231, 432964, 1 }, -- Your spells and abilities have a chance to manifest a Holy Armament for a nearby ally.
-    forewarning                     = {  95231, 432804, 1 }, -- The cooldown of Holy Armaments is reduced by 20%.
-    hammer_and_anvil                = {  95238, 433718, 1 }, -- Judgment critical strikes cause a shockwave around the target, dealing 39,827 damage at the target's location.
-    holy_armaments                  = {  95234, 432459, 1, "lightsmith" }, -- Will the Light to coalesce and become manifest as a Holy Armament, wielded by your friendly target.  Holy Bulwark: While wielding a Holy Bulwark, gain an absorb shield for 15.0% of your max health and an additional 2.0% every 2 sec. Lasts 20 sec. Becomes Sacred Weapon after use.
-    laying_down_arms                = {  95236, 432866, 1 }, -- When an Armament fades from you, the cooldown of Lay on Hands is reduced by 15.0 sec and you gain Shining Light.
-    rite_of_adjuration              = {  95233, 433583, 1 }, -- Imbue your weapon with the power of the Light, increasing your Stamina by 3% and causing your Holy Power abilities to sometimes unleash a burst of healing around a target. Lasts 1 |4hour:hrs;.
-    rite_of_sanctification          = {  95233, 433568, 1 }, -- Imbue your weapon with the power of the Light, increasing your armor by 5% and your primary stat by 2%. Lasts 1 |4hour:hrs;.
-    shared_resolve                  = {  95237, 432821, 1 }, -- The effect of your active Aura is increased by 33% on targets with your Armaments.
-    solidarity                      = {  95228, 432802, 1 }, -- If you bestow an Armament upon an ally, you also gain its benefits. If you bestow an Armament upon yourself, a nearby ally also gains its benefits.
-    tempered_in_battle              = {  95232, 469701, 1 }, -- When you or an ally wielding a Holy Bulwark are healed above maximum health, transfer 100% of the overhealing to your ally. When you or an ally wielding a Sacred Weapon drop below 40% health, redistribute your health immediately and every 1 sec for 4 sec.
-    valiance                        = {  95229, 432919, 1 }, -- Consuming Shining Light reduces the cooldown of Holy Armaments by 3.0 sec.
+    authoritative_rebuke           = {  95232,  469886, 1 }, -- Successfully interrupting an enemy spellcast reduces your Rebuke's cooldown by $s1 sec. Effect increased by $s2% while wielding a Holy Armament
+    blessed_assurance              = {  95235,  433015, 1 }, -- Casting a Holy Power ability increases the damage and healing of your next Hammer of the Righteous by $s1%
+    blessing_of_the_forge          = {  95230,  433011, 1 }, -- Avenging Wrath summons an additional Sacred Weapon, and during Avenging Wrath your Sacred Weapon casts spells on your target and echoes the effects of your Holy Power abilities
+    divine_guidance                = {  95235,  433106, 1 }, -- For each Holy Power ability cast, your next Consecration deals $s1 damage or healing immediately, split across all enemies and allies
+    divine_inspiration             = {  95231,  432964, 1 }, -- Your spells and abilities have a chance to manifest a Holy Armament for a nearby ally
+    forewarning                    = {  95231,  432804, 1 }, -- The cooldown of Holy Armaments is reduced by $s1%
+    hammer_and_anvil               = {  95238,  433718, 1 }, -- Judgment critical strikes cause a shockwave around the target, dealing $s1 damage at the target's location
+    holy_armaments                 = {  95234,  432459, 1 }, -- Will the Light to coalesce and become manifest as a Holy Armament, wielded by your friendly target.  Holy Bulwark: While wielding a Holy Bulwark, gain an absorb shield for $s3% of your max health and an additional $s4% every $s5 sec. Lasts $s6 sec. Becomes Sacred Weapon after use
+    laying_down_arms               = {  95236,  432866, 1 }, -- When an Armament fades from you, the cooldown of Lay on Hands is reduced by $s1 sec and you gain Shining Light
+    rite_of_adjuration             = {  95233,  433583, 1 }, -- Imbue your weapon with the power of the Light, increasing your Stamina by $s1% and causing your Holy Power abilities to sometimes unleash a burst of healing around a target. Lasts $s2 |$s3hour:hrs;
+    rite_of_sanctification         = {  95233,  433568, 1 }, -- Imbue your weapon with the power of the Light, increasing your armor by $s1% and your primary stat by $s2%. Lasts $s3 |$s4hour:hrs;
+    shared_resolve                 = {  95237,  432821, 1 }, -- The effect of your active Aura is increased by $s1% on targets with your Armaments
+    solidarity                     = {  95228,  432802, 1 }, -- If you bestow an Armament upon an ally, you also gain its benefits. If you bestow an Armament upon yourself, a nearby ally also gains its benefits
+    tempered_in_battle             = {  95232,  469701, 1 }, -- When you or an ally wielding a Holy Bulwark are healed above maximum health, transfer $s1% of the overhealing to your ally. When you or an ally wielding a Sacred Weapon drop below $s2% health, redistribute your health immediately and every $s3 sec for $s4 sec. May only occur once per cast
+    valiance                       = {  95229,  432919, 1 }, -- Consuming Shining Light reduces the cooldown of Holy Armaments by $s1 sec
 
     -- Templar
-    bonds_of_fellowship             = {  95181, 432992, 1 }, -- You receive 20% less damage from Blessing of Sacrifice and each time its target takes damage, you gain 4% movement speed up to a maximum of 40%.
-    endless_wrath                   = {  95185, 432615, 1 }, -- Calling down an Empyrean Hammer has a 10% chance to reset the cooldown of Hammer of Wrath and make it usable on any target, regardless of their health.
-    for_whom_the_bell_tolls         = {  95183, 432929, 1 }, -- Divine Toll grants up to 100% increased damage to your next 3 Judgment when striking only 1 enemy. This amount is reduced by 20% for each additional target struck.
-    hammerfall                      = {  95184, 432463, 1 }, -- Shield of the Righteous and Word of Glory calls down an Empyrean Hammer on a nearby enemy. While Shake the Heavens is active, this effect calls down an additional Empyrean Hammer.
-    higher_calling                  = {  95178, 431687, 1 }, -- Crusader Strike, Hammer of Wrath and Judgment extend the duration of Shake the Heavens by 1 sec.
-    lights_deliverance              = {  95182, 425518, 1 }, -- You gain a stack of Light's Deliverance when you call down an Empyrean Hammer. While Eye of Tyr and Hammer of Light are unavailable, you consume 60 stacks of Light's Deliverance, empowering yourself to cast Hammer of Light an additional time for free.
-    lights_guidance                 = {  95180, 427445, 1, "templar" }, -- Eye of Tyr is replaced with Hammer of Light for 12 sec after it is cast.  Hammer of Light: Hammer down your enemy with the power of the Light, dealing 157,254 Holy damage and 78,626 Holy damage up to 4 nearby enemies. Additionally, calls down Empyrean Hammers from the sky to strike 3 nearby enemies for 12,359 Holy damage each. Costs 5 Holy Power.
-    sacrosanct_crusade              = {  95179, 431730, 1 }, -- Eye of Tyr surrounds you with a Holy barrier for 15% of your maximum health. Hammer of Light heals you for 15% of your maximum health, increased by 2% for each additional target hit. Any overhealing done with this effect gets converted into a Holy barrier instead.
-    sanctification                  = {  95185, 432977, 1 }, -- Casting Judgment increases the damage of Empyrean Hammer by 10% for 10 sec. Multiple applications may overlap.
-    shake_the_heavens               = {  95187, 431533, 1 }, -- After casting Hammer of Light, you call down an Empyrean Hammer on a nearby target every 2 sec, for 8 sec.
-    undisputed_ruling               = {  95186, 432626, 1 }, -- Hammer of Light applies Judgment to its targets, and increases your Haste by 12% for 6 sec. Additionally, Eye of Tyr grants 3 Holy Power.
-    unrelenting_charger             = {  95181, 432990, 1 }, -- Divine Steed lasts 2 sec longer and increases your movement speed by an additional 30% for the first 3 sec.
-    wrathful_descent                = {  95177, 431551, 1 }, -- When Empyrean Hammer critically strikes, 100% of its damage is dealt to nearby enemies. Enemies hit by this effect deal 5% reduced damage to you for 8 sec.
-    zealous_vindication             = {  95183, 431463, 1 }, -- Hammer of Light instantly calls down 2 Empyrean Hammers on your target when it is cast.
+    bonds_of_fellowship            = {  95181,  432992, 1 }, -- You receive $s1% less damage from Blessing of Sacrifice and each time its target takes damage, you gain $s2% movement speed up to a maximum of $s3%
+    endless_wrath                  = {  95185,  432615, 1 }, -- Calling down an Empyrean Hammer has a $s1% chance to reset the cooldown of Hammer of Wrath and make it usable on any target, regardless of their health
+    for_whom_the_bell_tolls        = {  95183,  432929, 1 }, -- Divine Toll grants up to $s1% increased damage to your next $s2 Judgment when striking only $s3 enemy. This amount is reduced by $s4% for each additional target struck
+    hammerfall                     = {  95184,  432463, 1 }, -- Shield of the Righteous and Word of Glory calls down an Empyrean Hammer on a nearby enemy. While Shake the Heavens is active, this effect calls down an additional Empyrean Hammer
+    higher_calling                 = {  95178,  431687, 1 }, -- Crusader Strike, Hammer of Wrath and Judgment extend the duration of Shake the Heavens by $s1 sec
+    lights_deliverance             = {  95182,  425518, 1 }, -- You gain a stack of Light's Deliverance when you call down an Empyrean Hammer. While Eye of Tyr and Hammer of Light are unavailable, you consume $s1 stacks of Light's Deliverance, empowering yourself to cast Hammer of Light an additional time for free
+    lights_guidance                = {  95180,  427445, 1 }, -- Eye of Tyr is replaced with Hammer of Light for $s4 sec after it is cast.  Hammer of Light: Hammer down your enemy with the power of the Light, dealing $s$s7 Holy damage and $s$s8 Holy damage up to $s9 nearby enemies. Additionally, calls down Empyrean Hammers from the sky to strike $s10 nearby enemies for $s$s11 Holy damage each. Costs $s12 Holy Power
+    sacrosanct_crusade             = {  95179,  431730, 1 }, -- Eye of Tyr surrounds you with a Holy barrier for $s1% of your maximum health. Hammer of Light heals you for $s2% of your maximum health, increased by $s3% for each additional target hit. Any overhealing done with this effect gets converted into a Holy barrier instead
+    sanctification                 = {  95185,  432977, 1 }, -- Casting Judgment increases the damage of Empyrean Hammer by $s1% for $s2 sec. Multiple applications may overlap
+    shake_the_heavens              = {  95187,  431533, 1 }, -- After casting Hammer of Light, you call down an Empyrean Hammer on a nearby target every $s1 sec, for $s2 sec
+    undisputed_ruling              = {  95186,  432626, 1 }, -- Hammer of Light grants Shield of the Righteous, erupts a Consecration beneath its target, and increases your Haste by $s1% for $s2 sec. Additionally, Eye of Tyr grants $s3 Holy Power
+    unrelenting_charger            = {  95181,  432990, 1 }, -- Divine Steed lasts $s1 sec longer and increases your movement speed by an additional $s2% for the first $s3 sec
+    wrathful_descent               = {  95177,  431551, 1 }, -- When Empyrean Hammer critically strikes, $s1% of its damage is dealt to nearby enemies. Enemies hit by this effect deal $s2% reduced damage to you for $s3 sec
+    zealous_vindication            = {  95183,  431463, 1 }, -- Hammer of Light instantly calls down $s1 Empyrean Hammers on your target when it is cast
 } )
-
 
 -- PvP Talents
 spec:RegisterPvpTalents( {
-    aura_of_reckoning               = 5554, -- (247675) When you or allies within your Aura are critically struck, gain Reckoning. Gain 1 additional stack if you are the victim. At 100 stacks of Reckoning, your next weapon swing deals 200% increased damage, will critically strike, and activates Avenging Wrath for 6 sec.
-    guarded_by_the_light            = 97  , -- (216855) Your Flash of Light reduces all damage the target receives by 10% for 6 sec. Stacks up to 2 times.
-    guardian_of_the_forgotten_queen = 94  , -- (228049) Empowers the friendly target with the spirit of the forgotten queen, causing the target to be immune to all damage for 10 sec.
-    hallowed_ground                 = 90  , -- (216868) Your Consecration clears and suppresses all snare effects on allies within its area of effect.
-    inquisition                     = 844 , -- (207028)
-    luminescence                    = 3474, -- (199428) When healed by an ally, allies within your Aura gain 2% increased damage and healing for 6 sec.
-    sacred_duty                     = 92  , -- (216853) Reduces the cooldown of your Blessing of Protection and Blessing of Sacrifice by 33%.
-    searing_glare                   = 5582, -- (410126) Call upon the light to blind your enemies in a 25 yd cone, causing enemies to miss their spells and attacks for 4 sec.
-    shield_of_virtue                = 861 , -- (215652) When activated, your next Avenger's Shield will interrupt and silence all enemies within 8 yds of the target.
-    steed_of_glory                  = 91  , -- (199542) Your Divine Steed lasts for an additional 2 sec. While active you become immune to movement impairing effects, and you knock back enemies that you move through.
-    warrior_of_light                = 860 , -- (210341) Increases the damage done by your Shield of the Righteous by 30%, but reduces armor granted by 30%.
-    wrench_evil                     = 5652, -- (460720) Turn Evil's cast time is reduced by 100%.
+    bear_the_burden                = 5664, -- (468454)
+    guarded_by_the_light           =   97, -- (216855)
+    guardian_of_the_forgotten_queen =   94, -- (228049) Empowers the friendly target with the spirit of the forgotten queen, causing the target to be immune to all damage for $s1 sec
+    hallowed_ground                =   90, -- (216868)
+    inquisition                    =  844, -- (207028)
+    luminescence                   = 3474, -- (556606) Lightbearer's healing transfer is increased by up to $s1% based on your current health. Lower health heals allies for more
+    sacred_duty                    =   92, -- (216853)
+    searing_glare                  = 5582, -- (410126) Call upon the light to blind enemy players in a $s1 yd cone, causing enemies to miss their spells and attacks for $s2 sec
+    shield_of_virtue               =  861, -- (215652) When activated, your next Avenger's Shield will interrupt and silence all enemies within $s1 yds of the target
+    shining_revelation             = 5677, -- (936051) The light reveals all enemies in stealth or invisible to you while under the effects of Divine Shield. This effect lingers for $s1 sec after Divine Shield fades
+    spellbreaker                   = 5667, -- (469895) Eye for an Eye can now also trigger at $s1% effectiveness from direct Magic damage
+    steed_of_glory                 =   91, -- (199542)
+    warrior_of_light               =  860, -- (210341)
 } )
-
 
 -- Auras
 spec:RegisterAuras( {
@@ -533,7 +549,7 @@ spec:RegisterAuras( {
     hammer_of_light_ready = {
         id = 427453,
         duration = 12,
-        max_stack = 1
+        max_stack = function() return 1 + ( set_bonus.tww3 >= 4 and 1 or 0 ) end
     },
     -- Stunned.
     -- https://wowhead.com/beta/spell=853
@@ -815,77 +831,100 @@ spec:RegisterAuras( {
     },
 } )
 
--- The War Within
-spec:RegisterGear( "tww2", 229244, 229242, 229243, 229245, 229247 )
-spec:RegisterAura( "luck_of_the_draw", {
-    -- https://www.wowhead.com/ptr-2/spell=1218114/luck-of-the-draw
-    -- Each time you take damage you have a chance to activate Luck of the Draw! causing you to cast Guardian of Ancient Kings for 4.0 sec. Your damage done is increased by 15% for 10 sec after Luck of the Draw! activates.
-        id = 1218114,
-        duration = 10,
-        max_stack = 1
-} )
-
--- Legacy
-spec:RegisterGear( "tier31", 207189, 207190, 207191, 207192, 207194 )
-spec:RegisterAuras( {
-    sanctification = { -- TODO: Explore reset of stacks when empowered Consecration expires.
-        id = 424616,
-        duration = 20,
-        max_stack = 5
+spec:RegisterGear({
+    -- The War Within
+    tww3 = {
+        items = { 237619, 237617, 237622, 237620, 237618 },
+        auras = {
+            -- Templar
+            hammer_of_light = {
+                id = 427441,
+                duration = 20,
+                max_stack = 2
+            },
+            -- Lightsmith
+            masterwork = {
+                id = 1238903,
+                duration = 30,
+                max_stack = 5
+            },
+        }
     },
-    sanctification_empower = {
-        id = 424622,
-        duration = 30,
-        max_stack = 1
+    tww2 = {
+        items = { 229244, 229242, 229243, 229245, 229247 },
+        auras = {
+            luck_of_the_draw = {
+                id = 1218114,
+                duration = 10,
+                max_stack = 1
+            }
+        }
     },
-})
-
--- Tier 30
-spec:RegisterGear( "tier30", 202455, 202453, 202452, 202451, 202450 )
-spec:RegisterAura( "heartfire", {
-    id = 408399,
-    duration = 5,
-    max_stack = 1
-} )
-
-
--- Gear Sets
-spec:RegisterGear( "tier29", 200417, 200419, 200414, 200416, 200418, 217198, 217200, 217196, 217197, 217199 )
-spec:RegisterAuras( {
-    ally_of_the_light = {
-        id = 394714,
-        duration = 8,
-        max_stack = 1
+    -- Dragonflight
+    tier31 = {
+        items = { 207189, 207190, 207191, 207192, 207194 },
+        auras = {
+            sanctification = {
+                id = 424616,
+                duration = 20,
+                max_stack = 5
+            },
+            sanctification_empower = {
+                id = 424622,
+                duration = 30,
+                max_stack = 1
+            }
+        }
     },
-    deflecting_light = {
-        id = 394727,
-        duration = 10,
-        max_stack = 1
-    }
+    tier30 = {
+        items = { 202455, 202453, 202452, 202451, 202450 },
+        auras = {
+            heartfire = {
+                id = 408399,
+                duration = 5,
+                max_stack = 1
+            }
+        }
+    },
+    tier29 = {
+        items = { 200417, 200419, 200414, 200416, 200418, 217198, 217200, 217196, 217197, 217199 },
+        auras = {
+            ally_of_the_light = {
+                id = 394714,
+                duration = 8,
+                max_stack = 1
+            },
+            deflecting_light = {
+                id = 394727,
+                duration = 10,
+                max_stack = 1
+            }
+        }
+    },
+    -- Legacy
+    tier21 = { items = { 152151, 152153, 152149, 152148, 152150, 152152 } },
+    tier20 = {
+        items = { 147160, 147162, 147158, 147157, 147159, 147161 },
+        auras = {
+            sacred_judgment = {
+                id = 246973,
+                duration = 8,
+                max_stack = 1
+            }
+        }
+    },
+    tier19 = { items = { 138350, 138353, 138356, 138359, 138362, 138369 } },
+    class =  { items = { 139690, 139691, 139692, 139693, 139694, 139695, 139696, 139697 } },
+    breastplate_of_the_golden_valkyr = { items = { 137017 } },
+    heathcliffs_immortality = { items = { 137047 } },
+    justice_gaze = { items = { 137065 } },
+    saruans_resolve = { items = { 144275 } },
+    tyelca_ferren_marcuss_stature = { items = { 137070 } },
+    tyrs_hand_of_faith = { items = { 137059 } },
+    uthers_guard = { items = { 137105 } },
+    soul_of_the_highlord = { items = { 151644 } },
+    pillars_of_inmost_light = { items = { 151812 } }
 } )
-
-spec:RegisterGear( "tier19", 138350, 138353, 138356, 138359, 138362, 138369 )
-spec:RegisterGear( "tier20", 147160, 147162, 147158, 147157, 147159, 147161 )
-    spec:RegisterAura( "sacred_judgment", {
-        id = 246973,
-        duration = 8,
-        max_stack = 1,
-    } )
-
-spec:RegisterGear( "tier21", 152151, 152153, 152149, 152148, 152150, 152152 )
-spec:RegisterGear( "class", 139690, 139691, 139692, 139693, 139694, 139695, 139696, 139697 )
-
-spec:RegisterGear( "breastplate_of_the_golden_valkyr", 137017 )
-spec:RegisterGear( "heathcliffs_immortality", 137047 )
-spec:RegisterGear( "justice_gaze", 137065 )
-spec:RegisterGear( "saruans_resolve", 144275 )
-spec:RegisterGear( "tyelca_ferren_marcuss_stature", 137070 )
-spec:RegisterGear( "tyrs_hand_of_faith", 137059 )
-spec:RegisterGear( "uthers_guard", 137105 )
-
-spec:RegisterGear( "soul_of_the_highlord", 151644 )
-spec:RegisterGear( "pillars_of_inmost_light", 151812 )
-
 
 spec:RegisterStateExpr( "last_consecration", function () return action.consecration.lastCast end )
 spec:RegisterStateExpr( "last_blessed_hammer", function () return action.blessed_hammer.lastCast end )
@@ -987,7 +1026,6 @@ spec:RegisterHook( "reset_precast", function ()
     hpg_to_2dawn = nil
 end )
 
-
 spec:RegisterStateExpr( "next_armament", function()
     if buff.sacred_weapon_ready.up then return "sacred_weapon" end
     return "holy_bulwark"
@@ -996,7 +1034,6 @@ end )
 spec:RegisterStateExpr( "judgment_holy_power", function()
     return 1 + ( buff.bastion_of_light.up and 2 or 0 ) + ( ( buff.avenging_wrath.up or buff.sentinel.up ) and talent.sanctified_wrath.enabled and 1 or 0 )
 end )
-
 
 spec:RegisterHook( "spend", function( amt, resource )
     if amt > 0 and resource == "holy_power" then
@@ -1031,7 +1068,6 @@ spec:RegisterHook( "spend", function( amt, resource )
     end
 end )
 
-
 -- TODO: Need to count HoPo generators and stack Blessing of Dawn on third cast.
 spec:RegisterHook( "gain", function( amt, resource, overcap )
     if amt > 0 and resource == "holy_power" then
@@ -1049,7 +1085,6 @@ spec:RegisterHook( "gain", function( amt, resource, overcap )
         end
     end
 end )
-
 
 -- Abilities
 spec:RegisterAbilities( {
@@ -1461,7 +1496,7 @@ spec:RegisterAbilities( {
             active_dot.eye_of_tyr = active_enemies
 
             if talent.lights_guidance.enabled then
-                applyBuff( "hammer_of_light_ready" )
+                applyBuff( "hammer_of_light_ready", nil, 1 + set_bonus.tww3 >=4 and 1 or 0 )
             end
 
             if talent.undisputed_ruling.enabled then gain( 3, "holy_power" ) end
@@ -1575,7 +1610,7 @@ spec:RegisterAbilities( {
                 if buff.hammer_of_light_free.up then
                     removeBuff( "hammer_of_light_free" )
                 else
-                    removeBuff( "hammer_of_light_ready" )
+                    removeStack( "hammer_of_light_ready" )
 
                     if buff.lights_deliverance.stack_pct == 100 then
                         removeBuff( "lights_deliverance" )
@@ -1724,6 +1759,7 @@ spec:RegisterAbilities( {
                 removeBuff( "sacred_weapon_ready" )
                 applyBuff( "holy_bulwark_ready" )
             end
+            removeStack( "masterwork" )
         end,
 
         copy = { "holy_bulwark", 432459, "sacred_weapon", 432472 }
@@ -2054,7 +2090,6 @@ spec:RegisterStateExpr( "defensive_sentinel", function()
     return false
 end )
 
-
 spec:RegisterRanges( "shield_of_the_righteous", "rebuke", "avengers_shield" )
 
 spec:RegisterOptions( {
@@ -2074,6 +2109,5 @@ spec:RegisterOptions( {
 
     package = "Protection Paladin",
 } )
-
 
 spec:RegisterPack( "防骑Simc", 20250425, [[Hekili:nZvBVnUns4FlbfWRn6ghl5KSzxeBG2E4W1f9wS4sl2pCOwM2I2MnYs(eLs2ae4F73mK6fsjsjzhVPlqrtS1OHZB8HZmC2mZz2Vp7oFscD2NCh5E1OlDVAOJJ71UZUl5PD0z3TJS8EYA4xcjBH))NJJsOltyrH7N)zsaXNfI08uqeXhzfpknEjq3MKKD8pCXfRzjBsxmCz02l4STPbe8vxgtwLGFE5fZUBrkli5xdNTWOC48(z3rst2efp7U7yB)fGZmFFQKCkF5S7qYpF0LN7E1h2p)FY(6(5)C0DFE)8vaBPX7)4(pMtXiKcKjW))PWLLpYf(p4r)umW4K9Z)h0v0qF4DNNUdfj)mkV8CNrN74829ZHF6k(PZ5UUz)ez(FiOhw74OTzlv(Ro69Np6gGK)dLNefd0SLLWwtKwssMfnGXt0EdK54pVm7N3uObsrRK4BKsMRBlIX7o3DmqYVVbE(xiGo(fWdHorCT5IOb6ksAqc8RFseDifUz3ftxKEp4APHKfbu)z)8SeWzHuu(nfeVKee4j)GhYzj)9KbrLQoYIXhdlwgff4h9yih5WLhdhsIzH3ttem4QJHb8esOpj2hya8GDXuiiFbPUDZN(qKGdK0yIjZxoHbS1Bs4E)vQ)6TqGyfshRskjEjjK6brsX1P8svkxgfYPWgo5N0ORQwhTdukAs57(ajMHpf)TGu4hoa)IzW2kgPWaomXz4gc3l3JSFEV9ZR8mWuLmKe(KN)oU4593p)mfQCnq1ZpRXMC2p0pnoBxZ0jASWafdKSP(sLtRqh1di84a2GhpicDRF66d2g5A0g52GnYK2x3gzYsQzJmAbM2Mr0GjY5GmrjQBgZJ9vSyLgd(okSDkHeVg22nSs0U0D6winXeMVh9b4jdj((8H0VI4tYhx9zmPI(URm)40D23JvDpibET1SW1EpcgOnM2cAu1wKUA1q93vBz3fLJ2vfRQKhG)2eBIPBjSqqZVfoNjtdbstyBPcT2zKWjoOCX2gHQMx0kV1brXpzARUnNcFdJg4JVAYgQxmASOrPCPZzScMg7bMa)jiW0UK2mmsTOiA0QgJl6OYvDbHlasbXt4hXL(Dh0sxWAWWDtjJxXGd3cIIYWYloAWq4C(RKag5cbH7LdYxtayHH0yVykNfWOHlPIWISDtwyrdhRMjzovIBYbHgwBd6(5Gn0jhpPjVXkuk80S9xoQaFO9fX1mWEHtoMs8FQy7TnjzGkIutRieVJ)cxXM0qUez04Ey2n3xd7MJzW(xn7MRmMViBMgI5lZmP0kUCdcDW1GVxLcqkq(qIh5jrQq7Y6L(d3s(k8spTmGMd6GRNHq(k7J2q2Uf2iLVDXBvmLQHnMT2cI5Bi3tfqyBOOXIRJIQBnRtCnak6tInQjpfRZOHxzogaKMsRwfjV5dsG4Gn7wdaREU(emrbWSDv5r0Ka8unGv(P879apMhs1WmwjIb6vqwgUY6uMpbrEYxWcjRuTA9KPAcLJI5gEdohJhrbdLhiyA59cq2rVmzY(5w9vnifhu5TtwFAuCPnrZtAGspgeww47MOiZ5rivJ9eBj1oF3Y5MMoBSTxruwBmBx2bTPWU01qLHPObnAfOYyLB(XKh7)7F5lqq)LFEaFhbQZJhLaLZraDyB6YnYFBxe4yGvE)8hHY8IsbaGhXdrrwcQn8PnuSy0C6uTWTP9AGJO8LRlOWP8Cm6jk4jVDrpI1u)J7NNJJ4P(9tLr6L4MFBDVIuMmK)WH5EalkN5tLEgd(O3IM2OaPfa)DHQAZhLebwt4NKIpbAp(cg4m6rdbDMlDTadfDvqzDoyFjuxJ3IOWu(qyvEKe)OOZaECkHdjD56D5ULhQpTIlTtVJmoO3X5vrx6nwbno7GuYVTbGNk8L3Fahw31K9H0UfcOeDpnaStID3LA3Q04NkG5NKtVQF8wrbdMoP3zutoOwwZSy1mhJD6kCpyGDhvB9ACezzrJHAUfVGqYTxCB5bHuFpcNdfylZ2)qKGBZnKwZ0ZuAf1cjCAjxQxtXmFTKIRq6APm6tG052vPBzCkN4dMroKn89uH4zppib3Yk9TidMSnbiQLLUUHm1EImH0VM4rI3sKDbb4dNSmg0)hPKDrHkGrYSvvFyrMQ9n(u1esVUztIoGBZfKxTFdID95AGma8A1EQugPAQPkoVtLw1gluHo7W65O00vSquQXY5RNzPP9Zhc4zdgUmbitrX0YjHpWckLbJf8yhgSEmHWgNH2j9v51DnrVyJA(c3ounNjPZogsZfovAoQ)8U4tCBS4OtfcX4I0sSQkDcQ1T9(59AlT1rCDBSmQtLq6EicPbGxx7Dr8SUx)OPik79i8me0ReQwxeRGH7AhaQFH8Xc3gXtK5XPLdIXEwJ9kkR6(oANZY1Qi)rDZIpnG9anUlvw7wf6RROpnH1mEKkwELarD48XoMpIOs1w6VJwR6RgcvH2wYYaSWIZku6MuzjR5zxwBtrHhnVl8ngvQFOQuhxHxPOTIxk0ThJIfE)Ig4pw7s9QgKxr1TVD)LeXmULU8B0I2KkzFBzL6iusSQYfFIS5gTGcRx3zI29o34fvLqcVx0IKEfyzg3ooS4U80QTDOpKiYswsURTasml5MDPXqn)Y4nfFEd14z76awO04nbacSb1h(CLUu8F)x07zbS)eN(GLrquyOF(usWY7Pq24smNXXUoKf(IGuaFHkIJeSIpC)8FjLNGJvWUyweyXyyoiGpz)8uonNRYosefR02jOkBGWvusskKCMwrP0eSHu8HlI478KYHWXAp8GscGKV2TmreE8y0Ap5x9Y8fkhDzeBOP9N2tdiB)gKAkjWt0LDn4b1ynwi4DWf2NSLSM6DLSwCFE2xKd6xCJeIbwb2dlNxfDLyDkglqe3wgS9MHuEVWoRrwMDqg8P)i5Lwwv11Ebu1TJ20bDBDe5(VN0oR8f1u7aGcHKdiPEC4nGLmORo3V3ma5YpQV2bO7GIr8)EsTQSOO2zpDUk4lbrBYWxk5xa5jVOqi1MqF(SSXGaohLJpmBc2g9EaNGehkIEUtmWvST7IIbMUcHgFtXid9gi9q6)lfQA1hBJpEDzKuaKvm7zyLEWH9a07h)nqNHtd)aachfcRM4XVj)sd1hBJ3iBG8BSmvhWJ7781bDKPQtDIfgxHKoX86d(snMBKKoXCdt7Ibr3enFtzFRm2Wy8yWQC0Y9XY(oW4gd)Q9ynP96xFM(cd7SX8tYgg7s(X58(gZ(wz8XUzPJY9XY(oW4JcsD)hnG2N9w8ddS3TDxL42IAYpLtGMT80X4cwoUD3JzwAGanz90XyHZ5xf(fKtxRp61OzhNK3iOie6S7(HFaQKOJZX(IGOfxOEJIx8tcg)zzvsp9Bi7VyNCI5ZVBqmpf8T3)rCP(JDsXxo72YsOWz3gu()nu2l8jNXGFdYTy)8Zbb)g)XV7sXSPJVTup4dlsQ4hNCbMqJO0qitQeguhKCMpBLEI)FLpFOF0eDAt0SzsQoDNgjsVyEZ0OwqVzkYN2P3Itv3KmFF5ip9wXC5oX5TSvtmVVUNDS7E9pZ(Pgp)CdaqtN0aQ6GNF(mZhX9surxvv01SkwxluuX66FPkAqlM2G6RQHvMp8pwOJyiN4FubQFt1zUxQZk)RLOvAZxjE7KMdk3oL5ZhNI4xO186b8OROX5DE6exWezEkNF(56DlE67UQ(xdf5yuy0VLkZ0iRtcLtlxSLX3QYSfJVEFtVFw3nV1bK6(4eao1z0GbM5PYD(v3SzPRytNm2mZQoJW2vWNFUiQ1IWpz8iDWs1fIf(q09up6xHIgXw7GlImur04jpw4Qu(ryHlMfzBVyM0n9g1qXY9halSyZeWdYc371ABn71VEt0Mm65Nn38mWZcMPV)6ZOfdKT(Mkc)m0oslSrRlG47w24GBlBk5HzjZ(EJTGCGf5qRBisVSTEo2lpaOExBMw0NXEN13sNAYKUM6sJUIv0HMSVUO7m20fRSwn61GWR0hT)of)82NHsB9Mc2K1)7efOYA2IvVOjF)DkYQ9IRYUWYw3PcwMFwo8UfNxRndeYSfZgXcXj11hP9BNKno7g5BLr6RalVPXy)w3In)wgF9BDGCgSqI2bA1hy9BDgchfRnO636Au0lFxXP7Qt(9KRW06AEi0h0RLlf9qxtNmRYcJtz(0rh1c2WrK9pR9P(uXu3YeFobKVZm66lM9w8OZx558(qTjnRb9K79nmd496RC43pAyEFNo5kOuHtUjFGmHKVNhp7tSlOdZ1C7odHVOvhwVdXrCWQzNuKtD8sRBrpWJo6wnmJLPH3YawdL60R0(F7yJctLjcPmGPPjPUxxNI6EDtFMyw2SmCpfNjUWWSN1Tv82XzoUgQTsrqwOnqsV(RFLjw6uiaU2faSW1yQFkS64yCfa5w9HYsz7yG8ljhi1w3vORghF6jxzoWrBaZqwOnAAt0M2zauqMzuLbKgq0m895PaDTn7xVo0CalOBvM3zJ0O0ZJUUFUPPC(GbOSO0TmiZhLxsD4b7LfpnXCQN2K4UAISNBCV2Mj5df5Q)lDN74bwZ2VZWx)niegWWEXsH7blfM89hrvavrOoRYWa3LAvAyWF7zOnUtUeQHQtMf44uiVKwhxZx8EYoeRDiBo6suJrAQ1nTSqcdncRx)2MqxSRZngpuIVBEUCTM7ALqVoeICK(WdWEywq1UDnrJrkZI08bU6x2wjj5xtcqskN6XsOBZU)eZ)jSOqAn8x)Ig5k)TI)4eKFVmIJQ6B)pNbtC6z82hWt91B1XKlhH120aRC1URp97noVRl1wMb49CzNPdoeL1TnL190PSoA363jszf)7lD5SpD91I5HB2))d]] )

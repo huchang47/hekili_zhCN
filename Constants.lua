@@ -4,7 +4,8 @@
 local addon, ns = ...
 local Hekili = _G[ addon ]
 
-
+local GetSpecialization = C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 -- Class Localization
 ns.getLocalClass = function ( class )
     if not ns.player.sex then ns.player.sex = UnitSex( "player" ) end

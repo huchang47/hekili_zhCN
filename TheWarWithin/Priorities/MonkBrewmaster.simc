@@ -1,3 +1,5 @@
+## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/monk_brewmaster.simc
+
 actions.precombat+=/potion
 actions.precombat+=/chi_burst,if=talent.chi_burst.enabled
 

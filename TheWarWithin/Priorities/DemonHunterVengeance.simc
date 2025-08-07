@@ -1,3 +1,5 @@
+## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/demonhunter_vengeance.simc
+
 actions.precombat+=/variable,name=single_target,value=spell_targets.spirit_bomb=1
 actions.precombat+=/variable,name=small_aoe,value=spell_targets.spirit_bomb>=2&spell_targets.spirit_bomb<=5
 actions.precombat+=/variable,name=big_aoe,value=spell_targets.spirit_bomb>=6

@@ -1,17 +1,34 @@
 -- DeathKnightFrost.lua
--- January 2025
+-- August 2025
+-- Patch 11.2
 
 if UnitClassBase( "player" ) ~= "DEATHKNIGHT" then return end
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
 local class, state = Hekili.Class, Hekili.State
-
 local PTR = ns.PTR
-
-local strformat = string.format
-
 local spec = Hekili:NewSpecialization( 251 )
+
+---- Local function declarations for increased performance
+-- Strings
+local strformat = string.format
+-- Tables
+local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
+-- Math
+local abs, ceil, floor, max, sqrt = math.abs, math.ceil, math.floor, math.max, math.sqrt
+
+-- Common WoW APIs, comment out unneeded per-spec
+-- local GetSpellCastCount = C_Spell.GetSpellCastCount
+-- local GetSpellInfo = C_Spell.GetSpellInfo
+-- local GetSpellInfo = ns.GetUnpackedSpellInfo
+-- local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+-- local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
+-- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
+-- local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
+-- local IsActiveSpell = ns.IsActiveSpell
+
+-- Specialization-specific local functions (if any)
 
 spec:RegisterResource( Enum.PowerType.Runes, {
     rune_regen = {
@@ -26,21 +43,6 @@ spec:RegisterResource( Enum.PowerType.Runes, {
         value = 1,
     },
 
-    empower_rune = {
-        aura = "empower_rune_weapon",
-
-        last = function()
-            local applied = state.buff.empower_rune_weapon.applied
-            return applied + floor( ( state.query_time - applied ) / 5 ) * 5
-        end,
-
-        stop = function( x )
-            return x == 6
-        end,
-
-        interval = 5,
-        value = 1,
-    },
 }, setmetatable( {
     expiry = { 0, 0, 0, 0, 0, 0 },
     cooldown = 10,
@@ -155,34 +157,7 @@ spec:RegisterResource( Enum.PowerType.Runes, {
     end
 }))
 
-spec:RegisterStateExpr( "breath_ticks_left", function()
-    if not buff.breath_of_sindragosa.up then
-        return 0
-    end
-    return floor( runic_power.current / 17 ) + ( runic_power.current % 17 + ( floor( runes.current / 2 )  * 20 ) / gcd.max ) / 17
-end )
-
 spec:RegisterResource( Enum.PowerType.RunicPower, {
-    breath_of_sindragosa = {
-        aura = "breath_of_sindragosa",
-        stop = function( x )
-            return state.buff.breath_of_sindragosa.down or x < 17 or breath_ticks_left == 0
-        end,
-        interval = 1,
-        value = -17,
-
-        last = function()
-            local app = state.buff.breath_of_sindragosa.applied
-            return app + floor( state.query_time - app )
-        end,
-    },
-
-    empower_rp = {
-        aura = "empower_rune_weapon",
-        last = function () return state.buff.empower_rune_weapon.applied + floor( ( state.query_time - state.buff.empower_rune_weapon.applied ) / 5 ) * 5 end,
-        interval = 5,
-        value = 5
-    },
 
     swarming_mist = {
         aura = "swarming_mist",
@@ -199,145 +174,140 @@ spec:RegisterResource( Enum.PowerType.RunicPower, {
 
 -- Talents
 spec:RegisterTalents( {
-    -- DeathKnight
-    abomination_limb            = {  76049, 383269, 1 }, -- Sprout an additional limb, dealing 54,565 Shadow damage over 12 sec to all nearby enemies. Deals reduced damage beyond 5 targets. Every 1 sec, an enemy is pulled to your location if they are further than 8 yds from you. The same enemy can only be pulled once every 4 sec.
-    antimagic_barrier           = {  76046, 205727, 1 }, -- Reduces the cooldown of Anti-Magic Shell by 20 sec and increases its duration and amount absorbed by 40%.
-    antimagic_zone              = {  76065,  51052, 1 }, -- Places an Anti-Magic Zone that reduces spell damage taken by party or raid members by 20%. The Anti-Magic Zone lasts for 8 sec or until it absorbs 1.3 million damage.
-    asphyxiate                  = {  76064, 221562, 1 }, -- Lifts the enemy target off the ground, crushing their throat with dark energy and stunning them for 5 sec.
-    assimilation                = {  76048, 374383, 1 }, -- The amount absorbed by Anti-Magic Zone is increased by 10% and its cooldown is reduced by 30 sec.
-    blinding_sleet              = {  76044, 207167, 1 }, -- Targets in a cone in front of you are blinded, causing them to wander disoriented for 5 sec. Damage may cancel the effect. When Blinding Sleet ends, enemies are slowed by 50% for 6 sec.
-    blood_draw                  = {  76056, 374598, 1 }, -- When you fall below 30% health you drain 17,735 health from nearby enemies, the damage you take is reduced by 10% and your Death Strike cost is reduced by 10 for 8 sec. Can only occur every 2 min.
-    blood_scent                 = {  76078, 374030, 1 }, -- Increases Leech by 3%.
-    brittle                     = {  76061, 374504, 1 }, -- Your diseases have a chance to weaken your enemy causing your attacks against them to deal 6% increased damage for 5 sec.
-    cleaving_strikes            = {  76073, 316916, 1 }, -- Obliterate hits up to 2 additional enemies while you remain in Death and Decay. When leaving your Death and Decay you retain its bonus effects for 4 sec.
-    coldthirst                  = {  76083, 378848, 1 }, -- Successfully interrupting an enemy with Mind Freeze grants 10 Runic Power and reduces its cooldown by 3 sec.
-    control_undead              = {  76059, 111673, 1 }, -- Dominates the target undead creature up to level 71, forcing it to do your bidding for 5 min.
-    death_pact                  = {  76075,  48743, 1 }, -- Create a death pact that heals you for 50% of your maximum health, but absorbs incoming healing equal to 30% of your max health for 15 sec.
-    death_strike                = {  76071,  49998, 1 }, -- Focuses dark power into a strike with both weapons, that deals a total of 8,500 Physical damage and heals you for 40.00% of all damage taken in the last 5 sec, minimum 11.2% of maximum health.
-    deaths_echo                 = { 102007, 356367, 1 }, -- Death's Advance, Death and Decay, and Death Grip have 1 additional charge.
-    deaths_reach                = { 102006, 276079, 1 }, -- Increases the range of Death Grip by 10 yds. Killing an enemy that yields experience or honor resets the cooldown of Death Grip.
-    enfeeble                    = {  76060, 392566, 1 }, -- Your ghoul's attacks have a chance to apply Enfeeble, reducing the enemies movement speed by 30% and the damage they deal to you by 12% for 6 sec.
-    gloom_ward                  = {  76052, 391571, 1 }, -- Absorbs are 15% more effective on you.
-    grip_of_the_dead            = {  76057, 273952, 1 }, -- Death and Decay reduces the movement speed of enemies within its area by 90%, decaying by 10% every sec.
-    ice_prison                  = {  76086, 454786, 1 }, -- Chains of Ice now also roots enemies for 4 sec but its cooldown is increased to 12 sec.
-    icebound_fortitude          = {  76081,  48792, 1 }, -- Your blood freezes, granting immunity to Stun effects and reducing all damage you take by 30% for 8 sec.
-    icy_talons                  = {  76085, 194878, 1 }, -- Your Runic Power spending abilities increase your melee attack speed by 6% for 10 sec, stacking up to 5 times.
-    improved_death_strike       = {  76067, 374277, 1 }, -- Death Strike's cost is reduced by 10, and its healing is increased by 60%.
-    insidious_chill             = {  76051, 391566, 1 }, -- Your auto-attacks reduce the target's auto-attack speed by 5% for 30 sec, stacking up to 4 times.
-    march_of_darkness           = {  76074, 391546, 1 }, -- Death's Advance grants an additional 25% movement speed over the first 3 sec.
-    mind_freeze                 = {  76084,  47528, 1 }, -- Smash the target's mind with cold, interrupting spellcasting and preventing any spell in that school from being cast for 3 sec.
-    null_magic                  = { 102008, 454842, 1 }, -- Magic damage taken is reduced by 8% and the duration of harmful Magic effects against you are reduced by 35%.
-    osmosis                     = {  76088, 454835, 1 }, -- Anti-Magic Shell increases healing received by 15%.
-    permafrost                  = {  76066, 207200, 1 }, -- Your auto attack damage grants you an absorb shield equal to 40% of the damage dealt.
-    proliferating_chill         = { 101708, 373930, 1 }, -- Chains of Ice affects 1 additional nearby enemy.
-    raise_dead                  = {  76072,  46585, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time. Lasts 1 min.
-    rune_mastery                = {  76079, 374574, 2 }, -- Consuming a Rune has a chance to increase your Strength by 3% for 8 sec.
-    runic_attenuation           = {  76045, 207104, 1 }, -- Auto attacks have a chance to generate 3 Runic Power.
-    runic_protection            = {  76055, 454788, 1 }, -- Your chance to be critically struck is reduced by 3% and your Armor is increased by 6%.
-    sacrificial_pact            = {  76060, 327574, 1 }, -- Sacrifice your ghoul to deal 11,084 Shadow damage to all nearby enemies and heal for 25% of your maximum health. Deals reduced damage beyond 8 targets.
-    soul_reaper                 = {  76063, 343294, 1 }, -- Strike an enemy for 9,914 Shadowfrost damage and afflict the enemy with Soul Reaper. After 5 sec, if the target is below 35% health this effect will explode dealing an additional 45,489 Shadowfrost damage to the target. If the enemy that yields experience or honor dies while afflicted by Soul Reaper, gain Runic Corruption.
-    subduing_grasp              = {  76080, 454822, 1 }, -- When you pull an enemy, the damage they deal to you is reduced by 6% for 6 sec.
-    suppression                 = {  76087, 374049, 1 }, -- Damage taken from area of effect attacks reduced by 3%. When suffering a loss of control effect, this bonus is increased by an additional 6% for 6 sec.
-    unholy_bond                 = {  76076, 374261, 1 }, -- Increases the effectiveness of your Runeforge effects by 20%.
-    unholy_endurance            = {  76058, 389682, 1 }, -- Increases Lichborne duration by 2 sec and while active damage taken is reduced by 15%.
-    unholy_ground               = {  76069, 374265, 1 }, -- Gain 5% Haste while you remain within your Death and Decay.
-    unyielding_will             = {  76050, 457574, 1 }, -- Anti-Magic shell now removes all harmful magical effects when activated, but it's cooldown is increased by 20 sec.
-    vestigial_shell             = {  76053, 454851, 1 }, -- Casting Anti-Magic Shell grants 2 nearby allies a Lesser Anti-Magic Shell that Absorbs up to 55,050 magic damage and reduces the duration of harmful Magic effects against them by 50%.
-    veteran_of_the_third_war    = {  76068,  48263, 1 }, -- Stamina increased by 20%.
-    will_of_the_necropolis      = {  76054, 206967, 2 }, -- Damage taken below 30% Health is reduced by 20%.
-    wraith_walk                 = {  76077, 212552, 1 }, -- Embrace the power of the Shadowlands, removing all root effects and increasing your movement speed by 70% for 4 sec. Taking any action cancels the effect. While active, your movement speed cannot be reduced below 170%.
+
+    -- Death Knight
+    antimagic_barrier              = {  76046,  205727, 1 }, -- Reduces the cooldown of Anti-Magic Shell by $s1 sec and increases its duration and amount absorbed by $s2%
+    antimagic_zone                 = {  76065,   51052, 1 }, -- Places an Anti-Magic Zone for $s1 sec, reducing the magic damage taken by party or raid members by $s2%
+    asphyxiate                     = {  76064,  221562, 1 }, -- Lifts the enemy target off the ground, crushing their throat with dark energy and stunning them for $s1 sec
+    assimilation                   = {  76048,  374383, 1 }, -- The cooldown of Anti-Magic Zone is reduced by $s1 sec and its duration is increased by $s2 sec
+    blinding_sleet                 = {  76044,  207167, 1 }, -- Targets in a cone in front of you are blinded, causing them to wander disoriented for $s1 sec. Damage may cancel the effect. When Blinding Sleet ends, enemies are slowed by $s2% for $s3 sec
+    blood_draw                     = {  76056,  374598, 1 }, -- When you fall below $s1% health you drain $s2 health from nearby enemies, the damage you take is reduced by $s3% and your Death Strike cost is reduced by $s4 for $s5 sec. Can only occur every $s6 min
+    blood_scent                    = {  76078,  374030, 1 }, -- Increases Leech by $s1%
+    brittle                        = {  76061,  374504, 1 }, -- Your diseases have a chance to weaken your enemy causing your attacks against them to deal $s1% increased damage for $s2 sec
+    cleaving_strikes               = {  76073,  316916, 1 }, -- Frostscythe deals $s1% increased damage during Remorseless Winter
+    coldthirst                     = {  76083,  378848, 1 }, -- Successfully interrupting an enemy with Mind Freeze grants $s1 Runic Power and reduces its cooldown by $s2 sec
+    control_undead                 = {  76059,  111673, 1 }, -- Dominates the target undead creature up to level $s1, forcing it to do your bidding for $s2 min
+    death_pact                     = {  76075,   48743, 1 }, -- Create a death pact that heals you for $s1% of your maximum health, but absorbs incoming healing equal to $s2% of your max health for $s3 sec
+    death_strike                   = {  76071,   49998, 1 }, -- Focuses dark power into a strike with both weapons, that deals a total of $s$s2 Physical damage and heals you for $s3% of all damage taken in the last $s4 sec, minimum $s5% of maximum health
+    deaths_echo                    = { 102007,  356367, 1 }, -- Death's Advance, Death and Decay, and Death Grip have $s1 additional charge
+    deaths_reach                   = { 102006,  276079, 1 }, -- Increases the range of Death Grip by $s1 yds. Killing an enemy that yields experience or honor resets the cooldown of Death Grip
+    enfeeble                       = {  76060,  392566, 1 }, -- Your ghoul's attacks have a chance to apply Enfeeble, reducing the enemies movement speed by $s1% and the damage they deal to you by $s2% for $s3 sec
+    gloom_ward                     = {  76052,  391571, 1 }, -- Absorbs are $s1% more effective on you
+    grip_of_the_dead               = {  76057,  273952, 1 }, -- Death and Decay reduces the movement speed of enemies within its area by $s1%, decaying by $s2% every sec
+    ice_prison                     = {  76086,  454786, 1 }, -- Chains of Ice now also roots enemies for $s1 sec but its cooldown is increased to $s2 sec
+    icebound_fortitude             = {  76081,   48792, 1 }, -- Your blood freezes, granting immunity to Stun effects and reducing all damage you take by $s1% for $s2 sec
+    icy_talons                     = {  76085,  194878, 1 }, -- Your Runic Power spending abilities increase your melee attack speed by $s1% for $s2 sec, stacking up to $s3 times
+    improved_death_strike          = {  76067,  374277, 1 }, -- Death Strike's cost is reduced by $s1, and its healing is increased by $s2%
+    insidious_chill                = {  76051,  391566, 1 }, -- Your auto-attacks reduce the target's auto-attack speed by $s1% for $s2 sec, stacking up to $s3 times
+    march_of_darkness              = {  76074,  391546, 1 }, -- Death's Advance grants an additional $s1% movement speed over the first $s2 sec
+    mind_freeze                    = {  76084,   47528, 1 }, -- Smash the target's mind with cold, interrupting spellcasting and preventing any spell in that school from being cast for $s1 sec
+    null_magic                     = { 102008,  454842, 1 }, -- Magic damage taken is reduced by $s1% and the duration of harmful Magic effects against you are reduced by $s2%
+    osmosis                        = {  76088,  454835, 1 }, -- Anti-Magic Shell increases healing received by $s1%
+    permafrost                     = {  76066,  207200, 1 }, -- Your auto attack damage grants you an absorb shield equal to $s1% of the damage dealt
+    proliferating_chill            = { 101708,  373930, 1 }, -- Chains of Ice affects $s1 additional nearby enemy
+    raise_dead                     = {  76072,   46585, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time. Lasts $s1 min
+    rune_mastery                   = {  76079,  374574, 2 }, -- Consuming a Rune has a chance to increase your Strength by $s1% for $s2 sec
+    runic_attenuation              = {  76045,  207104, 1 }, -- Auto attacks have a chance to generate $s1 Runic Power
+    runic_protection               = {  76055,  454788, 1 }, -- Your chance to be critically struck is reduced by $s1% and your Armor is increased by $s2%
+    sacrificial_pact               = {  76060,  327574, 1 }, -- Sacrifice your ghoul to deal $s$s2 Shadow damage to all nearby enemies and heal for $s3% of your maximum health. Deals reduced damage beyond $s4 targets
+    soul_reaper                    = {  76063,  343294, 1 }, -- Strike an enemy for $s$s3 Shadowfrost damage and afflict the enemy with Soul Reaper. After $s4 sec, if the target is below $s5% health this effect will explode dealing an additional $s$s6 Shadowfrost damage to the target. If the enemy that yields experience or honor dies while afflicted by Soul Reaper, gain Runic Corruption
+    subduing_grasp                 = {  76080,  454822, 1 }, -- When you pull an enemy, the damage they deal to you is reduced by $s1% for $s2 sec
+    suppression                    = {  76087,  374049, 1 }, -- Damage taken from area of effect attacks reduced by $s1%. When suffering a loss of control effect, this bonus is increased by an additional $s2% for $s3 sec
+    unholy_bond                    = {  76076,  374261, 1 }, -- Increases the effectiveness of your Runeforge effects by $s1%
+    unholy_endurance               = {  76058,  389682, 1 }, -- Increases Lichborne duration by $s1 sec and while active damage taken is reduced by $s2%
+    unholy_momentum                = {  76069,  374265, 1 }, -- Increases Haste by $s1%
+    unyielding_will                = {  76050,  457574, 1 }, -- Anti-Magic Shell now removes all harmful magical effects when activated, but its cooldown is increased by $s1 sec
+    vestigial_shell                = {  76053,  454851, 1 }, -- Casting Anti-Magic Shell grants $s2 nearby allies a Lesser Anti-Magic Shell that Absorbs up to $s$s3 magic damage and reduces the duration of harmful Magic effects against them by $s4%
+    veteran_of_the_third_war       = {  76068,   48263, 1 }, -- Stamina increased by $s1%
+    will_of_the_necropolis         = {  76054,  206967, 2 }, -- Damage taken below $s1% Health is reduced by $s2%
+    wraith_walk                    = {  76077,  212552, 1 }, -- Embrace the power of the Shadowlands, removing all root effects and increasing your movement speed by $s1% for $s2 sec. Taking any action cancels the effect. While active, your movement speed cannot be reduced below $s3%
+
+    -- Frost
+    arctic_assault                 = {  76118,  456230, 1 }, -- Consuming Killing Machine fires a Glacial Advance through your target at $s1% effectiveness
+    avalanche                      = {  76105,  207142, 1 }, -- Casting Howling Blast with Rime active causes jagged icicles to fall on enemies nearby your target, applying Razorice and dealing $s$s2 Frost damage
+    biting_cold                    = {  76112,  377056, 1 }, -- Remorseless Winter damage is increased by $s1%. The first time Remorseless Winter deals damage to $s2 different enemies, you gain Rime
+    bonegrinder                    = {  76122,  377098, 2 }, -- Consuming Killing Machine grants $s1% critical strike chance for $s2 sec, stacking up to $s3 times. At $s4 stacks your next Killing Machine consumes the stacks and grants you $s5% increased Frost damage for $s6 sec
+    breath_of_sindragosa           = {  76093, 1249658, 1 }, -- Call upon Sindragosa's aid in battle for $s2 sec, continuously dealing $s$s3 Frost damage every $s4 sec to enemies in a cone in front of you. Consuming Killing Machine or Rime increases the duration by $s5 sec. Deals reduced damage to secondary targets. Grants a charge of Empower Rune Weapon at the start and $s6 Runes at the end
+    cryogenic_chamber              = { 106790,  456237, 1 }, -- When Howling Blast consumes Rime, $s1% of the damage it deals is gathered into the next cast of Remorseless Winter, up to $s2 times
+    empower_rune_weapon            = {  76096,   47568, 1 }, -- Drain the will of your enemy to empower your rune weapon, dealing $s$s2 Shadowfrost damage and reduced damage to enemies nearby, gaining $s3 Runic Power, and grants you Killing Machine
+    enduring_strength              = { 101930,  377190, 1 }, -- When Pillar of Frost expires, your Strength is increased by $s1% for $s2 sec. This effect lasts $s3 sec longer, up to $s4 sec, for each Obliterate and Frostscythe critical strike during Pillar of Frost
+    everfrost                      = {  76099,  376938, 1 }, -- Rime empowered Howling Blast deals $s1% increased damage to secondary targets. Remorseless Winter deals $s2% increased damage to enemies it hits, stacking up to $s3 times
+    frigid_executioner             = {  76092,  377073, 1 }, -- Runic Empowerment has a $s1% chance to refund $s2 additional Rune
+    frost_strike                   = {  76115,   49143, 1 }, -- Chill your weapon with icy power and quickly strike the enemy, dealing $s$s2 Frost damage
+    frostbane                      = {  76094,  455993, 1 }, -- Each foe struck with Glacial Advance has a chance to transform your next Frost Strike into Frostbane. The chance increases with the number of Razorice stacks on the target. Frostbane Start a frozen onslaught that strikes twice, unleashing the chilling essence of winter, dealing $s$s4 Frost damage to all enemies caught in its wake with each strike. Each enemy struck reduces the damage dealt to the next foe by $s5%, down to $s6%
+    frostbound_will                = { 107994, 1238680, 1 }, -- Consuming Rime reduces the cooldown of Empower Rune Weapon by $s1 sec
+    frostreaper                    = {  76098, 1230301, 1 }, -- Obliterate deals $s2% increased damage and has a chance to tether the souls of its target and a nearby enemy to yours. Frost Strike severs the tethers, dealing $s$s3 Shadowfrost damage to both foes
+    frostscythe                    = {  76113,  207230, 1 }, -- A sweeping attack that strikes all enemies in front of you for $s$s2 Frost damage. Deals reduced damage beyond $s3 targets. Consumes Killing Machine to have its critical strikes deal $s4 times the normal damage
+    frostwyrms_fury                = {  76106,  279302, 1 }, -- Summons a frostwyrm who breathes on all enemies within $s2 yd in front of you, dealing $s$s3 Frost damage, stunning enemies for $s4 sec, and slowing movement speed by $s5% for $s6 sec
+    frozen_dominion                = { 102009,  377226, 1 }, -- Pillar of Frost now summons a Remorseless Winter that lasts $s1 sec longer. Each enemy Remorseless Winter damages grants you $s2% Mastery, up to $s3% for $s4 sec
+    gathering_storm                = {  76110,  194912, 1 }, -- Each Rune spent during Remorseless Winter increases its damage by $s1%, and extends its duration by $s2 sec
+    howling_blades                 = {  76121, 1230223, 1 }, -- Rime empowered Howling Blast unleashes $s2 icy blades at its target that deal $s$s3 Frost damage and have $s4% chance to grant Killing Machine
+    howling_blast                  = {  76114,   49184, 1 }, -- Blast the target with a frigid wind, dealing $s$s3 Frost damage to that foe, and reduced damage to all other enemies within $s4 yards, infecting all targets with Frost Fever.  Frost Fever A disease that deals $s$s7 Frost damage over $s8 sec and has a chance to grant the Death Knight $s9 Runic Power each time it deals damage
+    hyperpyrexia                   = {  76108,  456238, 1 }, -- Your Runic Power spending abilities have a chance to additionally deal $s1% of the damage dealt over $s2 sec
+    icebreaker                     = {  76033,  392950, 2 }, -- When empowered by Rime, Howling Blast deals $s1% increased damage to your primary target
+    icy_death_torrent              = { 101933,  435010, 1 }, -- Your auto attack critical strikes have a chance to send out a torrent of ice dealing $s$s2 Frost damage to enemies in front of you
+    icy_onslaught                  = { 106791, 1230272, 1 }, -- Frost Strike and Glacial Advance now cause your next Frost Strike and Glacial Advance to deal $s1% increased damage and cost $s2 more Runic Power. This effect stacks until the next Runic Empowerment
+    inexorable_assault             = {  76100,  253593, 1 }, -- Gain Inexorable Assault every $s2 sec, stacking up to $s3 times. Obliterate and Frostscythe consume up to $s4 stacks, dealing an additional $s$s5 Frost damage for each stack consumed
+    killing_machine                = {  76117,   51128, 1 }, -- Your auto attack critical strikes have a chance to make your next Obliterate deal Frost damage and critically strike, or make your next Frostscythe critically strike for $s1 times the normal damage
+    killing_streak                 = {  76091, 1230153, 1 }, -- Obliterate and Frostscythe consume all Killing Machines to deal $s1% increased critical strike damage and grant $s2% Haste for $s3 sec for each stack consumed. Multiple applications may overlap
+    murderous_efficiency           = {  76037,  207061, 1 }, -- Consuming the Killing Machine effect has a $s1% chance to grant you $s2 Rune
+    northwinds                     = {  76109, 1230284, 1 }, -- Howling Blast now hits an additional target with maximum effectiveness. Rime increases Howling Blast damage done by an additional $s1%
+    obliterate                     = {  76116,   49020, 1 }, -- A brutal attack that deals $s$s2 Physical damage
+    obliteration                   = {  76123,  281238, 1 }, -- During Pillar of Frost, Frost Strike, Glacial Advance, and Howling Blast always grant Killing Machine and have a $s1% chance to generate a Rune. Additionally during Pillar of Frost, Empower Rune Weapon causes your next Obliterate or Frostscythe to cost no Runes
+    pillar_of_frost                = { 101929,   51271, 1 }, -- The power of frost increases your Strength by $s1% for $s2 sec
+    rage_of_the_frozen_champion    = { 101931,  377076, 1 }, -- Frost Strike and Glacial Advance have a $s1% increased chance to trigger Rime and Howling Blast generates $s2 Runic Power while Rime is active
+    runic_command                  = {  76102,  376251, 2 }, -- Increases your maximum Runic Power by $s1. Increases Rune regeneration rate by $s2%
+    runic_overflow                 = {  76103,  316803, 2 }, -- Increases Frost Strike and Glacial Advance damage by $s1%
+    shattering_blade               = {  76095,  207057, 1 }, -- When Frost Strike damages an enemy with $s1 stacks of Razorice it will consume them to deal an additional $s2% damage
+    smothering_offense             = {  76101,  435005, 1 }, -- Your auto attack damage is increased by $s1%. This amount is increased for each stack of Icy Talons you have and it can stack up to $s2 additional times
+    the_long_winter                = { 101932,  456240, 1 }, -- While Pillar of Frost is active your auto-attack critical strikes increase its duration by $s1 sec, up to a maximum of $s2 sec
 
     -- Deathbringer
-    absolute_zero               = { 102009, 377047, 1 }, -- Frostwyrm's Fury has 50% reduced cooldown and Freezes all enemies hit for 3 sec.
-    arctic_assault              = {  76091, 456230, 1 }, -- Consuming Killing Machine fires a Glacial Advance through your target at 80% effectiveness.
-    avalanche                   = {  76105, 207142, 1 }, -- Casting Howling Blast with Rime active causes jagged icicles to fall on enemies nearby your target, applying Razorice and dealing 4,963 Frost damage.
-    biting_cold                 = {  76111, 377056, 1 }, -- Remorseless Winter damage is increased by 35%. The first time Remorseless Winter deals damage to 3 different enemies, you gain Rime.
-    bonegrinder                 = {  76122, 377098, 2 }, -- Consuming Killing Machine grants 1% critical strike chance for 10 sec, stacking up to 5 times. At 5 stacks your next Killing Machine consumes the stacks and grants you 10% increased Frost damage for 10 sec.
-    breath_of_sindragosa        = {  76093, 152279, 1 }, -- Continuously deal 25,472 Frost damage every 1 sec to enemies in a cone in front of you, until your Runic Power is exhausted. Deals reduced damage to secondary targets. Generates 2 Runes at the start and end.
-    chill_streak                = {  76098, 305392, 1 }, -- Deals 25,420 Frost damage to the target and reduces their movement speed by 70% for 4 sec. Chill Streak bounces up to 12 times between closest targets within 10 yards.
-    cold_heart                  = {  76035, 281208, 1 }, -- Every 2 sec, gain a stack of Cold Heart, causing your next Chains of Ice to deal 2,481 Frost damage. Stacks up to 20 times.
-    cryogenic_chamber           = {  76109, 456237, 1 }, -- Each time Frost Fever deals damage, 15% of the damage dealt is gathered into the next cast of Remorseless Winter, up to 20 times.
-    empower_rune_weapon         = {  76110,  47568, 1 }, -- Empower your rune weapon, gaining 15% Haste and generating 1 Rune and 5 Runic Power instantly and every 5 sec for 20 sec.
-    enduring_chill              = {  76097, 377376, 1 }, -- Chill Streak's bounce range is increased by 2 yds and each time Chill Streak bounces it has a 25% chance to increase the maximum number of bounces by 1.
-    enduring_strength           = {  76100, 377190, 1 }, -- When Pillar of Frost expires, your Strength is increased by 15% for 6 sec. This effect lasts 2 sec longer for each Obliterate and Frostscythe critical strike during Pillar of Frost.
-    everfrost                   = {  76113, 376938, 1 }, -- Remorseless Winter deals 6% increased damage to enemies it hits, stacking up to 10 times.
-    frigid_executioner          = {  76120, 377073, 1 }, -- Obliterate deals 15% increased damage and has a 15% chance to refund 2 runes.
-    frost_strike                = {  76115,  49143, 1 }, -- Chill your weapon with icy power and quickly strike the enemy, dealing 26,260 Frost damage.
-    frostscythe                 = {  76096, 207230, 1 }, -- A sweeping attack that strikes all enemies in front of you for 18,880 Frost damage. This attack always critically strikes and critical strikes with Frostscythe deal 4 times normal damage. Deals reduced damage beyond 5 targets. Consuming Killing Machine reduces the cooldown of Frostscythe by 1.0 sec.
-    frostwhelps_aid             = {  76106, 377226, 1 }, -- Pillar of Frost summons a Frostwhelp who breathes on all enemies within 40 yards in front of you for 9,278 Frost damage. Each unique enemy hit by Frostwhelp's Aid grants you 8% Mastery for 15 sec, up to 40%.
-    frostwyrms_fury             = { 101931, 279302, 1 }, -- Summons a frostwyrm who breathes on all enemies within 40 yd in front of you, dealing 81,901 Frost damage and slowing movement speed by 50% for 10 sec.
-    gathering_storm             = {  76099, 194912, 1 }, -- Each Rune spent during Remorseless Winter increases its damage by 10%, and extends its duration by 0.5 sec.
-    glacial_advance             = {  76092, 194913, 1 }, -- Summon glacial spikes from the ground that advance forward, each dealing 10,985 Frost damage and applying Razorice to enemies near their eruption point.
-    horn_of_winter              = {  76089,  57330, 1 }, -- Blow the Horn of Winter, gaining 2 Runes and generating 25 Runic Power.
-    howling_blast               = {  76114,  49184, 1 }, -- Blast the target with a frigid wind, dealing 4,770 Frost damage to that foe, and reduced damage to all other enemies within 10 yards, infecting all targets with Frost Fever.  Frost Fever A disease that deals 57,047 Frost damage over 24 sec and has a chance to grant the Death Knight 5 Runic Power each time it deals damage.
-    hyperpyrexia                = {  76108, 456238, 1 }, -- Your Runic Power spending abilities have a chance to additionally deal 45% of the damage dealt over 4 sec.
-    icebreaker                  = {  76033, 392950, 2 }, -- When empowered by Rime, Howling Blast deals 30% increased damage to your primary target.
-    icecap                      = { 101930, 207126, 1 }, -- Reduces Pillar of Frost cooldown by 15 sec.
-    icy_death_torrent           = { 101933, 435010, 1 }, -- Your auto attack critical strikes have a chance to send out a torrent of ice dealing 24,555 Frost damage to enemies in front of you.
-    improved_frost_strike       = {  76103, 316803, 2 }, -- Increases Frost Strike damage by 10%.
-    improved_obliterate         = {  76119, 317198, 1 }, -- Increases Obliterate damage by 10%.
-    improved_rime               = {  76112, 316838, 1 }, -- Increases Howling Blast damage done by an additional 75%.
-    inexorable_assault          = {  76037, 253593, 1 }, -- Gain Inexorable Assault every 8 sec, stacking up to 5 times. Obliterate consumes a stack to deal an additional 5,815 Frost damage.
-    killing_machine             = {  76117,  51128, 1 }, -- Your auto attack critical strikes have a chance to make your next Obliterate deal Frost damage and critically strike.
-    murderous_efficiency        = {  76121, 207061, 1 }, -- Consuming the Killing Machine effect has a 25% chance to grant you 1 Rune.
-    obliterate                  = {  76116,  49020, 1 }, -- A brutal attack that deals 28,347 Physical damage.
-    obliteration                = {  76123, 281238, 1 }, -- While Pillar of Frost is active, Frost Strike Soul Reaper, and Howling Blast always grant Killing Machine and have a 30% chance to generate a Rune. to deal additional damage.
-    piercing_chill              = {  76097, 377351, 1 }, -- Enemies suffer 12% increased damage from Chill Streak each time they are struck by it.
-    pillar_of_frost             = { 101929,  51271, 1 }, -- The power of frost increases your Strength by 30% for 12 sec.
-    rage_of_the_frozen_champion = {  76120, 377076, 1 }, -- Obliterate has a 15% increased chance to trigger Rime and Howling Blast generates 6 Runic Power while Rime is active.
-    runic_command               = {  76102, 376251, 2 }, -- Increases your maximum Runic Power by 5.
-    shattered_frost             = {  76094, 455993, 1 }, -- When Frost Strike consumes 5 Razorice stacks, it deals 60% of the damage dealt to nearby enemies. Deals reduced damage beyond 8 targets.
-    shattering_blade            = {  76095, 207057, 1 }, -- When Frost Strike damages an enemy with 5 stacks of Razorice it will consume them to deal an additional 115% damage.
-    smothering_offense          = {  76101, 435005, 1 }, -- Your auto attack damage is increased by 10%. This amount is increased for each stack of Icy Talons you have and it can stack up to 2 additional times.
-    the_long_winter             = { 101932, 456240, 1 }, -- While Pillar of Frost is active your auto-attack critical strikes increase its duration by 2 sec, up to a maximum of 6 sec.
-    unleashed_frenzy            = {  76118, 376905, 1 }, -- Damaging an enemy with a Runic Power ability increases your Strength by 2% for 10 sec, stacks up to 3 times.
+    bind_in_darkness               = {  95043,  440031, 1 }, -- Rime empowered Howling Blast deals $s2% increased damage to its main target, and is now Shadowfrost$s$s3 Shadowfrost damage applies $s4 stacks to Reaper's Mark and $s5 stacks when it is a critical strike
+    dark_talons                    = {  95057,  436687, 1 }, -- Consuming Killing Machine or Rime has a $s1% chance to grant $s2 stacks of Icy Talons and increase its maximum stacks by the same amount for $s3 sec. Runic Power spending abilities count as Shadowfrost while Icy Talons is active
+    deaths_messenger               = {  95049,  437122, 1 }, -- Reduces the cooldowns of Lichborne and Raise Dead by $s1 sec
+    expelling_shield               = {  95049,  439948, 1 }, -- When an enemy deals direct damage to your Anti-Magic Shell, their cast speed is reduced by $s1% for $s2 sec
+    exterminate                    = {  95068,  441378, 1 }, -- After Reaper's Mark explodes, your next $s3 Obliterates or Frostscythes cost $s4 Rune and summon $s5 scythes to strike your enemies. The first scythe strikes your target for $s$s6 Shadowfrost damage and has a $s7% chance to grant Killing Machine, the second scythe strikes all enemies around your target for $s$s8 Shadowfrost damage and applies Frost Fever. Deals reduced damage beyond $s9 targets
+    grim_reaper                    = {  95034,  434905, 1 }, -- Reaper's Mark initial strike grants Killing Machine. Reaper's Mark explosion deals up to $s1% increased damage based on your target's missing health
+    pact_of_the_deathbringer       = {  95035,  440476, 1 }, -- When you suffer a damaging effect equal to $s1% of your maximum health, you instantly cast Death Pact at $s2% effectiveness. May only occur every $s3 min. When a Reaper's Mark explodes, the cooldowns of this effect and Death Pact are reduced by $s4 sec
+    reaper_of_souls                = {  95034,  440002, 1 }, -- When you apply Reaper's Mark, the cooldown of Soul Reaper is reset, your next Soul Reaper costs no runes, and it explodes on the target regardless of their health. Soul Reaper damage is increased by $s1%
+    reapers_mark                   = {  95062,  439843, 1 }, -- Viciously slice into the soul of your enemy, dealing $s$s2 Shadowfrost damage and applying Reaper's Mark. Each time you deal Shadow or Frost damage, add a stack of Reaper's Mark. After $s3 sec or reaching $s4 stacks, the mark explodes, dealing $s5 damage per stack. Reaper's Mark travels to an unmarked enemy nearby if the target dies
+    reapers_onslaught              = {  95057,  469870, 1 }, -- Reduces the cooldown of Reaper's Mark by $s1 sec, but the amount of Obliterates and Frostscythes empowered by Exterminate is reduced by $s2
+    rune_carved_plates             = {  95035,  440282, 1 }, -- Each Rune spent reduces the magic damage you take by $s1% and each Rune generated reduces the physical damage you take by $s2% for $s3 sec, up to $s4 times
+    soul_rupture                   = {  95061,  437161, 1 }, -- When Reaper's Mark explodes, it deals $s1% of the damage dealt to nearby enemies and causes them to deal $s2% reduced Physical damage to you for $s3 sec
+    swift_and_painful              = {  95032,  443560, 1 }, -- If no enemies are struck by Soul Rupture, you gain $s1% Strength for $s2 sec. Wave of Souls is $s3% more effective on the main target of your Reaper's Mark
+    wave_of_souls                  = {  95036,  439851, 1 }, -- Reaper's Mark sends forth bursts of Shadowfrost energy and back, dealing $s$s2 Shadowfrost damage both ways to all enemies caught in its path. Wave of Souls critical strikes cause enemies to take $s3% increased Shadowfrost damage for $s4 sec, stacking up to $s5 times, and it is always a critical strike on its way back
+    wither_away                    = {  95058,  441894, 1 }, -- Frost Fever deals its damage $s1% faster, and the second scythe of Exterminate applies Frost Fever
 
-    -- Rider of the Apocalypse
-    a_feast_of_souls            = {  95042, 444072, 1 }, -- While you have 2 or more Horsemen aiding you, your Runic Power spending abilities deal 20% increased damage.
-    apocalypse_now              = {  95041, 444040, 1 }, -- Army of the Dead and Frostwyrm's Fury call upon all 4 Horsemen to aid you for 20 sec.
-    death_charge                = {  95060, 444010, 1 }, -- Call upon your Death Charger to break free of movement impairment effects. For 10 sec, while upon your Death Charger your movement speed is increased by 100%, you cannot be slowed below 100% of normal speed, and you are immune to forced movement effects and knockbacks.
-    fury_of_the_horsemen        = {  95042, 444069, 1 }, -- Every 50 Runic Power you spend extends the duration of the Horsemen's aid in combat by 1 sec, up to 5 sec.
-    horsemens_aid               = {  95037, 444074, 1 }, -- While at your aid, the Horsemen will occasionally cast Anti-Magic Shell on you and themselves at 80% effectiveness. You may only benefit from this effect every 45 sec.
-    hungering_thirst            = {  95044, 444037, 1 }, -- The damage of your diseases and Frost Strike are increased by 10%.
-    mawsworn_menace             = {  95054, 444099, 1 }, -- Obliterate deals 10% increased damage and the cooldown of your Death and Decay is reduced by 10 sec.
-    mograines_might             = {  95067, 444047, 1 }, -- Your damage is increased by 5% and you gain the benefits of your Death and Decay while inside Mograine's Death and Decay.
-    nazgrims_conquest           = {  95059, 444052, 1 }, -- If an enemy dies while Nazgrim is active, the strength of Apocalyptic Conquest is increased by 3%. Additionally, each Rune you spend increase its value by 1%.
-    on_a_paler_horse            = {  95060, 444008, 1 }, -- While outdoors you are able to mount your Acherus Deathcharger in combat.
-    pact_of_the_apocalypse      = {  95037, 444083, 1 }, -- When you take damage, 5% of the damage is redirected to each active horsemen.
-    riders_champion             = {  95066, 444005, 1, "rider_of_the_apocalypse" }, -- Spending Runes has a chance to call forth the aid of a Horsemen for 10 sec. Mograine Casts Death and Decay at his location that follows his position. Whitemane Casts Undeath on your target dealing 2,608 Shadowfrost damage per stack every 3 sec, for 24 sec. Each time Undeath deals damage it gains a stack. Cannot be Refreshed. Trollbane Casts Chains of Ice on your target slowing their movement speed by 40% and increasing the damage they take from you by 5% for 8 sec. Nazgrim While Nazgrim is active you gain Apocalyptic Conquest, increasing your Strength by 5%.
-    trollbanes_icy_fury         = {  95063, 444097, 1 }, -- Obliterate shatters Trollbane's Chains of Ice when hit, dealing 31,015 Shadowfrost damage to nearby enemies, and slowing them by 40% for 4 sec. Deals reduced damage beyond 8 targets.
-    whitemanes_famine           = {  95047, 444033, 1 }, -- When Obliterate damages an enemy affected by Undeath it gains 1 stack and infects another nearby enemy.
-
-    -- Deathbringer
-    bind_in_darkness            = {  95043, 440031, 1 }, -- Rime empowered Howling Blast deals 30% increased damage to its main target, and is now Shadowfrost. Shadowfrost damage applies 2 stacks to Reaper's Mark and 4 stacks when it is a critical strike.
-    dark_talons                 = {  95057, 436687, 1 }, -- Consuming Killing Machine or Rime has a 25% chance to grant 3 stacks of Icy Talons and increase its maximum stacks by the same amount for 6 sec. Runic Power spending abilities count as Shadowfrost while Icy Talons is active.
-    deaths_messenger            = {  95049, 437122, 1 }, -- Reduces the cooldowns of Lichborne and Raise Dead by 30 sec.
-    expelling_shield            = {  95049, 439948, 1 }, -- When an enemy deals direct damage to your Anti-Magic Shell, their cast speed is reduced by 10% for 6 sec.
-    exterminate                 = {  95068, 441378, 1 }, -- After Reaper's Mark explodes, your next 2 Obliterates cost 1 Rune and summon 2 scythes to strike your enemies. The first scythe strikes your target for 74,146 Shadowfrost damage and has a 30% chance to apply Reaper's Mark, the second scythe strikes all enemies around your target for 25,308 Shadowfrost damage. Deals reduced damage beyond 8 targets.
-    grim_reaper                 = {  95034, 434905, 1 }, -- Reaper's Mark initial strike grants Killing Machine. Reaper's Mark explosion deals up to 30% increased damage based on your target's missing health.
-    pact_of_the_deathbringer    = {  95035, 440476, 1 }, -- When you suffer a damaging effect equal to 25% of your maximum health, you instantly cast Death Pact at 50% effectiveness. May only occur every 2 min. When a Reaper's Mark explodes, the cooldowns of this effect and Death Pact are reduced by 5 sec.
-    reaper_of_souls             = {  95034, 440002, 1 }, -- When you apply Reaper's Mark, the cooldown of Soul Reaper is reset, your next Soul Reaper costs no runes, and it explodes on the target regardless of their health. Soul Reaper damage is increased by 20%.
-    reapers_mark                = {  95062, 439843, 1, "deathbringer" }, -- Viciously slice into the soul of your enemy, dealing 55,138 Shadowfrost damage and applying Reaper's Mark. Each time you deal Shadow or Frost damage, add a stack of Reaper's Mark. After 12 sec or reaching 40 stacks, the mark explodes, dealing 4,233 damage per stack. Reaper's Mark travels to an unmarked enemy nearby if the target dies, or explodes below 35% health when there are no enemies to travel to. This explosion cannot occur again on a target for 3 min.
-    reapers_onslaught           = {  95057, 469870, 1 }, -- Reduces the cooldown of Reaper's Mark by 15 sec, but the amount of Obliterates empowered by Exterminate is reduced by 1.
-    rune_carved_plates          = {  95035, 440282, 1 }, -- Each Rune spent reduces the magic damage you take by 1.5% and each Rune generated reduces the physical damage you take by 1.5% for 5 sec, up to 5 times.
-    soul_rupture                = {  95061, 437161, 1 }, -- When Reaper's Mark explodes, it deals 30% of the damage dealt to nearby enemies and causes them to deal 5% reduced Physical damage to you for 10 sec.
-    swift_and_painful           = {  95032, 443560, 1 }, -- If no enemies are struck by Soul Rupture, you gain 10% Strength for 8 sec. Wave of Souls is 100% more effective on the main target of your Reaper's Mark.
-    wave_of_souls               = {  95036, 439851, 1 }, -- Reaper's Mark sends forth bursts of Shadowfrost energy and back, dealing 17,091 Shadowfrost damage both ways to all enemies caught in its path. Wave of Souls critical strikes cause enemies to take 5% increased Shadowfrost damage for 15 sec, stacking up to 2 times, and it is always a critical strike on its way back.
-    wither_away                 = {  95058, 441894, 1 }, -- Frost Fever deals its damage 100% faster, and the second scythe of Exterminate applies Frost Fever.
+    -- Rider Of The Apocalypse
+    a_feast_of_souls               = {  95042,  444072, 1 }, -- While you have $s1 or more Horsemen aiding you, your Runic Power spending abilities deal $s2% increased damage
+    apocalypse_now                 = {  95041,  444040, 1 }, -- Army of the Dead and Frostwyrm's Fury call upon all $s1 Horsemen to aid you for $s2 sec
+    death_charge                   = {  95060,  444010, 1 }, -- Call upon your Death Charger to break free of movement impairment effects. For $s1 sec, while upon your Death Charger your movement speed is increased by $s2%, you cannot be slowed below $s3% of normal speed, and you are immune to forced movement effects and knockbacks
+    fury_of_the_horsemen           = {  95042,  444069, 1 }, -- Every $s1 Runic Power you spend extends the duration of the Horsemen's aid in combat by $s2 sec, up to $s3 sec
+    horsemens_aid                  = {  95037,  444074, 1 }, -- While at your aid, the Horsemen will occasionally cast Anti-Magic Shell on you and themselves at $s1% effectiveness. You may only benefit from this effect every $s2 sec
+    hungering_thirst               = {  95044,  444037, 1 }, -- The damage of your diseases and Frost Strike are increased by $s1%
+    mawsworn_menace                = {  95054,  444099, 1 }, -- Obliterate deals $s1% increased damage and your Remorseless Winter lasts $s2 sec longer
+    mograines_might                = {  95067,  444047, 1 }, -- Your damage is increased by $s1% and you gain $s2% critical strike chance while inside Mograine's Death and Decay
+    nazgrims_conquest              = {  95059,  444052, 1 }, -- If an enemy dies while Nazgrim is active, the strength of Apocalyptic Conquest is increased by $s1%. Additionally, each Rune you spend increase its value by $s2%
+    on_a_paler_horse               = {  95060,  444008, 1 }, -- While outdoors you are able to mount your Acherus Deathcharger in combat
+    pact_of_the_apocalypse         = {  95037,  444083, 1 }, -- When you take damage, $s1% of the damage is redirected to each active horsemen
+    riders_champion                = {  95066,  444005, 1 }, -- Spending Runes has a chance to call forth the aid of a Horsemen for $s2 sec. Mograine Casts Death and Decay at his location that follows his position. Whitemane Casts Undeath on your target dealing $s$s3 Shadowfrost damage per stack every $s4 sec, for $s5 sec. Each time Undeath deals damage it gains a stack. Cannot be refreshed. Trollbane Casts Chains of Ice on your target slowing their movement speed by $s6% and increasing the damage they take from you by $s7% for $s8 sec. Nazgrim While Nazgrim is active you gain Apocalyptic Conquest, increasing your Strength by $s9%
+    trollbanes_icy_fury            = {  95063,  444097, 1 }, -- Obliterate and Frostscythe shatter Trollbane's Chains of Ice when hit, dealing $s$s2 Shadowfrost damage to nearby enemies, and slowing them by $s3% for $s4 sec. Deals reduced damage beyond $s5 targets
+    whitemanes_famine              = {  95047,  444033, 1 }, -- When Obliterate or Frostscythe damages an enemy affected by Undeath it gains $s1 stack and infects another nearby enemy
 } )
 
 -- PvP Talents
 spec:RegisterPvpTalents( {
-    bitter_chill      = 5435, -- (356470)
-    bloodforged_armor = 5586, -- (410301)
-    dark_simulacrum   = 3512, -- (77606) Places a dark ward on an enemy player that persists for 12 sec, triggering when the enemy next spends mana on a spell, and allowing the Death Knight to unleash an exact duplicate of that spell.
-    dead_of_winter    = 3743, -- (287250)
-    deathchill        =  701, -- (204080)
-    delirium          =  702, -- (233396)
-    rot_and_wither    = 5510, -- (202727)
-    shroud_of_winter  = 3439, -- (199719)
-    spellwarden       = 5591, -- (410320)
-    strangulate       = 5429, -- (47476) Shadowy tendrils constrict an enemy's throat, silencing them for 4 sec.
+    bitter_chill                   = 5435, -- (356470)
+    bloodforged_armor              = 5586, -- (410301) Death Strike reduces all Physical damage taken by $s1% for $s2 sec
+    dark_simulacrum                = 3512, -- (77606) Places a dark ward on an enemy player that persists for $s1 sec, triggering when the enemy next spends mana on a spell, and allowing the Death Knight to unleash an exact duplicate of that spell
+    deathchill                     =  701, -- (204080)
+    deaths_cold_embrace            = 5693, -- (1218603)
+    delirium                       =  702, -- (233396)
+    rot_and_wither                 = 5510, -- (202727) Your Death and Decay rots enemies each time it deals damage, absorbing healing equal to $s1% of damage dealt
+    shroud_of_winter               = 3439, -- (199719)
+    spellwarden                    = 5591, -- (410320) Anti-Magic Shell is now usable on allies and its cooldown is reduced by $s1 sec
+    strangulate                    = 5429, -- (47476) Shadowy tendrils constrict an enemy's throat, silencing them for $s1 sec
 } )
 
 -- Auras
@@ -355,9 +325,9 @@ spec:RegisterAuras( {
         duration = function () return ( legendary.deaths_embrace.enabled and 2 or 1 ) * 5 + ( conduit.reinforced_shell.mod * 0.001 ) end,
         max_stack = 1
     },
-    antimagic_zone = { -- TODO: Modify expiration based on last cast.
+    antimagic_zone = {
         id = 145629,
-        duration = 8,
+        duration = function () return 6 + ( 2 * talent.assimilation.rank ) end,
         max_stack = 1
     },
     asphyxiate = {
@@ -425,8 +395,8 @@ spec:RegisterAuras( {
     -- Talent: Continuously dealing Frost damage every $t1 sec to enemies in a cone in front of you.
     -- https://wowhead.com/beta/spell=152279
     breath_of_sindragosa = {
-        id = 152279,
-        duration = 3600,
+        id = 1249658,
+        duration = 8,
         tick_time = 1,
         max_stack = 1
     },
@@ -446,22 +416,8 @@ spec:RegisterAuras( {
         type = "Magic",
         max_stack = 1
     },
-    cold_heart_item = {
-        id = 235599,
-        duration = 3600,
-        max_stack = 20
-    },
-    -- Talent: Your next Chains of Ice will deal $281210s1 Frost damage.
-    -- https://wowhead.com/beta/spell=281209
-    cold_heart_talent = {
-        id = 281209,
-        duration = 3600,
-        max_stack = 20
-    },
     cold_heart = {
-        alias = { "cold_heart_item", "cold_heart_talent" },
-        aliasMode = "first",
-        aliasType = "buff",
+        id = 235599,
         duration = 3600,
         max_stack = 20
     },
@@ -527,14 +483,6 @@ spec:RegisterAuras( {
         type = "Magic",
         max_stack = 1
     },
-    -- Talent: Haste increased by $s3%.  Generating $s1 $LRune:Runes; and ${$m2/10} Runic Power every $t1 sec.
-    -- https://wowhead.com/beta/spell=47568
-    empower_rune_weapon = {
-        id = 47568,
-        duration = 20,
-        tick_time = 5,
-        max_stack = 1
-    },
     -- Talent: When Pillar of Frost expires, you will gain $s1% Strength for $<duration> sec.
     -- https://wowhead.com/beta/spell=377192
     enduring_strength = {
@@ -567,6 +515,17 @@ spec:RegisterAuras( {
         duration = 6,
         max_stack = 3
     },
+    -- Frostbane Your Frost Strike has become Frostbane. $s1 seconds remaining
+    -- https://www.wowhead.com/spell=1229310
+    frostbane = {
+        id = 1229310,
+        duration = 30
+    },
+    -- https://www.wowhead.com/spell=1233351
+    frostreaper = {
+        id = 1233351,
+        duration = 8
+    },
     -- Suffering $w1 Frost damage every $t1 sec.
     -- https://wowhead.com/beta/spell=55095
     frost_fever = {
@@ -575,14 +534,6 @@ spec:RegisterAuras( {
         tick_time = function() return 3 * ( talent.wither_away.enabled and 0.5 or 1 ) end,
         max_stack = 1
     },
-    -- Talent: Grants ${$s1*$mas}% Mastery.
-    -- https://wowhead.com/beta/spell=377253
-    frostwhelps_aid = {
-        id = 377253,
-        duration = 15,
-        type = "Magic",
-        max_stack = 5
-    },
     -- Talent: Movement speed slowed by $s2%.
     -- https://wowhead.com/beta/spell=279303
     frostwyrms_fury = {
@@ -590,6 +541,13 @@ spec:RegisterAuras( {
         duration = 10,
         type = "Magic",
         max_stack = 1
+    },
+    -- Frozen Dominion Grants $s1% Mastery. $s2 seconds remaining
+    -- https://www.wowhead.com/spell=377253
+    frozen_dominion = {
+        id = 377253,
+        duration = 15,
+        max_stack = 5
     },
     frozen_pulse = {
         -- Pseudo aura for legacy talent.
@@ -645,6 +603,13 @@ spec:RegisterAuras( {
         tick_time = 1.0,
         max_stack = 1
     },
+    -- Icy Onslaught Damage of Frost Strike and Glacial Advance increased by $s1% and their cost by $s2 Runic Power. $s3 seconds remaining
+    -- https://www.wowhead.com/spell=1230273
+    icy_onslaught = {
+        id = 1230273,
+        duration = 30,
+        max_stack = 5
+    },
     icy_talons = {
         id = 194879,
         duration = 10,
@@ -666,6 +631,13 @@ spec:RegisterAuras( {
         id = 51124,
         duration = 10,
         max_stack = 2
+    },
+    -- Killing Streak Haste increased by $s1%. $s2 seconds remaining
+    -- https://www.wowhead.com/spell=1230916
+    killing_streak = {
+        id = 1230916,
+        duration = 8,
+        max_stack = 10
     },
     -- Absorbing up to $w1 magic damage.; Duration of harmful magic effects reduced by $s2%.
     lesser_antimagic_shell = {
@@ -739,13 +711,20 @@ spec:RegisterAuras( {
         id = 434765,
         duration = 12.0,
         tick_time = 1.0,
-        max_stack = 40
+        max_stack = function() if set_bonus.tww3 >= 4 then return 55 else
+            return 40 end end,
+        copy = "reapers_mark_debuff",
+        onRemove = function()
+            if set_bonus.tww3 >= 4 then
+                applyBuff( "empowered_soul" )
+            end
+        end,
     },
     -- Talent: Dealing $196771s1 Frost damage to enemies within $196771A1 yards each second.
     -- https://wowhead.com/beta/spell=196770
     remorseless_winter = {
-        id = 196770,
-        duration = 8,
+        id = function() if talent.frozen_dominion.enabled then return 1233152 else return 196770 end end,
+        duration = function() return 8 + ( 4 * talent.frozen_dominion.rank ) + ( 2 * talent.mawsworn_menace.rank ) end,
         tick_time = 1,
         max_stack = 1
     },
@@ -928,6 +907,18 @@ spec:RegisterTotem( "ghoul", 1100170 )
 
 spec:RegisterGear({
     -- The War Within
+    tww3 = {
+        items = { 237631, 237629, 237627, 237628, 237626 },
+        auras = {
+            -- Deathbringer
+            -- Crit Buff
+            empowered_soul = {
+                id = 1236996,
+                duration = 8,
+                max_stack = 1
+            },
+        }
+    },
     tww2 = {
         items = { 229253, 229251, 229256, 229254, 229252 },
         auras = {
@@ -1004,6 +995,21 @@ spec:RegisterHook( "TALENTS_UPDATED", function()
     rawset( cooldown, "any_dnd", cooldown.death_and_decay )
 end )
 
+local ERWDiscount = 0
+
+spec:RegisterStateExpr( "erw_discount", function()
+    return ERWDiscount
+end )
+
+spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellID, spellName )
+    if spellID == 47568 and ( subtype == "SPELL_CAST_SUCCESS" ) and state.talent.obliteration.enabled and state.buff.pillar_of_frost.up then
+        ERWDiscount = 1
+    elseif spellID == 49020 or spellID == 207230 then
+        ERWDiscount = 0
+    end
+
+end )
+
 spec:RegisterHook( "reset_precast", function ()
     local control_expires = action.control_undead.lastCast + 300
     if talent.control_undead.enabled and control_expires > now and pet.up then
@@ -1019,6 +1025,40 @@ spec:RegisterHook( "reset_precast", function ()
     end
 
 end )
+
+local KillingMachineConsumer = setfenv( function ()
+
+    local stacksConsumed = 0
+    -- Killing Streak
+    if talent.killing_streak.enabled then
+        stacksConsumed = buff.killing_machine.stack
+        removeBuff( "killing_machine" )
+        addStack( "killing_streak", stacksConsumed )
+    else
+        stacksConsumed = 1
+        removeStack( "killing_machine" )
+    end
+
+    -- Bonegrinder
+    if talent.bonegrinder.enabled then
+        local current = buff.bonegrinder_crit.stack or 0
+        local totalStacks = current + stacksConsumed
+        if totalStacks >= 5 then
+            removeBuff( "bonegrinder_crit" )
+            applyBuff( "bonegrinder_frost" )
+
+            -- Handle overflow: if we added 2 but only needed 1 to cap
+            local overflow = totalStacks - 5
+            if overflow > 0 then applyBuff( "bonegrinder_crit", nil, overflow ) end
+        else
+            addStack( "bonegrinder_crit", stacksConsumed )
+        end
+    end
+
+    -- Breath of Sindragosa
+    if buff.breath_of_sindragosa.up then buff.breath_of_sindragosa.expires = buff.breath_of_sindragosa.expires + 0.8 * stacksConsumed end
+
+end, state )
 
 -- Abilities
 spec:RegisterAbilities( {
@@ -1049,7 +1089,7 @@ spec:RegisterAbilities( {
     antimagic_zone = {
         id = 51052,
         cast = 0,
-        cooldown = function() return 120 - ( talent.assimilation.enabled and 30 or 0 ) end,
+        cooldown = function() return 240 - ( talent.assimilation.enabled and 60 or 0 ) end,
         gcd = "spell",
 
         talent = "antimagic_zone",
@@ -1103,24 +1143,23 @@ spec:RegisterAbilities( {
 
     -- Talent: Continuously deal ${$155166s2*$<CAP>/$AP} Frost damage every $t1 sec to enemies in a cone in front of you, until your Runic Power is exhausted. Deals reduced damage to secondary targets.    |cFFFFFFFFGenerates $303753s1 $lRune:Runes; at the start and end.|r
     breath_of_sindragosa = {
-        id = 152279,
+        id = 1249658,
         cast = 0,
-        cooldown = 120,
+        cooldown = 150,
         gcd = "off",
 
-        spend = 17,
+        spend = 60,
         spendType = "runic_power",
-        readySpend = function () return settings.bos_rp end,
 
         talent = "breath_of_sindragosa",
         startsCombat = true,
+        texture = 1029007,
 
         toggle = "cooldowns",
 
         handler = function ()
-            gain( 2, "runes" )
-            applyBuff( "breath_of_sindragosa" )
-            if talent.unleashed_frenzy.enabled then addStack( "unleashed_frenzy", nil, 3 ) end
+            gainCharges( "empower_rune_weapon", 1 )
+            applyBuff( "breath_of_sindragosa", 8 )
         end,
     },
 
@@ -1139,29 +1178,7 @@ spec:RegisterAbilities( {
         handler = function ()
             applyDebuff( "target", "chains_of_ice" )
             if talent.ice_prison.enabled then applyDebuff( "target", "ice_prison" ) end
-            removeBuff( "cold_heart_item" )
-            removeBuff( "cold_heart_talent" )
-        end,
-    },
-
-    -- Talent: Deals $204167s4 Frost damage to the target and reduces their movement speed by $204206m2% for $204206d.    Chill Streak bounces up to $m1 times between closest targets within $204165A1 yards.
-    chill_streak = {
-        id = 305392,
-        cast = 0,
-        cooldown = 45,
-        gcd = "spell",
-
-        spend = 1,
-        spendType = "runes",
-
-        talent = "chill_streak",
-        startsCombat = true,
-
-        handler = function ()
-            applyDebuff( "target", "chilled" )
-            if set_bonus.tier31_2pc > 0 then
-                applyBuff( "chilling_rage", 5 ) -- TODO: Check if reliable.
-            end
+            removeBuff( "cold_heart" )
         end,
     },
 
@@ -1254,7 +1271,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 30,
+        spend = 35,
         spendType = "runic_power",
 
         startsCombat = true,
@@ -1286,8 +1303,8 @@ spec:RegisterAbilities( {
         id = 49576,
         cast = 0,
         charges = function() if talent.deaths_echo.enabled then return 2 end end,
-        cooldown = 25,
-        recharge = function() if talent.deaths_echo.enabled then return 25 end end,
+        cooldown = 15,
+        recharge = function() if talent.deaths_echo.enabled then return 15 end end,
 
         gcd = "off",
 
@@ -1363,30 +1380,32 @@ spec:RegisterAbilities( {
     empower_rune_weapon = {
         id = 47568,
         cast = 0,
-        cooldown = function () return ( conduit.accelerated_cold.enabled and 0.9 or 1 ) * ( essence.vision_of_perfection.enabled and 0.87 or 1 ) * ( level > 55 and 105 or 120 ) end,
+        cooldown = 30,
+        charges = 2,
+        recharge = 30,
+
         gcd = "off",
+        school = "shadowfrost",
 
         talent = "empower_rune_weapon",
         startsCombat = false,
 
         handler = function ()
-            stat.haste = state.haste + 0.15 + ( conduit.accelerated_cold.mod * 0.01 )
-            gain( 1, "runes" )
-            gain( 5, "runic_power" )
-            applyBuff( "empower_rune_weapon" )
+            gain( 40, "runic_power" )
+            addStack( "killing_machine" )
         end,
 
-        copy = "empowered_rune_weapon"
     },
 
     -- Talent: Chill your $?$owb==0[weapon with icy power and quickly strike the enemy, dealing $<2hDamage> Frost damage.][weapons with icy power and quickly strike the enemy with both, dealing a total of $<dualWieldDamage> Frost damage.]
     frost_strike = {
-        id = 49143,
+        id = function() return buff.frostbane.up and 1228436 or 49143 end,
+        texture = function() return buff.frostbane.up and 1273742 or 237520 end,
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = 30,
+        spend = 35,
         spendType = "runic_power",
         school = function() if talent.dark_talons.enabled and buff.icy_talons.up then return "shadowfrost" end return "frost" end,
 
@@ -1395,18 +1414,18 @@ spec:RegisterAbilities( {
 
         cycle = function ()
             if debuff.mark_of_fyralath.up then return "mark_of_fyralath" end
-            if death_knight.runeforge.razorice and debuff.razorice.stack == 5 then return "razorice" end
+            if death_knight.runeforge.razorice and talent.shattering_blade.disabled and debuff.razorice.at_max_stacks then return "razorice" end
         end,
 
         handler = function ()
 
             if talent.obliteration.enabled and buff.pillar_of_frost.up then addStack( "killing_machine" ) end
-            if talent.shattering_blade.enabled and debuff.razorice.stack == 5 then removeDebuff( "target", "razorice" ) end
+            if talent.shattering_blade.enabled and debuff.razorice.at_max_stacks then removeDebuff( "target", "razorice" ) end
             -- if debuff.razorice.stack > 5 then applyDebuff( "target", "razorice", nil, debuff.razorice.stack - 5 ) end
-
-
+            if talent.icy_onslaught.enabled then addStack( "icy_onslaught" ) end
+            removeBuff( "frostbane" )
             if death_knight.runeforge.razorice then applyDebuff( "target", "razorice", nil, min( 5, buff.razorice.stack + 1 ) ) end
-
+            if talent.frostreaper.enabled then removeBuff( "frost_reaper" ) end
             -- Legacy / PvP
             if pvptalent.bitter_chill.enabled and debuff.chains_of_ice.up then
                 applyDebuff( "target", "chains_of_ice" )
@@ -1422,17 +1441,23 @@ spec:RegisterAbilities( {
                 duration = 6,
                 max_stack = 5,
             }
-        }
+        },
+
+        copy = { 1228436, 49143 }
     },
 
     -- A sweeping attack that strikes all enemies in front of you for $s2 Frost damage. This attack always critically strikes and critical strikes with Frostscythe deal $s3 times normal damage. Deals reduced damage beyond $s5 targets. ; Consuming Killing Machine reduces the cooldown of Frostscythe by ${$s1/1000}.1 sec.
     frostscythe = {
         id = 207230,
         cast = 0,
-        cooldown = 30,
+        cooldown = 0,
         gcd = "spell",
 
-        spend = 2,
+        spend = function()
+            if talent.obliteration.enabled and erw_discount > 0 then return 0 end
+            if talent.exterminate.enabled and buff.exterminate.up then return 1 end
+            return 2
+        end,
         spendType = "runes",
 
         talent = "frostscythe",
@@ -1441,17 +1466,21 @@ spec:RegisterAbilities( {
         range = 7,
 
         handler = function ()
-            removeStack( "inexorable_assault" )
+            removeStack( "inexorable_assault", 3 )
 
-            if buff.killing_machine.up and talent.bonegrinder.enabled then
-                if buff.bonegrinder_crit.stack_pct == 100 then
-                    removeBuff( "bonegrinder_crit" )
-                    applyBuff( "bonegrinder_frost" )
-                else
-                    addStack( "bonegrinder_crit" )
+            if talent.obliteration.enabled then erw_discount = 0 end
+
+            if buff.killing_machine.up then KillingMachineConsumer( ) end
+
+            if buff.exterminate.up then
+                removeStack( "exterminate" )
+                if talent.wither_away.enabled then
+                    applyDebuff( "target", "frost_fever" )
+                    active_dot.frost_fever = max ( active_dot.frost_fever, active_enemies ) -- it applies in AoE around your target
                 end
-                removeBuff( "killing_machine" )
+                addStack( "killing_machine" )
             end
+
         end,
     },
 
@@ -1459,7 +1488,7 @@ spec:RegisterAbilities( {
     frostwyrms_fury = {
         id = 279302,
         cast = 0,
-        cooldown = function () return legendary.absolute_zero.enabled and 90 or 180 end,
+        cooldown = 90,
         gcd = "spell",
 
         talent = "frostwyrms_fury",
@@ -1482,10 +1511,9 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 30,
+        spend = 35,
         spendType = "runic_power",
 
-        talent = "glacial_advance",
         startsCombat = true,
 
         handler = function ()
@@ -1493,22 +1521,7 @@ spec:RegisterAbilities( {
             if active_enemies > 1 then active_dot.razorice = active_enemies end
             if talent.obliteration.enabled and buff.pillar_of_frost.up then addStack( "killing_machine" ) end
             if talent.unleashed_frenzy.enabled then addStack( "unleashed_frenzy", nil, 3 ) end
-        end,
-    },
-
-    -- Talent: Blow the Horn of Winter, gaining $s1 $LRune:Runes; and generating ${$s2/10} Runic Power.
-    horn_of_winter = {
-        id = 57330,
-        cast = 0,
-        cooldown = 45,
-        gcd = "spell",
-
-        talent = "horn_of_winter",
-        startsCombat = false,
-
-        handler = function ()
-            gain( 2, "runes" )
-            gain( 25, "runic_power" )
+            if talent.icy_onslaught.enabled then addStack( "icy_onslaught" ) end
         end,
     },
 
@@ -1535,10 +1548,12 @@ spec:RegisterAbilities( {
 
             if buff.rime.up then
                 removeBuff( "rime" )
-                if talent.rage_of_the_frozen_champion.enabled then gain( 6, "runic_power") end
+                if talent.rage_of_the_frozen_champion.enabled then gain( 8, "runic_power") end
                 if talent.avalanche.enabled then applyDebuff( "target", "razorice", nil, min( 5, buff.razorice.stack + 1 ) ) end
                 if legendary.rage_of_the_frozen_champion.enabled then gain( 8, "runic_power" ) end
                 if set_bonus.tier30_2pc > 0 then addStack( "wrath_of_the_frostwyrm" ) end
+                if talent.frostbound_will.enabled then reduceCooldown( "empower_rune_weapon", 6 ) end
+                if buff.breath_of_sindragosa.up then buff.breath_of_sindragosa.expires = buff.breath_of_sindragosa.expires + 0.8 end
             end
 
             if pvptalent.delirium.enabled then applyDebuff( "target", "delirium" ) end
@@ -1608,6 +1623,7 @@ spec:RegisterAbilities( {
         gcd = "spell",
 
         spend = function()
+            if talent.obliteration.enabled and erw_discount > 0 then return 0 end
             if talent.exterminate.enabled and buff.exterminate.up then return 1 end
             return 2
         end,
@@ -1618,31 +1634,24 @@ spec:RegisterAbilities( {
         school = function() if buff.killing_machine.up then return "frost" end return "physical" end,
 
         cycle = function ()
-            if debuff.mark_of_fyralath.up then return "mark_of_fyralath" end
-            if death_knight.runeforge.razorice and debuff.razorice.stack == 5 then return "razorice" end
-        end,
+            if hero_tree.rider_of_the_apocalypse then return "chains_of_ice_trollbane_slow" end
+         end,
+
+        cycle_to = true,
 
         handler = function ()
-            if talent.inexorable_assault.enabled then removeStack( "inexorable_assault" ) end
-
+            if talent.inexorable_assault.enabled then removeStack( "inexorable_assault", 3 ) end
+            if talent.obliteration.enabled then erw_discount = 0 end
             if buff.exterminate.up then
                 removeStack( "exterminate" )
                 if talent.wither_away.enabled then
                     applyDebuff( "target", "frost_fever" )
                     active_dot.frost_fever = max ( active_dot.frost_fever, active_enemies ) -- it applies in AoE around your target
                 end
+                addStack( "killing_machine" )
             end
 
-            if buff.killing_machine.up then
-                if talent.bonegrinder.enabled and buff.bonegrinder_crit.stack_pct == 100 then
-                    removeBuff( "bonegrinder_crit" )
-                    applyBuff( "bonegrinder_frost" )
-                else
-                    addStack( "bonegrinder_crit" )
-                end
-                removeStack( "killing_machine" )
-                if talent.arctic_assault.enabled then applyDebuff( "target", "razorice", nil, min( 5, buff.razorice.stack + 1 ) ) end
-            end
+            if buff.killing_machine.up then KillingMachineConsumer( ) end
 
             -- Koltira's Favor is not predictable.
             if conduit.eradicating_blow.enabled then addStack( "eradicating_blow", nil, 1 ) end
@@ -1679,7 +1688,7 @@ spec:RegisterAbilities( {
     pillar_of_frost = {
         id = 51271,
         cast = 0,
-        cooldown = function() return 60 - ( talent.icecap.enabled and 15 or 0 ) end,
+        cooldown = 60,
         gcd = "off",
 
         talent = "pillar_of_frost",
@@ -1687,6 +1696,7 @@ spec:RegisterAbilities( {
 
         handler = function ()
             applyBuff( "pillar_of_frost" )
+            if talent.frozen_dominion.enabled then spec.abilities.remorseless_winter.handler() end
 
             -- Legacy
             if set_bonus.tier30_2pc > 0 then
@@ -1747,6 +1757,8 @@ spec:RegisterAbilities( {
         talent = "reapers_mark",
         startsCombat = true,
 
+        cycle = "reapers_mark",
+
         handler = function()
             applyDebuff( "target", "reapers_mark" )
 
@@ -1773,6 +1785,7 @@ spec:RegisterAbilities( {
         spendType = "runes",
 
         startsCombat = true,
+        notalent = "frozen_dominion",
 
         handler = function ()
             applyBuff( "remorseless_winter" )
@@ -1936,14 +1949,11 @@ spec:RegisterStateExpr( "breath_possible_gains", function ()
     return possible_gains
 end )--]]
 
-spec:RegisterSetting( "bos_rp", 50, {
-    name = strformat( "%s 的 %s", _G.RUNIC_POWER, Hekili:GetSpellLinkWithTexture( spec.abilities.breath_of_sindragosa.id ) ),
-    desc = strformat( "只有当你拥有多于此项数值的 %s 后，插件才会推荐使用|W%s|w 。", Hekili:GetSpellLinkWithTexture( spec.abilities.breath_of_sindragosa.id ), _G.RUNIC_POWER ),
-    type = "range",
-    min = 18,
-    max = 100,
-    step = 1,
-    width = "full"
+spec:RegisterSetting( "dnd_while_moving", true, {
+    name = strformat( "允许移动时使用 %s", Hekili:GetSpellLinkWithTexture( spec.abilities.death_and_decay.id ) ),
+    desc = strformat( "如果勾选，则在玩家移动时也会推荐 %s，否则仅在站定时推荐。", Hekili:GetSpellLinkWithTexture( spec.abilities.death_and_decay.id ) ),
+    type = "toggle",
+    width = "full",
 } )
 
 spec:RegisterSetting( "ams_usage", "damage", {
@@ -1967,4 +1977,4 @@ spec:RegisterSetting( "ams_usage", "damage", {
     sorting = { "damage", "defensives", "both", "none" }
 } )
 
-spec:RegisterPack( "冰霜Simc", 20250415, [[Hekili:S3t)ZTTnY(3INBIIv(qwK2kPxhBntV(AN2(6DTtC7D)MLOLOKynfPEKuXrz8O)2F7cqqcqIfa0soj9(CYjtcUy3fl2VWcGB8U53U565bfH38p8h6pA4fEJg45p68lEZnxxSBt4nxVjy2DblHFKeSg(3VplnVy)0)N)x8n7ItdMJqipDB2m4TRkk2K)1ND2YOIvBVDWS01NLhTEBCqruAYSSGff4Fp7SBU(2TrXf)yYn3QR79h92BUoyBXQ0SBU(6O1Fla5O5Zd5npmF2nxJn)1dV41EJ(69t)X1BYsFF4(P)Ay2I0S1bjZc3)t7)jEJo)1(yJkIwhoPiDY8O2V76DjZ2p9EaRHFd9xDd8FT)B00GBUookViNr7rjlJbihKTmSaEW)GXtdtcUnoC(n)nGqMHu)nxVazDtYlYIUlKtgzrB4V6Agm2p93yaz)03LweWFd0MIWSOay4iiomPyqWKfHbaCsxmb46X5dk7P9t7TF68WB3UyXGSGpMMfnlCqEbm6TF6v7NoI9(syKVkOaHAYYj3ghmpubgmi0Qx2U5McyqQbPvJDSV6UO4yeORdMTkkrU793p9HhkHD4hGVzDucmSJGTI)KEBmcnuAa6QZj7Qtpc0zFo(aGkBBcW4VKHIWxEs1hdW92SWG7cZK(mIrtaFVGeFxeTCvXKSW1brj57NoUgjXb7bc5YnZkMC(igQO99OCB9hFsjZSjlhW4zf1yjo4bDDWMWmejhrIKVpa()Ghpid7oe051qzv69XLmX8ceoVPBYbB3iW5QUztAkRji7pNsg4TFA5PCrb4p9jzGFfjgrqCrZMSj9(WmwhCQuBY2W5YvcIN4GylhjfWCW8WfrZIk4IVdzs1gKq)RMh0WbEL5JTg19gEqu)jmYehXMSkiz(a)vCA3kvBGM8AQS1kkfMZqgz0Gs8ZJwDNf61actRxRZtp8O15aWAEAXaEVVi89GWsr0S7aqAA8Lw9qdTKAfcXjoJeY51sZOs0IvmljrjZZcwMMhup2IcavuDr2wq3dV9ZaoW807tyWv8hdapcsqqDFusb23BZy2j3p917N6nsrurTPm6JwTLRORjAFyDFhKnlib1WKLbW8g8)E9mGeMSkmiZOtcZwHA0WUpAwtVe(wac7N(dmqqRlegKwoB(G1bFqmwip4H8BkBhLQP5JEQZtf(futecBUJbJUxWHRZFY(PFvLj4JiMWaBhrepHAtJE3ulEundegrA720gGocYWrp2mpbDyG1H9pNs1caTJQVG1EV9tFj7hLyg7dUFx268jl2MTtb5QM)0SrGW(8DCoG0WX2KvPX7qTwHjllwPqgnFNwmSpLaTrh7CGlpNn58UeuKFakxdU7VmCWIGy47MmlBBoy5itXdjIXKkwcjlFmxLI0OJXHqsoxfBL4Zp3m)YOsEB8Rt6elZorEmyQYkkBrT0MGCGunHAwgdV4Wgd)R8MyN(HzjNBLxFHrjIcj)aWgyWAIK)cxpB3SQWuZXpXrV2pvByBC61GPNxWm30VHjSFrcX3p9Ba0edBVkC3hDiMvEM4Uw0EYoJ7sqp0kUo(yMqyMp5fSKnzE4SGDIXKkeFzWKnzrqqWf7QX8LXbZIcINem)9yMq0PerFoj(8qrAen1OiWggFWPeOUngtXcRx0LEeTubThNpjrWgWMqnjmjCDegOZvm3e6jhARYGr7P8Kr(2mwCTQySPqrptIoO6NeMKdH53muz96eunfBrhkDezmTK64lTI3MAcUAYX0PCGRUMyocNT1xgt17ZG4dfT0i801HuwkoxoJC0zjroqM(Af4hZe47tZsDl5Sk8ZMHprGChScO(IPMwZKIs81negudTwVcH2zDjCEP67ASHGbAX(SdzrQPDuBdbFPZrOSTAywQlKKEB8AXGUAR0A2R02l02YQMHCUX0VqNo3kauzTQMvGG1uQv(hEgtkRv7Cnfqb96BYcNLU(2aTzQjf(28WIOf1GqWmz)AcFHYaMEYDHft8MKVlzMsGm83mOWBWQG8jBZ5UEkKJlfdB6xvJqDCnBviaR7VQ4tQtC2Zme1sDRGzjdR0r3H(Uc0ABScwygnRqG(itoElmdoohyZdhmQ8b3CTNU4h64WLp9WL)N4Hl))CmCPfnDE4QPXGYHl9dwSpRX0N68e3sAxD4IXk(s6L9B9(O8bf4c4TkmlDB(KISGK81rO1i9Aw4rSQj8UoWf9nZfBk0RGXFj8YMCr)oYf9R5InnJ2rvhEteY)eA7nJy1tsK(ee3KaRyMZiDXw2r013m6AJpQbD9nIUnT(3r0vYfiT(X0ywHQlungSjKYRNeGsuN0AQB9773isac4BvB(zAHr977xLS)bJyP7300GxOg6un8YzfVs)wlCGk6ff)(y26OjlXYEwFgI6nCOyHc6Zc06uh8Uqhb65ebQrBjbb65eb6PHa9jjqvjCVkrzFD5RWrj55bRdwcEUEac06EVSmxlkdtNCdwGrsRzIp6GHeM(TGyiIHvajVz7h)iecXTPF4GTYToizBqS2eI0b0Z3n0ZMAV2ArLqpIqfmHELrScoBXZjqoeyZA1iwf(VfvGnaxYaX7LrOS7RnK1kiD7iceCMeWkD)lBd0DerTBhKL4Dgk0doscui6N6hXfDAvW6nrYRFJeDQRURuydjZNeLmzEq2DjH5564f54YjmBIuw91fNosbzHK0qBErXkO5Ra(pMT5fbBJlySaCyjFWTP5qBASChFZV(Z7N(plb6(P)c7XF9(P)q697NUE7Sv7N(omw39t)vEWUfP7NIrKdXTI5Cd(MzquPSKe(3y4X(PPlWsqu4uU24)DKYcrzMAQllA5suiVI2E7qhjNFphhK4vhPmq3MekalN0MhwWwdj4JVFviO)hWswPJcQVcqQngzmHjPBxUI)fGbG9t)U1L5c4DS8e8Vcd2KMOnNepckxcjLO9ZpqsFZtmHRZBkhiCw2650CzIFKO5lCKM5sVbj744fqcWC79tzn)EiMuuD6ozzzqsgKWzrRYLFlRIyoBtEnbhSF6pcVicGzsk8JG9txUnaubxeg(Q9t)JT5LpmniEG2K)4iJqmoHQiiMA)gxf))M1PBtk4uM60zK8r5dWHhdZH5SQBbqYbC1W)7aSJNrQG0qD5IsqHYlcJkkN(D8LzfD26NJux0cIuJjNT6zXHbVNBxctIOMLctZ65PjlmhygjzD3bNGDLe2qMMxDjj(swnorKayQ8zBAXIilopDDaDfG4yk3PlQcTIa1vh1qTIyAI98iLZ7dy1R0Z6Ow1YhPCO(oHPcs3uX6owJR1AY(9FQlUs6IdMMGmKw)cHoAx17156BrA3j0qRPqnD3QpLNQfRUEgc(uPPKnw0AJ7yIkXGANIRsZHj7aS3rusvUwrw3MMeUeuippmtca91sFYOkLnAMazTMCNcW4f7N(M9s15OjDWK6rPve74u4ZhknfMXBc5E4XDj7EM)DvvxvZLbRfJHhEMOwREH(cWS9uvQLlStLYrluSvXq)NJ6HHC6e9Qv2CCy(ofXgGgsZYdJHGtLy6gxKYMorvvzinSjcYQBIdsseVRCgqzflUmd8dDUdfRUs9CACwSIfezYvredcfyY8K5MTYzHR1LDBsZjgVX86dtVhrCZ)PI6Gc0ylsXYXpId3zB3if9XAmHflYcd)yOo7h2ZJIoH4gDRiOKC1SGujSOZ8q374XSoUUdcMppVCgRoTJ27a9Y16CaFm3kDDFZsmm3)anA0S31KZQuK4LOWYKcxXCdtMZsh38CD61SJaYIEAMN3ibwkPalaab4D9QqIvzgMcGFDqEokZ2O(5n7dDnbQM8mIfVXa9vPAcIGmFflmRWKpURz0ym0PvJmuNyiFq)hvtlN3CTVJMTdmefNMKRT)LETl9SuZR7ZtzTHVUdCJXIanxNksUB6IfHj5QL8LMVatTzl0vAHjQgI2uparSMeMNb0L4i4EYPRz1oZv7tMPYHWKlLNA3RsTFUYM2yy9c4zcw9B2mRiTjN1Cdm1TshSuy4AvbAMbQiDicRdCgoC2D6SnlTUv1MenxciY8zBB2Hg2O((0m8KaaZowWMnzPbZw1k3OS8iIUYvN)B4r5SmJfbJHmgXSu89P4IcwhhBXQGIYVV(eha(9kWPoGHcZtvYUEv6xhSF63cOdY0ra4nc6GOKsibJnt4ZFMGB3Fmz8XXdKzY6cQMCox5sUzNVvod1PHcTUk54ksYZgSiphiF3KxwNlx(0vH6yJAMe(HnHZkqgmwFFdv5fNlRo60obTxkk13ZKJ7H9NCyXr0QM9cPNxtxVuu7Z9fnYB4qTEn6ipTCSYbMQsatL(JBjBnA4GdBWbTaHhhxRjlZFOggw39STsuQcPBV(eoLPHoAlZcpASO416S4Dd6qviOwgrD3DxCiRUQlv1NDHQ33i2mzeNZYAVtVoVkcsN0t10LSJ1yPJDEzYx0K0PAnB2gRFKdXvjpUGyrO7GFAKRArVMnr)6FOZPIlQgACURA1k37n)gUPixD7feRLTvTip20KvAoRk7r(mbffaEgja1O1NNtJcIfM264SzxBLJiPC0QmqOdD3AxbpXSU6e2cHkMuDe(0ZycDPFlvVwf1GUmnyCrFUQAlgDIZ7wPAHwJBqKtmfNDJgqeOTQMoJhSj1IqlUFHuXQyCVsO1dIlgwgHVeZyruwEXKG15tWYiHX)5Q07UEwNAODpyKJBiibqMGLa1aHXdowlvwGY5wuPrmMtZGDf(Itu1wyUIGWfMaIES1fsaAYpqt0qMMv(gvcxk1qASa3LQuvvAZ(yKJ2cVuSwiS46tZ5OHol8ncH734iixcLApswsfaFopoTq(Vvs5TCDJIBLwUCj31lDmfBLbPOobfS8tTxTKMtPrxz(0Dv)6EZuEl0qskfsRVKctzgOUIxw6Lvcfv9LwSTET25lssZDUVySF)0FJfKo)pf1WdlC5vGeuiQMb(hyolZPyMXTxjQliSgx2YQykMMjqXFc87nbrz4Z4GQvDcXQZhFQ9cBjI4tjE57M4LV1QS1jXlV)ejE57M4vZAFxr8Y7rjEX9bur9aR6J9PwNFADkn1Txle8KQG5eRPXSlJTNytyPx7fkxJtPslqELqQvXI30W0r72koHGiTX1)tRIjI2jRTed0OH9SECtDnpsTwfKKeYgiqovf(L3wJvvb5wI2mRG(uf6wTAPgI5UiX(uOZ6)kX6Ge7tKUosn4ojXIIzu1yiTIr9102JszNSdSeBIf59r)HQfqEW5uRokESfClButHvrrpyDUKWUUbSww0ZSZ)2d)yCvYyvDOGCrOS72V3OMf1aOxmnjEh(V4kVKuwEYLOm4axw67JMZQLDoN5vIwGUfYw(t(Nvrp7N(lWJIaaNegXFVDODBkR2PLHdBYb1bWqToxZtg6KEuxNm4RDYqNvWqnzqVjIV0NmObRnozW7lIjdACuLQe6WpKDYt2QkJOypp(Sd0RL6Xwspx6cxZQczNGcFC0E7uhJCIZxZurwpvPN3OC7v0G93biueGRRB5op57Xk(e0R8JZ2HN66yPwugm6VlkReSTyDL0Su9OoeN6zAj7p2tm73gQ0fWxzdUNPODsW9b70(ElRiJn)TydNg8Wuqt6kLuulhBWLoTNDKd6i7ZMcIEw9A2gZZQ7S)hC5QyvhaUdbOYE7Mu()FJJiz5GZOR5wBJAMmQ1JkQIQPkyoLbVccd57oQBbLRSDcOIvSmwLgNdZdYUtrx7ix4mEY7DIBtzNlNrS6uz9TmANUqCTjOrqFM7VZPRw3kGj2IYUWcTSclYkjjeT4GYzdsU5HH(Qcue1AZTXD9IvjFgbN1Q(WTSazTlnEpPcEUn4yJh0f98tmNVgZa97XXS1EmGv)zNtV3zSjq6QQFtQBSPRrINQrBhJaSCeWAkBiN2USdUOuSJCbSj2qX9KkclTTvzFx33oz5YrmTv(UdQvoXIHjzcBK7ZGHw)wl(F4Ojph4vh0buTR8s9tr7GaCdkKH5079MddTAmmzEThvD4PcG1LZVqPhBOSvnERKTstMzZeBWhpLrvD8fAFoDtK(q4EMXm7hSHh78VkxCNTunbW4Rg6MTvweb9igGraRVEY6xzpLNIGlRSCMjDcrknEQJ(B5YiYkPwTAzVWAeUbFQgpajT7XmVZfmdrvQibSjLpJNNNE1ojqPEYUEUXM2PZxq7aw98KSiSOCs57vsqL2SG4DBY51dIWUF1tNKKEVvb42ooyDEGzd02IBRdkbzqU(YUGXLmEFbzNf0mkNQnu4HhlPnLnUActDOQQQISY5o3mJZLlhLoW4usnInAYMqtwq08jHVNHcZNNpi8d4LZhxVrJxvhCqBwKzgGl3Bjgya2mKCGSbUauvMYguCFk7h2DyVNM7lh76IoqPrZSAlh4fTPcj95braZh8hyUoZaxq792jgspvptCWgKs(SDGYvwNr7WfLNlsDKTB(HMBfy75vOXvZrp97cAP9Y7fg9mYew2A2Uqnj1U82KXXEeJmz4vDyJ5oGHPTLbGxwXRk6p12hnTVk5HJg6yKWLaw)z88XHqNN(no9f2D27iYSTOqq25UM96SvOFh5s1eSDTfFU4Pgtc2xO8uph5PJndsLtVf3A4lCcjb8GZQXfe9zIsYr()9jFCEKXlMYp9JZ1ggr)SJtbASmrFYKO9H42kT7tf9K3OptSEhYZOGql3jQKz0)24005CVauZQ)7yLR)(PFJytGY6zApsj75QEcmqgMXpTxA7LWiAx9Sc5YJFInBXnNhclAFzScRyCuoFYFSD(Y1H8ZYIroCd(sIAjZcHX7G4j42yvlHt7XIvOViklKnaQfW0EsyZVylZ2kttuZDaJ0qDWswaVzrZUJl3y0qRn0XYmFc0HgvTSYcMDyP9303eHtBnuOwiT66ORrOjM8owsVI5y)R0pD6XBF9upKrUPEuA1J9SZWwMhUI42VeMPjVfYXtLfa3lMGBJysUo)2LVAF8xDVXcdIVH2uN5uNWWE(lXswiFsC4c(ghAOaPuugNPU33vqjoCyOdT6)dzMKL0BAalBZE7kcOqPYFmJEPn6O1SPwwBBHcPEepPpXoI2guZoIFEa11(byOlRsI4nLhZrVhSlIF6)WFO)OHN7pAaaU7dYWOmHy2z78JO1BsZkkpuxFE5bJ0ZXJuH)VT89Xro7aAiyBrA5Mab8CeIVnFW(F6NzhZdEd)69t)20eO7yVpDtjloNF4l88tp1MZrv776x61)zLZ86)Stpfvtap6fSFjsD9lh1VF)x4nCiGM4zarhH)zc4FMv4xtIEwjrPk7Q9oLJISK7v)HnPkBGulLOfK1eYileI0NFPMLya3PSVW)fLDCVmLTB7yPp(zeFSG6ow9Zzu9tnj)xvj5NlQooPA5vGv6QZx4DN69H(2HNAPr3cKTETRqvkxqmHznqwttEkHojCBjoDIoo64H9OksYENO5n861T3PN2(LLLpzpt2xE4HtCWHMhEGc497zYVTXAqyrq4pZVFVtpHqc4HhmWI1GnI6r(kV(IXO)ZM7E2tf3Ts82Fi90gsvh(0QoiHNNzvhTETRq16KBTn5Pe6KW1GQdFZc3(Kc3(MeU9(cu42Ns1HhLWDBwSjHBFnQo(prU7zpvC3AXBVJRxhKW7G86WauTo52UxhhzOxdx)JSAzk4DyQLPHQvQ3b1YhxOxd3ZFsKZOHQvS1b5SJl0Td3h7C4Jn8U4jrULgQw5Moi3ECHUD4(y1jCSH3OJkD)0cD7W9XnZYvS(Xb9k4EH1Osz(n0Ere7PMmUXE9usm84rGtde5zSxDoOiwP1R86v1ekxwObIWZLxBVjVWkQiTOVp7zE9X)tVtBq7Ja3GmV8In5wYEx(FzWvm4Jk)fKX3)tAsCB1DC(Z7wQBnAarCDDsyar61QjBYUUibN0KYiP28Kc(Nma)zcVBPTJyyR3PMl3VEUeCgaed44ZEg5esrtUAy)QjcM7OkqPTz1DPjec6T(wKM)uWw(0ZvSYuQnkB0)FsvcTETQLE7g6jL913MNuW)Kb4pt4nTkb)NuzFn44NxvcAqiTQe(0Zw(0ZvSYuQKMOdB9acZ0mqFKUEygOmplf1QdbKB2MJm4paeFneAzy2ot4DDtoUa)aWA4D5GivCuHrmxTzh)o5aOGviRXeUlAWXeWha(ILwIj0T89hrW2DKL(wzxtxySXkDiDoBmQOYCUlnd0hPdrMbQznj6BZrg8haItPlrBtoUa)aWAt6qiB2XVtoakqV(enn4yc4daF1QrP97pIGT7iBhuuzPXkDiD6A3KLoBaRI83KBkFauT7i3ni3As3bFhyBDr)(BihNCJEOB3rUBmY2ObFhyBDrA7TpfMfPa6bfuanM(4ci(jg8oayxT3A0C(HdEknF0qok(9X6K64p2jG4PhiEDei2hBCi7RhBW7aGTp24qiNho476q)rzu7qKFAVCDKvxez1kDkHwmSKJ0RkQpDDg17uZ5UXqHg1)fN6ny0ljMncVvZ3MVlzg(DVuPBrg3RBmA0)zEdh2VF)XNAoFZgkIYMiONve0tlc61ab9vqqHGWx4JKN95BK8mNgjBJGFYgjlrWAfFF1XyQpfq6Ksi6c8h8rkiEzyXQGSjB2(XpgdmJ0pOdSun09oYvp36IdVn3AnYmz3indnSd9KR0MBELYw)6fPXXP3ZoVlcajyqx)9H4fYWw21Zq1L2kFz03pLFJTE72cr7sszl(92eLwpFo245bfb3gKh(17)j2gMhdjex48FKTM5i8FRkKXve)MRbV7xeH3HB)L)Y(PRkk2K)1ND2YOIvBVfMkU(S6RI2zzblkW)E2zWla6l)mO)VpidpvEJso7ByW(xllm0Fg7HZyLkaF7pwMAF873)tyN97B4CsaXdf3CoxhT(BHXK)EqgE16ocRyA)rmYz4fNFXBNTaPi8J)o8w5b(WC2rSE5yrE9os)vaCJWZGDGUVD3(P8vyGFL8WqeObLNpEIdre(jKh8CS4c4lJaV91lKWZZvoa4XtvEiU7C8mnjElaIv4qAskwocyPxmNb8WITzal3d7Xy8KQs8KHdgbdb8HK8bvvZWlVQsJ3RWn62vQQUEv6MRyxIRVI1Px59Q67s1Raq(QzPjZJylOr9uvzTIuRSJXv0P2K0tZsE78k48md4bUcoDHH6)yzO(htg6tZcg2DgkXsI1fgAPJnLmsvXpbWLLKK5I1vGUg381(YY0IQ9DVVoPJAF)k8B1(guVzF53qRDVlSgFTSgFcwJpbRrtWVAFzlwJ(8XQ99nyn(KSgtg(6cRP2DUwtfhjpxSEirBkP0Q474GH(DedjsAMwnjhhmuSFmAIF(YONNecCirLqguYJjMKdl4sntiCoSKgrLqgE5HfDPgTzohxsJWsuJV0fXdIR3LJGuc9gNufBhFLkX4cwx3x8nBvl7j6DV)PqPTweGk(IJNQrX5mVOJlpFqcuoC2RT)ddw4zzkiK6cWv304cfzV1LpnViapBrYWDLUgemdf2s5NnRG7kFmepJDcwVbGAfYgnlerG7cZKW)K5tIsMmpi7UKW8CWf)9t)MF9N3p9Fw277N(lSdsji2GFi9(9txVfJp4D4wIF)0FL7fpglbENLVV(EUdSKXc26Vj5n)1v(a5cbxZRQoOHFv5bgbodcbF(GBtZHwGtQGMewye9)DwOE8ODipWZzHffcYkRzXPE)QWemSH80TzZyH8GuxmYicts3UCf)l2Ibx8DIGAEhlOM)flOgxOuTNu7v06BhEyK3MVCiojoDf5DUBuhx2dmRZXG8YiWznNFzlwKTtwsKvO6TUoyfmOFr(CDbcNeEruEzu(quTl3gaAnkcXlF2)yBE5dtdIDkQr(L7pJAlVj)RO2lCJA)M1PBtk44T6uneG448C2jvj58lgJaV(j5aUAy8D4jJTdKGyed12ODg4BKLkz0YpINrDzB3uubFaQRr9llYcd)yyzZeuBUCZAQQR60jTujN6wt4kp6VfpNEl3FhA)2Xg(wMt)mcV8tRm0kHrp8qR9jHbkP(SUUeKNQhMvpvc)7td3wwbyo5GpLT1vK6JggnQu8xDuwvfQS6HxvpTNXwxoYesTrNHPMNc)9oLb3who)LBzMllpdwEX5p8G(gYrKZ7lzwB3Kc2TWvjSRFajuLAchENE(lp1)fLqmFDQWCF6IfHj5H9LElARS8JL9fSf)q46k)WUtm(BkZeLihX(xVpz2oyFLU9Wuz7LpiQmVj29gwVl5L)Q(1pwBNR)s5G(JepxZ3Pzcgfb2NPr57bhY2ghGkjd2ar)fmBvltDmJf8RfaHlkWJYzkilpwiX8lIVpfVjFfJDyZckk)(6eYc)Ev6w8MpaKEuCaQYAkyv5Bb0b1vJaWBuUuIJBCYJH(lflzBrJxXTprMAgjH5KovoalhTbzIUeTToyeNG9yBaKM(4wmlnwY2qRnPUUDOB5(H6Lmd5Cjkw(aJ68rSteQl9TUH)QWHl9gstTLmrZKRuqEh2b8Lsov1tHdaR6rZIkGP)9m2Vgjlb9GyJWiaJVvbY2og1tNgkl6inIHJh2VdJsnWm5reNOtbdu1KN(KcBMXw9wnchp8GY2w9YZh27eNMrwBJSl8xNa94ZbgDJjj247po29YG6KN0WgAoOBgOkMVbOvf1hJG(24G5HT2zRxamgsGCIRqX3GT)swh7UUTEQWr5iOJ6OUJgzQU4ee8ptUaiCvc4qL(F188OTN2N34ZroSqklnjCzgBn5a3jtUtypx651USq8MMqV9gC27Hh06Y6vJaVqSCyWwpJOX5aBTdmv(ll9ifhMRNR1uWPVyLt)HimK6FT6IEMVST5Sq33p9siQnimRfx9CXAbF)93p4(uik9G58feEtyC8vGk93m8mMOWRJswSfpZnF(4YWd)XYhC5zbJXa8JI7aKh55)wVZ4YfVoDXRzSEa0ndIMdCmE5TBGaK5lMogco(lx7mVr((V9VEgxgg7nP16DS(OA59BAJRdC(nbURDB3Or2DGIRG(rtrbvfyaxcc8zKjVictFfi3W0bcZSJsEF6DGu)hajSeqqfL4fMLqhPfseVkAbX8CdUL3xBedMxSttrSy(e3QN2anKvJfKaAadwctYGaaJJrAsNxlxmSNYe8frzqW1bRZNGPH8sulQnBEMqtZ(Buz0RbYwTGf8Gu(nE6Pv8bgZ3aq4RFf(JYZ88R8eE8Rnd2ilWQz23uJYsjGONUv(GVUbTEHViBbhbpfU8nGQr8OVUxtVyqPCG18VyPHedHcMlTjoSqeV2VLjybSFxLfFyAs(D7NUeu)NmqzQcWuNZUBC0X7MGFwdEnWojNKOIUEJuhhNYkROsgMiTIm0gNUgIb1b)tu5jHbZW7RePQetmhVWJyIQL6z2eWpgn4GQLgPbAfDWl5CXQJWihPve8lZZOZJ3bSh1jFAZfjT(5vcSLW08jZPvgUVcd3)l0t2WJhdN68I0JGH3(SEY85ziBg23UkijjKLKBe7KlXSMZEQwTPYErV2v1PiTM)F8MVqFwczE45etJTYbznwJR)vPMhKEmoA(gj91TBtW8D91A2O)tXmlnVTEY84Ru082JDTjyBG1NEG9WNx(V)dShRzWA11yEG9VWRMZ0K4D4)gY9UNTAvLGamnMLIvukVKtzU8kAbAWLLSE1GcgSF6VKXJmijmI)E7q72uMl6kWXMGh3O7JrDrT)ye1kYvES0u055E4i7P6vRDicSWRBkMYYVrFY5hk1NKeAGsE0(CAZ)2X(dPxoc9(AIoVzvbI2Xrh0oyFC0xEC09PAkJJ(Fzmo6BDC07Z04i2c29qQrN67EqqAR)AbczJgnnn16hBpt2CwibJ6VGvZFusraUStLv)W3h(EiisqJ7mqz7VXwdZYOp(DX6SITfxOvzo9Q07JlZNvEbBIY8uioBeMtwGGCaETaH5ZV9A3DiIQ9R)ATzK4EMQ9jb3hSJkv3MnnwUIRAmTZXR2xzv97xwidFRoNo3KI)QTVi)3L9L9rhPL9vRiVVIUHGBtxhLWiIjXrRVL5qOg2cPRD6CzceN0F57kPSltZnO7LJCrDMouw3GIwutgqa4tZYHqOYZlV6irqv9vIkCKIe1MEBXevnJg9SU0SGAk7MdKRrdUdVnk6YY857nKlx0Mk1SkbQN3RQREjmJooMTagb3PWGom2HCxOroNuq0Asw1zot38GHoGbgdmrEzKV8cyOt7sxPTgd7PUGVef)Nl8OoN54YPY6vjXXRr2fvV8TKMeO9vrXcG67Eud36KeDySMURDUxST3LumyubG6cNRVyXbBu0wSyLP0DIJnJ9SXf1pM3vcuUt09rTnDFScINxcjktMg)vdnR9e8qPNgUC7ccGTCRGp5xcAhzDKk7u2O0RMTBw1D3xEP7jOSf6bf(SQLDEEemSCE)QsbucitkFgI39OxNjBZ2gRwpHS3vFD(JywTmtweUCWP8sChMwpliE3M8qXI(x)KjjP3BX2whvYAY7mhMxQHSorpwR6c0vED21p9EltP3QMlvvIa6xQMJb1WIfOBKdmzjiA(eiade4ZNNpi8d4MBUxZhJEH0MwECyT2Wi6gE37KQGrhuCFk7h0Em0RUX(RSgYxNgnv0beebuiO5DUZRbwlgy(SDWSVATITdpI0HA111LDfGRo)w2MqpYt0)6511LpDpZoFl8R0NPzCSpbMCaxIaudSA5raooROsIc0oTT0fxXMkvl0Qvy2LZ2Fl1S0XH6pGRqb7vu5)wrUFzEJr09RmIpZ8zHcq0rG4uaT4H)zL5wRjOF7v3)GPFwsHEhR8X2p9BQQQCz)nXB4EU5NwAGR0Rjic(Ugq5ZbnBHzyw2EuFoeaBaw4TBJZdD8tIrEu(K)y78LRb(GJFfw4CaJkiEcwv7pkCDruwiJB9O(ALlV(oN4NYayADl8BQd0gBcP8lrpyTUkR29kgKVFX5mrrL8C04M8wS7ue3m8VIF7FpPMrj9oDpum3ST1FJfsfUAgp(s0uWIBuHM1BFjlBOj9oQFfWYuJusDNzixnVL8jjpMixGLYxuFx5pEO1orw2P9qIlswuI6KEPAIiSkb9)3CxlTg3WaH)TKlL1bky7DDifCwihk0t9sUVTlnoTbkXbVBUT0F7vJ17rZij)G0sVLgR59NMzKgL7o235PscaftVeckA)7iFKfdM4ptB3HXU5lGFOz9D8nbs9lW0ccKWVbwlFtUWIBlgNnn2nx5Lv(4VMLks)293T7YLm(1UTqf3ox6CBwKPY7jJjUkzsawmcFvjtMVUWrWJQGIwOsWSBxJ(pK99OOWmaGtgOCzQbgKONeEWWu1p82PJpAkrHqDLknK9v6sgi1PmcTsBq8jBxM4YH8ILxEoE(AcN(KKG1N0w4SA3Dtx7(P0DXQDlRYzxHb4sFdWVFeztKQy)5rXWQbKiXcP3iLDunRJekrUrAnXIDQ)TF)nzHXbGHI8Sr987vXUoBBAd(5qVaB862ztjbXcoOy75T7oeYSWUCwuEZp1uK4nzs73e0xw8uT)rne1a)ROX13aisCN7nPQy4fyTSNaNCtNpqDf23wQtQI7ivjpdgBJM9hFOI1XPcrxd3wtz6xt)m8U)4o3yP6q8Z6uPGgVFleFTBLQ4Iu13ObYj2x7qQqs(5a8YqsAzhbij7kljtsz5ccQYw8KL8DUFyqv(MRx0nzfap6yOEzbmyzUpFgXq0Cf456cQqZhN4LXZhx6xgKu31onHatyAPIedTL5Ah4M(ibMglPr1RSCINU1OotmjlBjXWK9ZiBJXI5XzZom1nYoXN6safO0W1vdkUrapPUf94FAmg7DavJ9QgTUXrVlIigNoACibVhPEmMDE5d6XrEuN7jvmdZGK2cTimzBkO7WrBt4I630MlxCg5F9lPI8OXBRlcAxAbVyNkuYu7lb5MyywHZ1ILyQ4JmwT4qb8WZQNg7PcPB2OAMkN)DYtgERXzUvf(pkPIytit5Dl7hqMGsxBL)llqz(ob8qPQmxUV)Z6bV(pFhEPSTR9X(oFS1i5KWDWaj33tsKfP(PFAMISz4gAFrSxB7UcmFMgVoz9quleB0A2Maz91L4VCXbrtCdHv1UYRgc1MtO0Y6MuxbBdtfFaN9PQ98iRc1drl8WHZmHLp8m0iy4kPdAlQsj8Avmwv)SPbrbz8n1GL0ziI5KCDxHXaHOuM8frUtpHD7zrsfkhdTdG9jaTGNURzcH0aYJ3bcEgGVGxQcUMH9ao8dQqXUil7AQvWPjNYYNlOLnto8ZBJ1bNisST27OdsAoObVxMqC1g3J4i2JPsE2Dg7R3LTAL49fYstqXNE72WL4)2TkWSA4MgrVUMKcq5Hho9A3po816MQdNf)7WFp]] )
+spec:RegisterPack( "冰霜Simc", 20250806, [[Hekili:D3ZAVnoos(Bjyr72kpCSuIZ0ZG4am3S3bm9oy3btgC3hoCrwXwowxSL8kj3PZIa)B)QIuuIKIVSTC6zo0ajPLilwVyX6bj1d(p87pC)SOY4h(7bddgn8tdVzGVV)3D91pCF5RRJF4(1rtFo6j4psJwb)8)ipROC7K)6FdFZRlZIMHqOiBt(u4Tlklxx8dxE5tjLl284GPzRUSiz1MLrLjzPtZJMxI))Px(4YShVSCr8lr5Vannj9YFCk2KFnpjlpP81FjPOS4YzXZJ2SSe(Du5INttEArz4CC8hGa5H7FCtYYYFo9Hhvrc3mm4H7J2uUil)H7Vpz1pbyxYSzX0Mhxa9)Il2o53xeVDY)vuo8dcISDY9XrfzWVVA7Nr4DXWpDXWB(HTt(50KYKOLBN8J)6VS9ZB)S5EhW691x4pc79Q15zFbA9VgNpplFvu60ywtU6IaSjLjRIdlZcNLi)M7FnD62jiNc(BGuyVo4IGBu86hUFjY)icMK0Nwcqnk)P4s4b)DIapon6XLXZE4Fd4qe((d3N94YKY4CKns4o5jRPV4EceasLaITt(TSYi6BG2a9ijcfeZNp45KLlH2gUkAkWjIhevc)5xdlkbfOITtE7TTt6VDIYMUz92j92ojFtkmq3ng59t8EOeeOsyR0qMdCmwNlJwgNwoGOF8y2M0zHVaJYawNRj0fzVqg7hxgvuIJXvA4ieibOFEYZX8J8Sy6yh9Vav1PTOZguPyruj2h6GnlMHlK2CY2jFjcGh8Gb5RdxNLHyfmoVoTwEvGIladV2jUGbsCKwaCYHGTmHwYu4jVeNpaMWMmnbusUfeHd1Wkb85gZeKg1dbKauvAyAkuIHr57mr1kz(6W3p5gK4Wjgc3VM)wJBWiiWBjK8AGKJYdZMxzGdjzpDe23BcDmXb7iSrw)QeNuqmvRYctgOzwagFQ7oJHH)1YnWVAql5b2nmJAC5e7qbBwEusf8YkOtxNtwyjpEvusAbr3nyOKrW)ZkuUGG9H0LcNcI6zzVKgoDr80NvzUYjsxjDXJnpnD2aWcJOj0nPlYw(kQJgN(u5cMew57ucmVA4vX1Emln(jy()myICEu6ZBNmgxgRgQCVNJ5R)T6gvpMQiYu(sCyCA8QKyOD3TDIpfPKnXsSTsWNr0gy1MLhVGA(lZdrawOYCVDz0I48SqGxgpG4iYJ44fNtOcMkaqSrRJZlGjC5plq53WTYgAvKhVemIPWoVDuJj6Yred1EG17NLh9uwrKWCNA8uzl5X3R3o5uo5LObEkfnC7KZicWRgr(RrKUqKyjtFnmlTyz0gykfBY5fKg7pK0mkNqq8WzbwXAv2zcxXWhFYia)b0(qqHCtXGYxE5QW8euReOzWJZWO1ztJw(66I4WRxpTTDAy53OVGAuuZ)fTTbbSRS8IyWAqb4JrkOaYOupcLjy5G4VCX0xlrpftaEC8)Cd6ezujXlNQf6phE(xNgVUK5g3VHOminqm8LfjtHhr07aa8pQxly7KfGPlSDeObaztkIvG8UIiawbLkOJn6Ka30IgulCn44D9kZmo9kqfbMmhh)VI5fjkwAL1dyWsFoU0hezlZk5))IUCqF8Gs)btHLqcrpFjZ)hs4Y1ROw1UqF603wEb08EWFAcBv36e1Q4utp84qWGfrfHSziv2xAEj3u8kqGnOfkSUkYfIvk)26b)oTDq3X)rIBOQRmrordHiqXaSGFKScKXZWXcuZphB2sGcFeA1Mc85ZtYXwgLc)96OKC8zuq9ReQF7KS5BNquahOYlgjHwGoHuGBcPalcPGdri5Bsi5VxcPaIqsqpnqL3v21TbXbqeZdbRMO7pCSXJQIEnrBY5b1yW72SanTZpC2gQZN049eCbtAMZpTiknnMybgzo1Ovr7zepgdHwh3Wzil47p0QEVKsGlc0JXKIDtGgywGEKMXOPDbgfOOuqxIh0pTsDuw71uL(Cnyw0QONGqS1OYw5u8bn3G3l3(wxURpFSlMDLRkohQh3QAzLJi9AAMQiMyHlzaV84qn9A1iGSR1Ehgr1UeNMN7HQ5psYCXpdwiYsx(k(Zy8heJdCR2I5Hd8Uc6EeLfDoRf4cWzLehQWUvtyGpxWJsaaNgNqFVDO9ygUsSaCiZdKJr0YQWhMffx17duQ3VZMq0P3R2y53E9Ef4Lr9E))yP3323fFDjZe7yiSq6SwjBthFQVn2Ttly1KLbJgWnQL33Iw3TUGiwTz7eu8CKSfL87M8SruHcu95(vzIxHb(A6SlsUkcPvnzajuHWOvWS5OcA(zrL(g9JOumCJNaawSiE5sYqlhjUKxzzzOzoADB2obR4aa0mse(nWfc1Ezi9)eInHwAcPeOrDqqFsHR1oKY4wl)0yJ6JlZYGix3K)Qew)p4s7jf3XsYWkPbgz2VfnLwKNhtGMMetXn9PswlUvJlX5fX5ptYVSe(IqwFQLTc5O8PrycK2SSGKwyF95f2kSwIQjfH)VBM90kWefjzMY(nVdGdRUvrzE0YqubqfHhi7p4oaDqBoMiIvcy91mYwUVnT0rpT5DLtuh9ejlt5jtFMO3eiBowvHx29uX3Rdtd8PK0qHwPmhsE7(4zIW1B2QvwFhtYkQEdgygSMwgMmxBF5mPeLrMkeiB7Yj7rIflLuxJ15XtZw9yKPkBGyMYq(rVNqfuAyR94ZYOPcD4Qtr6xASjwSpyy1QMwnM56dxU1DzSRbTYglGfMrZAeqoTz)7yYVIkR8VUcifnJm4T9Se0bCm6FWx21Cz(IqLyMvxvL8AAUNFjoADg2XSCmPQiItBFdQ)XcbV)XqkskXhssf32jGGfIfaxRJm9GKQ284Yn5aP4JJ4sCPr2tgoy0a(8U24auXRPt1My7qekpCp076mD7BOitS5hYqsEudQgvL5049vJn4phASkrtEnwJIRDVEtAJ)QNC4zjfdsi7RKKI4zHfXrZHq62SkCD0uqX85QIu1VviDnIyPq6(2)sp1ZuirdSN1itu9wl7mypyNYZyKIY4B)lvYodAyN7E124KCiuQZ7NA5w9BvSRp2HXkW(yfimwYoSVJgjzjhXwYy2RyyvLortPDrFoxfGVvlRxAjVTESYN6pGwyx9AvSwQaEfKnJwdSyfNve9sw(LLKkdZBnJ8mpcI6pCilDsEKOABNjv3iqFNiWwwH0sG(orG(kiWaTeO4ki(1Q)bQQANJAYAY23UOqBl7JTOm0DCjwGrstoEv7gegQ2kdnJNkl2ZEcZGgywsJQWWENKRq6sUV(JzXQ3XKS4366nnjlfvQIuQwyQQW)6sln)(cvkZHDnU)GYn)O(qOjq29TaATH2zzvTjCE8xIZhucrTkS9)AT)jLD6qqWVxBruY7PiAukD3BQI41fg7(pWw35ukuEULShFKSiiTnqprI9JufdXvsAD7EaDpu6vo9vHRd7XmbRByvvme9zcKxr3GwQXTfQc5wdOEAjjRNHrZ(cM5oLgs1aTUEpV2HcsTLCwTK8OswQf5TkgOa2ys16argD6qWADnjLxXkEwtsR7f8iyK(83VoJ(BXkoWxTa9mU(M2yPv8SNIWQ4s3KFz5RAvao2YwYTRzFO6pSHhRy)aQBVV2MtG4g3oLVnSmVgyZEtvZMCK3Op3wFmn7fTPgXPCa7SyUUMQULKiPzZV8A(QcALCuSo8Fk5doWeyoh1SVBrlG3iFIkezoUCipSoO9jYjD74zcXw7ZwZ2bYnga38BroRz3b2bu3C29KRoB1mDZDQXtvrHrF6gH(ckOovppZJZR8DL7AKJz84TqmmzIG6BzBs4MivahvnCQQqNU9Hk)EOVL7p6Wt7ZwVR(ud4gnPEPAJoxz3UI8ss09AMWc5MsWUwwGGDv1UcWsVK99EsTgkYOcHyJqAA2SIbXFfppHnmr(3Hh6X74KdswM4spZzT7SqUz6X7Kh7iB4UK7kJwhn7p7UlaVR(WXCGsqv8ug)Ux7xXShPqk40oy5c19vXJTlBmZW177OtmCBU3EGSD6eN69AZGGf1Zum1hXo0Zfo(on)t1eGVPtlnlJjUHRZlEaQWBG14MXRhuQyxQ1AXE6sbKLsY2Su5zWrSb877b5qMQ8AhnU3GCy3cPqHGs6DTS)2MJVvGOsIQGZ8A7VWT1hvQgLwXtkvn9P(GuvrbNswjJoaOdO8w)i1DKrCvv8oKeglTE3k38r6DzSwVrbOgmFZsK3nDbUcz1UN82XSZ6MfzGV4P1QIDWApUzvIEwEwrhqSKyB)c4Eb2h6ffW14EU7LO8u8Cv9W9KZKtcaS8sy5fCZb8XQt16hXA5)p3qpHnfzi5gTPmR645aSbW)TIbB)8VKGQjF3pSDYpLLcJf51FKLrCUnznaqCNY9r(YzW9U((F1Zk4eRIuli261oc0AbFf)wbGv0KJiWRb7N0dwT81a98vDGZ3mFT1RDeOwjDLn5ic8AW(9DR(67e4oi1F9a1kN0U6F3c8AW6pSB1)F3G3bnHYauTYnTpJQJHEdC9pgATgGQvS1UABhdD7WDpni05Wl4OO3QhQw5MoO32Tq3oC3xBcDn8UQtP7Jl0Td39BMLRy9(b9b4vBLcxHR3i0FCNCgw)Kv(nCJMjxCVwKKTlNyrWAsqX1MJk4pAa(BeENTUkFmqWyyAg0j2613Cop6DIdP2haIbC8dFO(r62RWJh692Bonq1GY4Ed(dFWecbJMNfT53d2Y7pxXktPwBs)Acgnj061c6(gwOXQUV62Cub)rdWFJWB9MecoQ6(kWXVTMeuGqknj8(ZwE)5kwzk1At6D86aCbxpqTUp)vmsU0hhh(dWZhZaLK5v2X9tdKLBthd(daXxbE9hN)Qj8UPjDlWpaSgExbOrVmP0iMl2SUFqoakybYAmH7Sg0La(aWxSifMq3Q33HGvhYETrpz0A2YCwE0duxmbjpsU0hhhEJMTm7DMzGA2UI620XG)aqCDwwu2KUf4hawBYII2M19dYbqbQTUOObDjGpa8vP9L2VVdbRoKDKwJHGHIPdIsFnC26ct5kqx764Hbr(qDG)gT8g3aV(21XdJrQ4DT6UhK70ouv3DkuYJm4DaWUU4GX1EoCWRBAQEiJhSofaR6XobeF1aXFhbIDzJd5TSRbVda2USXHOLoCWVRI(orQDi6pTYZZj6obP90D0rfstbVbN3E7enMI8E7n9qZCwpmCGN9oTV)GrNPz2i8wnhUzSFNjmSiJ7cjPH3h8ho0ZZ7U(MZuRHdSSmc6Bfb9vIG(siyGacYue(dUK8YVDsYlDss2gbF3KKviOlBvQDyQV(TBKtgHi1qCE2YLzVqoeDraVOaV9DWlO3nKRRx0cc5s3KUv(yxICpUPK1U0msbi3Kk06zZWgplQm6XOI4Fy7Nj7Fz0tyS4L)mPULi8hjczSQKpCFX64P4feLpE5oLnpbpj4)L)Y2jVNF6I2(zCeVVg8)ecEKBVAfEj(HFpFaM)N(EGsNoJ24)AujqPtA(IeHKk88))YfK02ptfvfdQR08zJRNtDoE68hlo548S1JjxecNtg0X(N3Cvdmga55tZsNLqs2CJQl)8oDzD3y22Bm6DCkhPZzx)dgWdm767cdnyFzObDjd94umNDNHQPCf7cdTAPZkgPO6hd49oHZIQT00XR2XZYbsx45cEDQ8LvPus574syJY3Va7RY3GgF3jouGsouGgoKdjYKxpsnhsrizkFzloK6uAP89sCOGdGd14(ql1iLPEyxGDGoyRjTgNVlaNDxZiBpjG3EIpN1KdX1tTEEUpoEEyrqOq)YzFpLC9uBmehwiekSr4SZNs(EkgeHlQhAUrI6aTK2VHjAfX27glsmUG1nJf9cbQclhUl9nOvFjUUv)rfJ6H3)99VMNm))H4l7FdwFkcDqAg46BukBx4LTb(X6n5RZki7XoSBm0Gn0fTqJcGzVmkfpMlMxINJzlEChh73R)jQp9zWmU2h9S3ER9ZUZFKNRym2LQZ2zfIkIp3noWreA9g8caI8IEYTVAlpE3ib01upaQiyOZurrmWntFkC6m2YCnt14KjCwM4O7MPuTGlZca9g3GbAnUErMS3(Wm6Hwkv2dkZOhEqB7jCiBVnyOECQ(4kYqhLJldsv3EcV9gTzTVeJ7P85sDhObgvl)TRd0piqq13SoDVrg6E96lP15)2Bk)Y0nEuThOY3RsgeJ83XmvCn13ma9Qn5NR4Rm3T30dH0TxzyKwlnoMCx2S3YSb96tRyt94oPJ3EZWZ6F1OZgDkHjj)XGZ7I((dpfrwpI9V)G9PrZGYDdIsw2QIlE1z99pTV7FR56DctDv(BmhvLmx13vo(fxbeJ7tYgHhk8zfJ8G37VSy8yh6ZniawDo(LmGT8N)5jZhZ5ww9U7)UHT9Vt)s6SfGvBrRsVewvqNJHk8XRQtkCnK5CYyFpR0xGa9fyM(cm4YYUrF(AOV2Nebt0xaDQ4H8n2YkdY)C8XvNg3Xe1HUtBqB(bywQumuhbTefVTXl87glEBvyJHfONHD4QxoZWcuYW6k1oLXJPLH9xO5y8pOFxNSkqPMa3h17gpg1e(0yWPK9rDgDVPV6PH9nLUoWVrQ)tQVBH86DIgpofcnNB4a8qB8BV9MnTv0FCTUY6P3xw)rwfAbQfAomfZUqlGxO5(ukbHwW7RqlWQqZ)BPqdBb5IzbLAAPM(MydwnnIbCODsSwffv5UHrr2grtZGT2zpReevqyIDZhPl6bjrfoSriKK(LSNHiK(k4TAA0scjtDAMEPCKKoFdELBGsLAoKyaS8YuPpdvyVu8zU6URh2ZWN3QBrD0k3Am8rQIFCL)SWigOnDbO94Bhf)q08nPQ9Q7oWzA(msTxDN)BfLJDr6tcLJ9s8l)0EHR1FEN2REl8TiI46e1md)fjLw7DQZ7GySHTgGtunc6gG9oJhNE1BVzk0aAB8SRvhLfFE93uPwjw7QZv9q7qfSK28TtQkbNc3(5njmfqauk3eunoKu(IXRuCM57236sKmGaOjS(OmQxRXiheVm(0CPaFUW9)hvXRtWo5Hu423TEuQUON7vPvrW7MBZCyDtn3F5kzWvzyqfjz8UcNQoshB6fuE3cEnPlts8D7io3SAYIvD9KRXplkx6emCaNlzCVR6qAXIDszrUXsxO3IEYYDZTBMTPH9uNglxm4D0Mr2jiNvM8j6eA74WqDhjtoLj1RJHgwP361oVONHe1ps9a0obJelVsci)6KzlD9x7XmXP8AXES)qTPXuo16I47D(dvJVe(xZnoiISwVNNzwweVzj52eiwRjH(YF4zCJS8NfAWuY)5C2(UX3OrSin68UaPEd4CI66AaOjzHXadXGe4ooCa7bOMWHavCZnLUCEdtQ)ndViy4PQPqpmGDRuVAku1O322GX467PUkCyGWguq0z7OP0tAxCt1iztPLv(1Dr6Rys1jQNZiABdRJ9UvN0EQCUxFUlmuvAf1sUM1irp1BTJZ0DXS61KUH6kVQNnEv3YfjvFF3yJTjFnvyhNE1Irznthx0UpTEKjw3HYFu5lWoYH6DsDgSgeSGLWofTJVzwtWJbn12CH3nLxnwyQVUGfnZPU1C3FVCg)ZfVwGzoKiFxb3tPxDe3yUnq94P4wMTT14(KkXhWKETDB0tOC5xn6mMwIqTYvv(CcYD6iVEC3fU3oCGgp9CcBRLGUDh)E74BmX38XQHxrnI3MVkWzI7W3tszW2j)onNbkYuGqsfeJiO7JjxEW2NOZ1dnsd78WLnhu3orroI6CgbDcB6Pi)T3E1Wdsg7qmZwPHDIXjItDCKNwLsDtmOKBa7h()o]] )

@@ -1,207 +1,209 @@
 -- MonkMistweaver.lua
--- January 2025
+-- August 2025
+-- Patch 11.2
 
 if UnitClassBase( "player" ) ~= "MONK" then return end
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
 local class, state = Hekili.Class, Hekili.State
-
-local strformat = string.format
-
 local spec = Hekili:NewSpecialization( 270 )
-local GetSpellCount = C_Spell.GetSpellCastCount
+
+---- Local function declarations for increased performance
+-- Strings
+local strformat = string.format
+-- Tables
+local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
+-- Math
+local abs, ceil, floor, max, sqrt = math.abs, math.ceil, math.floor, math.max, math.sqrt
+
+-- Common WoW APIs, comment out unneeded per-spec
+local GetSpellCastCount = C_Spell.GetSpellCastCount
+-- local GetSpellInfo = C_Spell.GetSpellInfo
+-- local GetSpellInfo = ns.GetUnpackedSpellInfo
+-- local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+-- local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
+-- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
+-- local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
+-- local IsActiveSpell = ns.IsActiveSpell
+
+-- Specialization-specific local functions (if any)
 
 spec:RegisterResource( Enum.PowerType.Mana )
 
 -- Talents
 spec:RegisterTalents( {
+
     -- Monk
-    against_all_odds              = { 101253, 450986, 1 }, -- Flurry Strikes increase your Agility by 1% for 5 sec, stacking up to 20 times.
-    ancient_arts                  = { 101184, 344359, 2 }, -- Reduces the cooldown of Paralysis by 15 sec and the cooldown of Leg Sweep by 10 sec.
-    bounce_back                   = { 101177, 389577, 1 }, -- When a hit deals more than 12% of your maximum health, reduce all damage you take by 40% for 6 sec. This effect cannot occur more than once every 30 seconds.
-    bounding_agility              = { 101161, 450520, 1 }, -- Roll and Chi Torpedo travel a small distance further.
-    calming_presence              = { 101153, 388664, 1 }, -- Reduces all damage taken by 6%.
-    celerity                      = { 101183, 115173, 1 }, -- Reduces the cooldown of Roll by 5 sec and increases its maximum number of charges by 1.
-    celestial_determination       = { 101180, 450638, 1 }, -- While your Celestial is active, you cannot be slowed below 90% normal movement speed.
-    chi_burst                     = { 102432, 123986, 1 }, -- Hurls a torrent of Chi energy up to 40 yds forward, dealing 29,046 Nature damage to all enemies, and 20,243 healing to the Monk and all allies in its path. Healing and damage reduced beyond 5 targets.
-    chi_proficiency               = { 101169, 450426, 2 }, -- Magical damage done increased by 5% and healing done increased by 5%.
-    chi_torpedo                   = { 101183, 115008, 1 }, -- Torpedoes you forward a long distance and increases your movement speed by 30% for 10 sec, stacking up to 2 times.
-    chi_wave                      = { 102432, 450391, 1 }, -- Every 15 sec, your next Rising Sun Kick or Vivify releases a wave of Chi energy that flows through friends and foes, dealing 2,074 Nature damage or 5,520 healing. Bounces up to 7 times to targets within 25 yards.
-    clash                         = { 101154, 324312, 1 }, -- You and the target charge each other, meeting halfway then rooting all targets within 6 yards for 4 sec.
-    crashing_momentum             = { 101149, 450335, 1 }, -- Targets you Roll through are snared by 40% for 5 sec.
-    dance_of_the_wind             = { 101139, 432181, 1 }, -- Your physical damage taken is reduced by 10% and an additional 10% every 4 sec until you receive a physical attack.
-    diffuse_magic                 = { 101165, 122783, 1 }, -- Reduces magic damage you take by 60% for 6 sec, and transfers all currently active harmful magical effects on you back to their original caster if possible.
-    disable                       = { 101149, 116095, 1 }, -- Reduces the target's movement speed by 50% for 15 sec, duration refreshed by your melee attacks.
-    efficient_training            = { 101251, 450989, 1 }, -- Energy spenders deal an additional 20% damage. Every 50 Energy spent reduces the cooldown of Storm, Earth, and Fire by 1 sec.
-    elusive_mists                 = { 101144, 388681, 1 }, -- Reduces all damage taken by you and your target while channeling Soothing Mists by 6%.
-    energy_transfer               = { 101151, 450631, 1 }, -- Successfully interrupting an enemy reduces the cooldown of Paralysis and Roll by 5 sec.
-    escape_from_reality           = { 101176, 394110, 1 }, -- After you use Transcendence: Transfer, you can use Transcendence: Transfer again within 10 sec, ignoring its cooldown.
-    expeditious_fortification     = { 101174, 388813, 1 }, -- Fortifying Brew cooldown reduced by 30 sec.
-    fast_feet                     = { 101185, 388809, 1 }, -- Rising Sun Kick deals 70% increased damage. Spinning Crane Kick deals 10% additional damage.
-    fatal_touch                   = { 101178, 394123, 1 }, -- Touch of Death increases your damage by 5% for 30 sec after being cast and its cooldown is reduced by 90 sec.
-    ferocity_of_xuen              = { 101166, 388674, 1 }, -- Increases all damage dealt by 2%.
-    flow_of_chi                   = { 101170, 450569, 1 }, -- You gain a bonus effect based on your current health. Above 90% health: Movement speed increased by 5%. This bonus stacks with similar effects. Between 90% and 35% health: Damage taken reduced by 5%. Below 35% health: Healing received increased by 10%.
-    flurry_strikes                = { 101248, 450615, 1 }, -- Every 61,118 damage you deal generates a Flurry Charge. For each 240 energy you spend, unleash all Flurry Charges, dealing 6,224 Physical damage per charge.
-    fortifying_brew               = { 101173, 115203, 1 }, -- Turns your skin to stone for 15 sec, increasing your current and maximum health by 20%, reducing all damage you take by 20%.
-    grace_of_the_crane            = { 101146, 388811, 1 }, -- Increases all healing taken by 6%.
-    hasty_provocation             = { 101158, 328670, 1 }, -- Provoked targets move towards you at 50% increased speed.
-    healing_winds                 = { 101171, 450560, 1 }, -- Transcendence: Transfer immediately heals you for 10% of your maximum health.
-    high_impact                   = { 101247, 450982, 1 }, -- Enemies who die within 10 sec of being damaged by a Flurry Strike explode, dealing 10,373 physical damage to uncontrolled enemies within 8 yds.
-    improved_detox                = { 101089, 388874, 1 }, -- Detox additionally removes all Poison and Disease effects.
-    improved_touch_of_death       = { 101140, 322113, 1 }, -- Touch of Death can now be used on targets with less than 15% health remaining, dealing 35% of your maximum health in damage.
-    ironshell_brew                = { 101174, 388814, 1 }, -- Increases your maximum health by an additional 10% and your damage taken is reduced by an additional 10% while Fortifying Brew is active.
-    jade_walk                     = { 101160, 450553, 1 }, -- While out of combat, your movement speed is increased by 15%.
-    lead_from_the_front           = { 101254, 450985, 1 }, -- Chi Burst, Chi Wave, and Expel Harm now heal you for 20% of damage dealt.
-    lighter_than_air              = { 101168, 449582, 1 }, -- Roll causes you to become lighter than air, allowing you to double jump to dash forward a short distance once within 5 sec, but the cooldown of Roll is increased by 2 sec.
-    martial_instincts             = { 101179, 450427, 2 }, -- Increases your Physical damage done by 5% and Avoidance increased by 4%.
-    martial_precision             = { 101246, 450990, 1 }, -- Your attacks penetrate 12% armor.
-    one_versus_many               = { 101250, 450988, 1 }, -- Damage dealt by Fists of Fury and Keg Smash counts as double towards Flurry Charge generation. Fists of Fury damage increased by 15%. Keg Smash damage increased by 35%.
-    paralysis                     = { 101142, 115078, 1 }, -- Incapacitates the target for 1 min. Limit 1. Damage may cancel the effect.
-    peace_and_prosperity          = { 101163, 450448, 1 }, -- Reduces the cooldown of Ring of Peace by 5 sec and Song of Chi-Ji's cast time is reduced by 0.5 sec.
-    predictive_training           = { 101245, 450992, 1 }, -- When you dodge or parry an attack, reduce all damage taken by 10% for the next 6 sec.
-    pressure_points               = { 101141, 450432, 1 }, -- Paralysis now removes all Enrage effects from its target.
-    pride_of_pandaria             = { 101247, 450979, 1 }, -- Flurry Strikes have 15% additional chance to critically strike.
-    profound_rebuttal             = { 101135, 392910, 1 }, -- Expel Harm's critical healing is increased by 15%.
-    protect_and_serve             = { 101254, 450984, 1 }, -- Your Vivify always heals you for an additional 30% of its total value.
-    quick_footed                  = { 101158, 450503, 1 }, -- The duration of snare effects on you is reduced by 20%.
-    ring_of_peace                 = { 101136, 116844, 1 }, -- Form a Ring of Peace at the target location for 5 sec. Enemies that enter will be ejected from the Ring.
-    rising_sun_kick               = { 101186, 107428, 1 }, -- Kick upwards, dealing 52,240 Physical damage. Applies Renewing Mist for 6 seconds to an ally within 40 yds
-    rushing_reflexes              = { 101154, 450154, 1 }, -- Your heightened reflexes allow you to react swiftly to the presence of enemies, causing you to quickly lunge to the nearest enemy in front of you within 10 yards after you Roll.
-    save_them_all                 = { 101157, 389579, 1 }, -- When your healing spells heal an ally whose health is below 35% maximum health, you gain an additional 10% healing for the next 4 sec.
-    song_of_chiji                 = { 101136, 198898, 1 }, -- Conjures a cloud of hypnotic mist that slowly travels forward. Enemies touched by the mist fall asleep, Disoriented for 20 sec.
-    soothing_mist                 = { 101143, 115175, 1 }, -- Heals the target for 133,673 over 7.4 sec. While channeling, Enveloping Mist and Vivify may be cast instantly on the target. Each heal has a chance to cause a Gust of Mists on the target.
-    spear_hand_strike             = { 101152, 116705, 1 }, -- Jabs the target in the throat, interrupting spellcasting and preventing any spell from that school of magic from being cast for 3 sec.
-    spirits_essence               = { 101138, 450595, 1 }, -- Transcendence: Transfer snares targets within 10 yds by 70% for 4 sec when cast.
-    strength_of_spirit            = { 101135, 387276, 1 }, -- Expel Harm's healing is increased by up to 30%, based on your missing health.
-    summon_jade_serpent_statue    = { 101164, 115313, 1 }, -- Summons a Jade Serpent Statue at the target location. When you channel Soothing Mist, the statue will also begin to channel Soothing Mist on your target, healing for 59,675 over 7.4 sec.
-    swift_art                     = { 101155, 450622, 1 }, -- Roll removes a snare effect once every 30 sec.
-    tiger_tail_sweep              = { 101182, 264348, 1 }, -- Increases the range of Leg Sweep by 4 yds.
-    tigers_lust                   = { 101147, 116841, 1 }, -- Increases a friendly target's movement speed by 70% for 6 sec and removes all roots and snares.
-    transcendence                 = { 101167, 101643, 1 }, -- Split your body and spirit, leaving your spirit behind for 15 min. Use Transcendence: Transfer to swap locations with your spirit.
-    transcendence_linked_spirits  = { 101176, 434774, 1 }, -- Transcendence now tethers your spirit onto an ally for 1 |4hour:hrs;. Use Transcendence: Transfer to teleport to your ally's location.
-    veterans_eye                  = { 101249, 450987, 1 }, -- Striking the same target 5 times within 2 sec grants 1% Haste, stacking up to 10 times.
-    vigilant_watch                = { 101244, 450993, 1 }, -- Blackout Kick deals an additional 20% critical damage and increases the damage of your next set of Flurry Strikes by 10%.
-    vigorous_expulsion            = { 101156, 392900, 1 }, -- Expel Harm's healing increased by 5% and critical strike chance increased by 15%.
-    vivacious_vivification        = { 101145, 388812, 1 }, -- Every 10 sec, your next Vivify becomes instant and its healing is increased by 20%.
-    whirling_steel                = { 101245, 450991, 1 }, -- When your health drops below 50%, summon Whirling Steel, increasing your parry chance and avoidance by 15% for 6 sec. This effect can not occur more than once every 180 sec.
-    winds_reach                   = { 101148, 450514, 1 }, -- The range of Disable is increased by 5 yds. The duration of Crashing Momentum is increased by 3 sec and its snare now reduces movement speed by an additional 20%.
-    windwalking                   = { 101175, 157411, 1 }, -- You and your allies within 10 yards have 10% increased movement speed. Stacks with other similar effects.
-    wisdom_of_the_wall            = { 101252, 450994, 1 }, -- Every 10 Flurry Strikes, become infused with the Wisdom of the Wall, gaining one of the following effects for 16 sec. Critical strike damage increased by 30%. Dodge and Critical Strike chance increased by 25% of your Versatility bonus. Flurry Strikes deal 16,597 Shadow damage to all uncontrolled enemies within 6 yds. Effect of your Mastery increased by 25%.
-    yulons_grace                  = { 101165, 414131, 1 }, -- Find resilience in the flow of chi in battle, gaining a magic absorb shield for 1.0% of your max health every 3 sec in combat, stacking up to 10%.
+    ancient_arts                   = { 101184,  344359, 2 }, -- Reduces the cooldown of Paralysis by $s1 sec and the cooldown of Leg Sweep by $s2 sec
+    bounce_back                    = { 101177,  389577, 1 }, -- When a hit deals more than $s1% of your maximum health, reduce all damage you take by $s2% for $s3 sec. This effect cannot occur more than once every $s4 seconds
+    bounding_agility               = { 101161,  450520, 1 }, -- Roll and Chi Torpedo travel a small distance further
+    calming_presence               = { 101153,  388664, 1 }, -- Reduces all damage taken by $s1%
+    celerity                       = { 101183,  115173, 1 }, -- Reduces the cooldown of Roll by $s1 sec and increases its maximum number of charges by $s2
+    celestial_determination        = { 101180,  450638, 1 }, -- While your Celestial is active, you cannot be slowed below $s1% normal movement speed
+    chi_burst                      = { 102432,  123986, 1 }, -- Hurls a torrent of Chi energy up to $s2 yds forward, dealing $s$s3 Nature damage to all enemies, and $s4 healing to the Monk and all allies in its path. Healing and damage reduced beyond $s5 targets
+    chi_proficiency                = { 101169,  450426, 2 }, -- Magical damage done increased by $s1% and healing done increased by $s2%
+    chi_torpedo                    = { 101183,  115008, 1 }, -- Torpedoes you forward a long distance and increases your movement speed by $s1% for $s2 sec, stacking up to $s3 times
+    chi_wave                       = { 102432,  450391, 1 }, -- Every $s2 sec, your next Rising Sun Kick or Vivify releases a wave of Chi energy that flows through friends and foes, dealing $s$s3 Nature damage or $s4 healing. Bounces up to $s5 times to targets within $s6 yards
+    clash                          = { 101154,  324312, 1 }, -- You and the target charge each other, meeting halfway then rooting all targets within $s1 yards for $s2 sec
+    crashing_momentum              = { 101149,  450335, 1 }, -- Targets you Roll through are snared by $s1% for $s2 sec
+    dance_of_the_wind              = { 101139,  432181, 1 }, -- Your physical damage taken is reduced by $s1% and an additional $s2% every $s3 sec until you receive a physical attack
+    diffuse_magic                  = { 101165,  122783, 1 }, -- Reduces magic damage you take by $s1% for $s2 sec, and transfers all currently active harmful magical effects on you back to their original caster if possible
+    disable                        = { 101149,  116095, 1 }, -- Reduces the target's movement speed by $s1% for $s2 sec, duration refreshed by your melee attacks
+    elusive_mists                  = { 101144,  388681, 1 }, -- Reduces all damage taken by you and your target while channeling Soothing Mists by $s1%
+    energy_transfer                = { 101151,  450631, 1 }, -- Successfully interrupting an enemy reduces the cooldown of Paralysis and Roll by $s1 sec
+    escape_from_reality            = { 101176,  394110, 1 }, -- After you use Transcendence: Transfer, you can use Transcendence: Transfer again within $s1 sec, ignoring its cooldown
+    expeditious_fortification      = { 101174,  388813, 1 }, -- Fortifying Brew cooldown reduced by $s1 sec
+    fast_feet                      = { 101185,  388809, 1 }, -- Rising Sun Kick deals $s1% increased damage. Spinning Crane Kick deals $s2% additional damage
+    fatal_touch                    = { 101178,  394123, 1 }, -- Touch of Death increases your damage by $s1% for $s2 sec after being cast and its cooldown is reduced by $s3 sec
+    ferocity_of_xuen               = { 101166,  388674, 1 }, -- Increases all damage dealt by $s1%
+    flow_of_chi                    = { 101170,  450569, 1 }, -- You gain a bonus effect based on your current health. Above $s1% health: Movement speed increased by $s2%. This bonus stacks with similar effects. Between $s3% and $s4% health: Damage taken reduced by $s5%. Below $s6% health: Healing received increased by $s7%
+    fortifying_brew                = { 101173,  115203, 1 }, -- Turns your skin to stone for $s1 sec, increasing your current and maximum health by $s2%, reducing all damage you take by $s3%
+    grace_of_the_crane             = { 101146,  388811, 1 }, -- Increases all healing taken by $s1%
+    hasty_provocation              = { 101158,  328670, 1 }, -- Provoked targets move towards you at $s1% increased speed
+    healing_winds                  = { 101171,  450560, 1 }, -- Transcendence: Transfer immediately heals you for $s1% of your maximum health
+    improved_detox                 = { 101089,  388874, 1 }, -- Detox additionally removes all Poison and Disease effects
+    improved_touch_of_death        = { 101140,  322113, 1 }, -- Touch of Death can now be used on targets with less than $s1% health remaining, dealing $s2% of your maximum health in damage
+    ironshell_brew                 = { 101174,  388814, 1 }, -- Increases your maximum health by an additional $s1% and your damage taken is reduced by an additional $s2% while Fortifying Brew is active
+    jade_walk                      = { 101160,  450553, 1 }, -- While out of combat, your movement speed is increased by $s1%
+    lighter_than_air               = { 101168,  449582, 1 }, -- Roll causes you to become lighter than air, allowing you to double jump to dash forward a short distance once within $s1 sec, but the cooldown of Roll is increased by $s2 sec
+    martial_instincts              = { 101179,  450427, 2 }, -- Increases your Physical damage done by $s1% and Avoidance increased by $s2%
+    paralysis                      = { 101142,  115078, 1 }, -- Incapacitates the target for $s1 min. Limit $s2. Damage may cancel the effect
+    peace_and_prosperity           = { 101163,  450448, 1 }, -- Reduces the cooldown of Ring of Peace by $s1 sec and Song of Chi-Ji's cast time is reduced by $s2 sec
+    pressure_points                = { 101141,  450432, 1 }, -- Paralysis now removes all Enrage effects from its target
+    profound_rebuttal              = { 101135,  392910, 1 }, -- Expel Harm's critical healing is increased by $s1%
+    quick_footed                   = { 101158,  450503, 1 }, -- The duration of snare effects on you is reduced by $s1%
+    ring_of_peace                  = { 101136,  116844, 1 }, -- Form a Ring of Peace at the target location for $s1 sec. Enemies that enter will be ejected from the Ring
+    rising_sun_kick                = { 101186,  107428, 1 }, -- Kick upwards, dealing $s$s2 Physical damage. Applies Renewing Mist for $s3 seconds to an ally within $s4 yds
+    rushing_reflexes               = { 101154,  450154, 1 }, -- Your heightened reflexes allow you to react swiftly to the presence of enemies, causing you to quickly lunge to the nearest enemy in front of you within $s1 yards after you Roll
+    save_them_all                  = { 101157,  389579, 1 }, -- When your healing spells heal an ally whose health is below $s1% maximum health, you gain an additional $s2% healing for the next $s3 sec
+    song_of_chiji                  = { 101136,  198898, 1 }, -- Conjures a cloud of hypnotic mist that slowly travels forward. Enemies touched by the mist fall asleep, Disoriented for $s1 sec
+    soothing_mist                  = { 101143,  115175, 1 }, -- Heals the target for $s1 over $s2 sec. While channeling, Enveloping Mist and Vivify may be cast instantly on the target. Each heal has a chance to cause a Gust of Mists on the target
+    spear_hand_strike              = { 101152,  116705, 1 }, -- Jabs the target in the throat, interrupting spellcasting and preventing any spell from that school of magic from being cast for $s1 sec
+    spirits_essence                = { 101138,  450595, 1 }, -- Transcendence: Transfer snares targets within $s1 yds by $s2% for $s3 sec when cast
+    strength_of_spirit             = { 101135,  387276, 1 }, -- Expel Harm's healing is increased by up to $s1%, based on your missing health
+    summon_jade_serpent_statue     = { 101164,  115313, 1 }, -- Summons a Jade Serpent Statue at the target location. When you channel Soothing Mist, the statue will also begin to channel Soothing Mist on your target, healing for $s1 over $s2 sec
+    swift_art                      = { 101155,  450622, 1 }, -- Roll removes a snare effect once every $s1 sec
+    tiger_tail_sweep               = { 101182,  264348, 1 }, -- Increases the range of Leg Sweep by $s1 yds
+    tigers_lust                    = { 101147,  116841, 1 }, -- Increases a friendly target's movement speed by $s1% for $s2 sec and removes all roots and snares
+    transcendence                  = { 101167,  101643, 1 }, -- Split your body and spirit, leaving your spirit behind for $s1 min. Use Transcendence: Transfer to swap locations with your spirit
+    transcendence_linked_spirits   = { 101176,  434774, 1 }, -- Transcendence now tethers your spirit onto an ally for $s1 |$s2hour:hrs;. Use Transcendence: Transfer to teleport to your ally's location
+    vigorous_expulsion             = { 101156,  392900, 1 }, -- Expel Harm's healing increased by $s1% and critical strike chance increased by $s2%
+    vivacious_vivification         = { 101145,  388812, 1 }, -- After casting Rising Sun Kick, your next Vivify becomes instant and its healing is increased by $s1%
+    winds_reach                    = { 101148,  450514, 1 }, -- The range of Disable is increased by $s1 yds. The duration of Crashing Momentum is increased by $s2 sec and its snare now reduces movement speed by an additional $s3%
+    windwalking                    = { 101175,  157411, 1 }, -- You and your allies within $s1 yards have $s2% increased movement speed. Stacks with other similar effects
+    yulons_grace                   = { 101165,  414131, 1 }, -- Find resilience in the flow of chi in battle, gaining a magic absorb shield for $s1% of your max health every $s2 sec in combat, stacking up to $s3%
 
     -- Mistweaver
-    awakened_jadefire             = { 101104, 388779, 1 }, -- Your abilities reset Jadefire Stomp 100% more often. While within Jadefire Stomp, your Tiger Palms strike twice, your Blackout Kicks strike an additional 2 targets at 20% effectiveness, and your Spinning Crane Kick heals 3 nearby allies for 110% of the damage done.
-    burst_of_life                 = { 101098, 399226, 1 }, -- When Life Cocoon expires, it releases a burst of mist that restores 85,913 health to 3 nearby allies.
-    calming_coalescence           = { 101095, 388218, 1 }, -- The absorb amount of Life Cocoon is increased by 80%.
-    celestial_harmony             = { 101128, 343655, 1 }, -- While active, Yu'lon and Chi'Ji heal up to 5 nearby targets with Enveloping Breath when you cast Enveloping Mist, healing for 15,448 over 7 sec, and increasing the healing they receive from you by 10%. When activated, Yu'lon and Chi'Ji apply Chi Cocoons to 5 targets within 40 yds, absorbing 84,432 damage for 10 sec.
-    chi_harmony                   = { 101121, 448392, 1 }, -- Renewing Mist increases its target's healing received from you by 50% for the first 8 sec of its duration, but cannot jump to a new target during this time.
-    chrysalis                     = { 101098, 202424, 1 }, -- Reduces the cooldown of Life Cocoon by 45 sec.
-    crane_style                   = { 101097, 446260, 1 }, -- Rising Sun Kick now kicks up a Gust of Mist to heal 2 allies within 40 yds for 18,333. Spinning Crane Kick and Blackout Kick have a chance to kick up a Gust of Mist to heal 1 ally within 40 yds for 18,333.
-    dance_of_chiji                = { 101106, 438439, 1 }, -- Your spells and abilities have a chance to make your next Spinning Crane Kick deal an additional 400% damage.
-    dancing_mists                 = { 101112, 388701, 1 }, -- Renewing Mist has a 8% chance to immediately spread to an additional target when initially cast or when traveling to a new target.
-    deep_clarity                  = { 101122, 446345, 1 }, -- After you fully consume Thunder Focus Tea, your next Vivify triggers Zen Pulse.
-    emperors_favor                = { 101118, 471761, 1 }, -- Sheilun's Gift's healing is increased by 150% and its cast time is reduced by 100%, but it now only heals a single ally.
-    energizing_brew               = { 101130, 422031, 1 }, -- Mana Tea now channels 50% faster and generates 20% more Mana.
-    enveloping_mist               = { 101134, 124682, 1 }, -- Wraps the target in healing mists, healing for 46,979 over 7 sec, and increasing healing received from your other spells by 40%. Applies Renewing Mist for 6 seconds to an ally within 40 yds.
-    focused_thunder               = { 101115, 197895, 1 }, -- Thunder Focus Tea now empowers your next 2 spells.
-    gift_of_the_celestials        = { 101113, 388212, 1 }, -- Reduces the cooldown of Invoke Chi-Ji, the Red Crane by 1 min, but decreases its duration to 12 sec.
-    healing_elixir                = { 101109, 122280, 1 }, -- You consume a healing elixir when you drop below 40% health or generate excess healing elixirs, instantly healing you for 15% of your maximum health. You generate 1 healing elixir every 30 sec, stacking up to 2 times.
-    invigorating_mists            = { 101110, 274586, 1 }, -- Vivify heals all allies with your Renewing Mist active for 13,248, reduced beyond 5 allies.
-    invoke_chiji                  = { 101129, 325197, 1 }, -- Summon an effigy of Chi-Ji for 12 sec that kicks up 3 Gust of Mists when you Blackout Kick, Rising Sun Kick, or Spinning Crane Kick, healing up to 2 allies for 18,333, and reducing the cost and cast time of your next Enveloping Mist by 33%, stacking. Chi-Ji's presence makes you immune to movement impairing effects.
-    invoke_chiji_the_red_crane    = { 101129, 325197, 1 }, -- Summon an effigy of Chi-Ji for 12 sec that kicks up 3 Gust of Mists when you Blackout Kick, Rising Sun Kick, or Spinning Crane Kick, healing up to 2 allies for 18,333, and reducing the cost and cast time of your next Enveloping Mist by 33%, stacking. Chi-Ji's presence makes you immune to movement impairing effects.
-    invoke_yulon                  = { 101129, 322118, 1 }, -- Summons an effigy of Yu'lon, the Jade Serpent for 12 sec. Yu'lon will heal injured allies with Soothing Breath, healing the target and up to 2 allies for 11,192 over 4.2 sec. Enveloping Mist costs 50% less mana while Yu'lon is active.
-    invoke_yulon_the_jade_serpent = { 101129, 322118, 1 }, -- Summons an effigy of Yu'lon, the Jade Serpent for 12 sec. Yu'lon will heal injured allies with Soothing Breath, healing the target and up to 2 allies for 11,192 over 4.2 sec. Enveloping Mist costs 50% less mana while Yu'lon is active.
-    invokers_delight              = { 101123, 388661, 1 }, -- You gain 20% haste for 8 sec after summoning your Celestial.
-    jade_bond                     = { 101113, 388031, 1 }, -- Chi Cocoons now apply Enveloping Mist for 4 sec when they expire or are consumed, and Chi-Ji's Gusts of Mists healing is increased by 40% and Yu'lon's Soothing Breath healing is increased by 500%.
-    jade_empowerment              = { 101106, 467316, 1 }, -- Casting Thunder Focus Tea increases your next Crackling Jade Lightning's damage by 3,000% and causes it to chain to 4 additional enemies at 10% effectiveness.
-    jadefire_stomp                = { 101101, 388193, 1 }, -- Strike the ground fiercely to expose a path of jade for 30 sec, dealing 11,759 Nature damage to up to 5 enemies, and restoring 24,250 health to up to 5 allies within 30 yds caught in the path. Your abilities have a 6% chance of resetting the cooldown of Jadefire Stomp while fighting within the path.
-    jadefire_teachings            = { 101102, 467293, 1 }, -- After casting Jadefire Stomp or Thunder Focus Tea, Ancient Teachings transfers an additional 160% damage to healing for 15 sec. While Jadefire Teachings is active, your Stamina is increased by 5%.
-    legacy_of_wisdom              = { 101118, 404408, 1 }, -- Sheilun's Gift heals 2 additional allies and its cast time is reduced by 0.5 sec.
-    life_cocoon                   = { 101096, 116849, 1 }, -- Encases the target in a cocoon of Chi energy for 12 sec, absorbing 337,729 damage and increasing all healing over time received by 50%. Applies Renewing Mist and Enveloping Mist to the target.
-    lifecycles                    = { 101130, 197915, 1 }, -- Vivify has a 20% chance to cause your next Rising Sun Kick or Enveloping Mist to generate 1 stack of Mana Tea. Enveloping Mist and Rising Sun Kick have a 20% chance to cause your next Vivify to generate 1 stack of Mana Tea.
-    lotus_infusion                = { 101121, 458431, 1 }, -- Allies with Renewing Mist receive 10% more healing from you and Renewing Mist's duration is increased by 2 sec.
-    mana_tea                      = { 101132, 115869, 1 }, -- For every 29,360 Mana you spend, you gain 1 stack of Mana Tea, with a chance equal to your critical strike chance to generate 1 extra stack. Mana Tea: Consumes 1 stack of Mana Tea per 0.2 sec to restore 3,600 Mana and reduces the Mana cost of your spells by 30% for 1.00 sec per stack of Mana Tea consumed after drinking. Can be cast while moving, but movement speed is reduced by 40% while channeling.
-    mending_proliferation         = { 101125, 388509, 1 }, -- Each time Enveloping Mist heals, its healing bonus has a 50% chance to spread to an injured ally within 30 yds.
-    mist_wrap                     = { 101093, 197900, 1 }, -- Increases Enveloping Mist's duration by 1 sec and its healing bonus by 10%.
-    mists_of_life                 = { 101099, 388548, 1 }, -- Life Cocoon applies Renewing Mist and Enveloping Mist to the target.
-    misty_peaks                   = { 101114, 388682, 2 }, -- Renewing Mist's heal over time effect has a 5.0% chance to apply Enveloping Mist for 2 sec.
-    overflowing_mists             = { 101094, 388511, 2 }, -- Your Enveloping Mists heal the target for 2.0% of their maximum health each time they take direct damage.
-    peaceful_mending              = { 101116, 388593, 1 }, -- Allies targeted by Soothing Mist receive 40% more healing from your Enveloping Mist and Renewing Mist effects.
-    peer_into_peace               = { 101127, 440008, 1 }, -- 5% of your overhealing done onto targets with Soothing Mist is spread to 3 nearby injured allies. Soothing Mist now follows the target of your Enveloping Mist or Vivify and its channel time is increased by 4 sec.
-    pool_of_mists                 = { 101127, 173841, 1 }, -- Renewing Mist now has 3 charges and reduces the remaining cooldown of Rising Sun Kick by 1.0 sec. Rising Sun Kick now reduces the remaining cooldown of Renewing Mist by 1.0 sec.
-    rapid_diffusion               = { 101111, 388847, 2 }, -- Rising Sun Kick and Enveloping Mist apply Renewing Mist for 6 seconds to an ally within 40 yds.
-    refreshing_jade_wind          = { 101093, 457397, 1 }, -- Thunder Focus Tea summons a whirling tornado around you, causing 1,545 healing every 0.69 sec for 6 sec on to up to 5 allies within 10 yards.
-    refreshment                   = { 101095, 467270, 1 }, -- Life Cocoon grants up to 5 stacks of Mana Tea and applies 2 stacks of Healing Elixir to its target.
-    renewing_mist                 = { 101107, 115151, 1 }, -- Surrounds the target with healing mists, restoring 27,933 health over 22 sec. If Renewing Mist heals a target past maximum health, it will travel to another injured ally within 20 yds.
-    resplendent_mist              = { 101126, 388020, 2 }, -- Gust of Mists has a 30% chance to do 100% more healing.
-    restoral                      = { 101131, 388615, 1 }, -- Heals all party and raid members within 40 yds for 159,576 and clears them of all harmful Poison and Disease effects. Castable while stunned. Healing reduced beyond 5 targets.
-    revival                       = { 101131, 115310, 1 }, -- Heals all party and raid members within 40 yds for 159,576 and clears them of 3 harmful Magic, all Poison, and all Disease effects. Healing reduced beyond 5 targets.
-    rising_mist                   = { 101117, 274909, 1 }, -- Rising Sun Kick heals all allies with your Renewing Mist and Enveloping Mist for 2,552, and extends those effects by 4 sec, up to 100% of their original duration.
-    rushing_wind_kick             = { 101102, 467307, 1 }, -- Kick up a powerful gust of wind, dealing 130,600 Nature damage in a 25 yd cone to enemies in front of you, split evenly among them. Damage is increased by 6% for each target hit, up to 30%. Grants Rushing Winds for 4 sec, increasing Renewing Mist's healing by 100%.
-    secret_infusion               = { 101124, 388491, 2 }, -- After using Thunder Focus Tea, your next spell gives 5% of a stat for 10 sec: Enveloping Mist: Critical strike Renewing Mist: Haste Vivify: Mastery Rising Sun Kick: Versatility Expel Harm: Versatility
-    shaohaos_lessons              = { 101119, 400089, 1 }, -- Each time you cast Sheilun's Gift, you learn one of Shaohao's Lessons for up to 30 sec, with the duration based on how many clouds of mist are consumed. Lesson of Doubt: Your spells and abilities deal up to 40% more healing and damage to targets, based on their current health. Lesson of Despair: Your Critical Strike is increased by 30% while above 50% health. Lesson of Fear: Decreases your damage taken by 15% and increases your Haste by 20%. Lesson of Anger: 25% of the damage or healing you deal is duplicated every 4 sec.
-    sheiluns_gift                 = { 101120, 399491, 1 }, -- Draws in all nearby clouds of mist, healing the friendly target and up to 2 nearby allies for 12,880 per cloud absorbed. A cloud of mist is generated every 8 sec while in combat.
-    tea_of_plenty                 = { 101103, 388517, 1 }, -- Thunder Focus Tea also empowers 2 additional Enveloping Mist, Expel Harm, or Rising Sun Kick at random.
-    tea_of_serenity               = { 101103, 393460, 1 }, -- Thunder Focus Tea also empowers 2 additional Renewing Mist, Enveloping Mist, or Vivify at random.
-    tear_of_morning               = { 101117, 387991, 1 }, -- Casting Vivify or Enveloping Mist on a target with Renewing Mist has a 10% chance to spread the Renewing Mist to another target. Your Vivify healing through Renewing Mist is increased by 10% and your Enveloping Mist also heals allies with Renewing Mist for 12% of its healing.
-    thunder_focus_tea             = { 101133, 116680, 1 }, -- Receive a jolt of energy, empowering your next spell cast: Enveloping Mist: Immediately heals for 33,257 and is instant cast. Renewing Mist: Duration increased by 10 sec. Vivify: No mana cost. Rising Sun Kick: Cooldown reduced by 9 sec. Expel Harm: Transfers 25% additional healing into damage and creates a Chi Cocoon absorbing 112,576 damage.
-    unison                        = { 101125, 388477, 1 }, -- Soothing Mist heals a second injured ally within 40 yds for 25% of the amount healed.
-    uplifted_spirits              = { 101092, 388551, 1 }, -- Vivify critical strikes and Rising Sun Kicks reduce the remaining cooldown on Revival by 1 sec, and Revival heals targets for 15% of Revival's heal over 10 sec.
-    veil_of_pride                 = { 101119, 400053, 1 }, -- Increases Sheilun's Gift cloud of mist generation to every 4 sec.
-    yulons_whisper                = { 101100, 388038, 1 }, -- While channeling Mana Tea you exhale the breath of Yu'lon, healing up to 5 allies within 15 yards for 4,850 every 0.2 sec.
-    zen_pulse                     = { 101108, 446326, 1 }, -- Renewing Mist's heal over time has a chance to cause your next Vivify to also trigger a Zen Pulse on its target and all allies with Renewing Mist, healing them for 17,055 increased by 6% per Renewing Mist active, up to 30%.
+    awakened_jadefire              = { 101104,  388779, 1 }, -- Your abilities reset Jadefire Stomp $s1% more often. While within Jadefire Stomp, your Tiger Palms strike twice, your Blackout Kicks strike an additional $s2 targets at $s3% effectiveness, and your Spinning Crane Kick heals $s4 nearby allies for $s5% of the damage done
+    burst_of_life                  = { 101098,  399226, 1 }, -- When Life Cocoon expires, it releases a burst of mist that restores $s1 health to $s2 nearby allies
+    calming_coalescence            = { 101095,  388218, 1 }, -- The absorb amount of Life Cocoon is increased by $s1%
+    celestial_harmony              = { 101128,  343655, 1 }, -- While active, Yu'lon and Chi'Ji heal up to $s1 nearby targets with Enveloping Breath when you cast Enveloping Mist, healing for $s2 over $s3 sec, and increasing the healing they receive from you by $s4%. When activated, Yu'lon and Chi'Ji apply Chi Cocoons to $s5 targets within $s6 yds, absorbing $s7 damage for $s8 sec
+    chi_harmony                    = { 101121,  448392, 1 }, -- Renewing Mist increases its target's healing received from you by $s1% for the first $s2 sec of its duration, but cannot jump to a new target during this time
+    chrysalis                      = { 101098,  202424, 1 }, -- Reduces the cooldown of Life Cocoon by $s1 sec
+    crane_style                    = { 101097,  446260, 1 }, -- Rising Sun Kick now kicks up a Gust of Mist to heal $s1 allies within $s2 yds for $s3. Spinning Crane Kick and Blackout Kick have a chance to kick up a Gust of Mist to heal $s4 ally within $s5 yds for $s6
+    dance_of_chiji                 = { 101106,  438439, 1 }, -- Your spells and abilities have a chance to make your next Spinning Crane Kick deal an additional $s1% damage
+    dancing_mists                  = { 101112,  388701, 1 }, -- Renewing Mist has a $s1% chance to immediately spread to an additional target when initially cast or when traveling to a new target
+    deep_clarity                   = { 101122,  446345, 1 }, -- After you fully consume Thunder Focus Tea, your next Vivify triggers Zen Pulse
+    emperors_favor                 = { 101118,  471761, 1 }, -- Sheilun's Gift's healing is increased by $s1% and its cast time is reduced by $s2%, but it now only heals a single ally
+    energizing_brew                = { 101130,  422031, 1 }, -- Mana Tea now channels $s1% faster and generates $s2% more Mana
+    enveloping_mist                = { 101134,  124682, 1 }, -- Wraps the target in healing mists, healing for $s1 over $s2 sec, and increasing healing received from your other spells by $s3%. Applies Renewing Mist for $s4 seconds to an ally within $s5 yds
+    focused_thunder                = { 101115,  197895, 1 }, -- Thunder Focus Tea now empowers your next $s1 spells
+    gift_of_the_celestials         = { 101113,  388212, 1 }, -- Reduces the cooldown of Invoke Chi-Ji, the Red Crane by $s1 min, but decreases its duration to $s2 sec
+    healing_elixir                 = { 101109,  122280, 1 }, -- You consume a healing elixir when you drop below $s1% health or generate excess healing elixirs, instantly healing you for $s2% of your maximum health. You generate $s3 healing elixir every $s4 sec, stacking up to $s5 times
+    invigorating_mists             = { 101110,  274586, 1 }, -- Vivify heals all allies with your Renewing Mist active for $s1, reduced beyond $s2 allies
+    invoke_chiji_the_red_crane     = { 101129,  325197, 1 }, -- Summon an effigy of Chi-Ji for $s1 sec that kicks up $s2 Gust of Mists when you Blackout Kick, Rising Sun Kick, or Spinning Crane Kick, healing up to $s3 allies for $s4, and reducing the cost and cast time of your next Enveloping Mist by $s5%, stacking. Chi-Ji's presence makes you immune to movement impairing effects
+    invoke_yulon_the_jade_serpent  = { 101129,  322118, 1 }, -- Summons an effigy of Yu'lon, the Jade Serpent for $s1 sec. Yu'lon will heal injured allies with Soothing Breath, healing the target and up to $s2 allies for $s3 over $s4 sec. Enveloping Mist costs $s5% less mana while Yu'lon is active
+    invokers_delight               = { 101123,  388661, 1 }, -- You gain $s1% haste for $s2 sec after summoning your Celestial
+    jade_bond                      = { 101113,  388031, 1 }, -- Chi Cocoons now apply Enveloping Mist for $s1 sec when they expire or are consumed, and Chi-Ji's Gusts of Mists healing is increased by $s2% and Yu'lon's Soothing Breath healing is increased by $s3%
+    jade_empowerment               = { 101106,  467316, 1 }, -- Casting Thunder Focus Tea increases your next Crackling Jade Lightning's damage by $s1% and causes it to chain to $s2 additional enemies at $s3% effectiveness
+    jadefire_stomp                 = { 101101,  388193, 1 }, -- Strike the ground fiercely to expose a path of jade for $s2 sec, dealing $s$s3 Nature damage to up to $s4 enemies, and restoring $s5 health to up to $s6 allies within $s7 yds caught in the path. Your abilities have a $s8% chance of resetting the cooldown of Jadefire Stomp while fighting within the path
+    jadefire_teachings             = { 101102,  467293, 1 }, -- After casting Jadefire Stomp or Thunder Focus Tea, Ancient Teachings transfers an additional $s1% damage to healing for $s2 sec. While Jadefire Teachings is active, your Stamina is increased by $s3%
+    legacy_of_wisdom               = { 101118,  404408, 1 }, -- Sheilun's Gift heals $s1 additional allies and its cast time is reduced by $s2 sec
+    life_cocoon                    = { 101096,  116849, 1 }, -- Encases the target in a cocoon of Chi energy for $s1 sec, absorbing $s2 damage and increasing all healing over time received by $s3%. Applies Renewing Mist and Enveloping Mist to the target
+    lifecycles                     = { 101130,  197915, 1 }, -- Vivify has a $s1% chance to cause your next Rising Sun Kick or Enveloping Mist to generate $s2 stack of Mana Tea. Enveloping Mist and Rising Sun Kick have a $s3% chance to cause your next Vivify to generate $s4 stack of Mana Tea
+    lotus_infusion                 = { 101121,  458431, 1 }, -- Allies with Renewing Mist receive $s1% more healing from you and Renewing Mist's duration is increased by $s2 sec
+    mana_tea                       = { 101132,  115869, 1 }, -- For every $s1 Mana you spend, you gain $s2 stack of Mana Tea, with a chance equal to your critical strike chance to generate $s3 extra stack. Mana Tea: Consumes $s6 stack of Mana Tea per $s7 sec to restore $s8 Mana and reduces the Mana cost of your spells by $s9% for $s10 sec per stack of Mana Tea consumed after drinking. Can be cast while moving, but movement speed is reduced by $s11% while channeling
+    mending_proliferation          = { 101125,  388509, 1 }, -- Each time Enveloping Mist heals, its healing bonus has a $s1% chance to spread to an injured ally within $s2 yds
+    mist_wrap                      = { 101093,  197900, 1 }, -- Increases Enveloping Mist's duration by $s1 sec and its healing bonus by $s2%
+    mists_of_life                  = { 101099,  388548, 1 }, -- Life Cocoon applies Renewing Mist and Enveloping Mist to the target
+    misty_peaks                    = { 101114,  388682, 2 }, -- Renewing Mist's heal over time effect has a $s1% chance to apply Enveloping Mist for $s2 sec
+    overflowing_mists              = { 101094,  388511, 2 }, -- Your Enveloping Mists heal the target for $s1% of their maximum health each time they take direct damage
+    peaceful_mending               = { 101116,  388593, 1 }, -- Allies targeted by Soothing Mist receive $s1% more healing from your Enveloping Mist and Renewing Mist effects
+    peer_into_peace                = { 101127,  440008, 1 }, -- $s1% of your overhealing done onto targets with Soothing Mist is spread to $s2 nearby injured allies. Soothing Mist now follows the target of your Enveloping Mist or Vivify and its channel time is increased by $s3 sec
+    pool_of_mists                  = { 101127,  173841, 1 }, -- Renewing Mist now has $s1 charges and reduces the remaining cooldown of Rising Sun Kick by $s2 sec. Rising Sun Kick now reduces the remaining cooldown of Renewing Mist by $s3 sec
+    rapid_diffusion                = { 101111,  388847, 2 }, -- Rising Sun Kick and Enveloping Mist apply Renewing Mist for $s1 seconds to an ally within $s2 yds
+    refreshing_jade_wind           = { 101093,  457397, 1 }, -- Thunder Focus Tea summons a whirling tornado around you, causing $s1 healing every $s2 sec for $s3 sec on to up to $s4 allies within $s5 yards
+    refreshment                    = { 101095,  467270, 1 }, -- Life Cocoon grants up to $s1 stacks of Mana Tea and applies $s2 stacks of Healing Elixir to its target
+    renewing_mist                  = { 101107,  115151, 1 }, -- Surrounds the target with healing mists, restoring $s1 health over $s2 sec. If Renewing Mist heals a target past maximum health, it will travel to another injured ally within $s3 yds
+    resplendent_mist               = { 101126,  388020, 2 }, -- Gust of Mists has a $s1% chance to do $s2% more healing
+    restoral                       = { 101131,  388615, 1 }, -- Heals all party and raid members within $s1 yds for $s2 and clears them of all harmful Poison and Disease effects. Castable while stunned. Healing reduced beyond $s3 targets
+    revival                        = { 101131,  115310, 1 }, -- Heals all party and raid members within $s1 yds for $s2 and clears them of $s3 harmful Magic, all Poison, and all Disease effects. Healing reduced beyond $s4 targets
+    rising_mist                    = { 101117,  274909, 1 }, -- Rising Sun Kick heals all allies with your Renewing Mist and Enveloping Mist for $s1, and extends those effects by $s2 sec, up to $s3% of their original duration
+    rushing_wind_kick              = { 101102,  467307, 1 }, -- Kick up a powerful gust of wind, dealing $s$s2 Nature damage in a $s3 yd cone to enemies in front of you, split evenly among them. Damage is increased by $s4% for each target hit, up to $s5%. Grants Rushing Winds for $s6 sec, increasing Renewing Mist's healing by $s7%
+    secret_infusion                = { 101124,  388491, 2 }, -- After using Thunder Focus Tea, your next spell gives $s1% of a stat for $s2 sec: Enveloping Mist: Critical strike Renewing Mist: Haste Vivify: Mastery Rising Sun Kick: Versatility Expel Harm: Versatility
+    shaohaos_lessons               = { 101119,  400089, 1 }, -- Each time you cast Sheilun's Gift, you learn one of Shaohao's Lessons for up to $s1 sec, with the duration based on how many clouds of mist are consumed. Lesson of Doubt: Your spells and abilities deal up to $s2% more healing and damage to targets, based on their current health. Lesson of Despair: Your Critical Strike is increased by $s3% while above $s4% health. Lesson of Fear: Decreases your damage taken by $s5% and increases your Haste by $s6%. Lesson of Anger: $s7% of the damage or healing you deal is duplicated every $s8 sec
+    sheiluns_gift                  = { 101120,  399491, 1 }, -- Draws in all nearby clouds of mist, healing the friendly target and up to $s1 nearby allies for $s2 per cloud absorbed. A cloud of mist is generated every $s3 sec while in combat
+    tea_of_plenty                  = { 101103,  388517, 1 }, -- Thunder Focus Tea also empowers $s1 additional Enveloping Mist, Expel Harm, or Rising Sun Kick at random
+    tea_of_serenity                = { 101103,  393460, 1 }, -- Thunder Focus Tea also empowers $s1 additional Renewing Mist, Enveloping Mist, or Vivify at random
+    tear_of_morning                = { 101117,  387991, 1 }, -- Casting Vivify or Enveloping Mist on a target with Renewing Mist has a $s1% chance to spread the Renewing Mist to another target. Your Vivify healing through Renewing Mist is increased by $s2% and your Enveloping Mist also heals allies with Renewing Mist for $s3% of its healing
+    thunder_focus_tea              = { 101133,  116680, 1 }, -- Receive a jolt of energy, empowering your next spell cast: Enveloping Mist: Immediately heals for $s1 and is instant cast. Renewing Mist: Duration increased by $s2 sec. Vivify: No mana cost. Rising Sun Kick: Cooldown reduced by $s3 sec. Expel Harm: Transfers $s4% additional healing into damage and creates a Chi Cocoon absorbing $s5 damage
+    unison                         = { 101125,  388477, 1 }, -- Soothing Mist heals a second injured ally within $s1 yds for $s2% of the amount healed
+    uplifted_spirits               = { 101092,  388551, 1 }, -- Vivify critical strikes and Rising Sun Kicks reduce the remaining cooldown on Revival by $s1 sec, and Revival heals targets for $s2% of Revival's heal over $s3 sec
+    veil_of_pride                  = { 101119,  400053, 1 }, -- Increases Sheilun's Gift cloud of mist generation to every $s1 sec
+    yulons_whisper                 = { 101100,  388038, 1 }, -- While channeling Mana Tea you exhale the breath of Yu'lon, healing up to $s1 allies within $s2 yards for $s3 every $s4 sec
+    zen_pulse                      = { 101108,  446326, 1 }, -- Renewing Mist's heal over time has a chance to cause your next Vivify to also trigger a Zen Pulse on its target and all allies with Renewing Mist, healing them for $s1 increased by $s2% per Renewing Mist active, up to $s3%
 
-    -- Master of Harmony
-    aspect_of_harmony             = { 101223, 450508, 1, "master_of_harmony" }, -- Store vitality from 10% of your damage dealt and 30% of your healing. Vitality stored from overhealing is reduced. For 10 sec after casting Thunder Focus Tea your spells and abilities draw upon the stored vitality to deal 40% additional healing over 8 sec.
-    balanced_stratagem            = { 101230, 450889, 1 }, -- Casting a Physical spell or ability increases the damage and healing of your next Fire or Nature spell or ability by 3%, and vice versa. Stacks up to 5.
-    clarity_of_purpose            = { 101228, 451017, 1 }, -- Casting Vivify stores 9,403 vitality, increased based on your recent Gusts of Mist.
-    coalescence                   = { 101227, 450529, 1 }, -- When Aspect of Harmony deals damage or heals, it has a chance to spread to a nearby target. When you directly attack or heal an affected target, it has a chance to intensify. Targets damaged or healed by your Aspect of Harmony take 20% increased damage or healing from you.
-    endless_draught               = { 101225, 450892, 1 }, -- Thunder Focus Tea has 1 additional charge.
-    harmonic_gambit               = { 101224, 450870, 1 }, -- During Aspect of Harmony, Rising Sun Kick, Blackout Kick, and Tiger Palm also withdraw vitality to damage enemies.
-    manifestation                 = { 101222, 450875, 1 }, -- Chi Burst and Chi Wave deal 50% increased damage and healing.
-    mantra_of_purity              = { 101229, 451036, 1 }, -- When cast on yourself, your single-target healing spells heal for 10% more and restore an additional 15,988 health over 6 sec.
-    mantra_of_tenacity            = { 101229, 451029, 1 }, -- Fortifying Brew grants 20% Stagger.
-    overwhelming_force            = { 101220, 451024, 1 }, -- Rising Sun Kick, Blackout Kick, and Tiger Palm deal 15% additional damage to enemies in a line in front of you. Damage reduced above 5 targets.
-    path_of_resurgence            = { 101226, 450912, 1 }, -- Chi Wave increases vitality stored by 25% for 5 sec.
-    purified_spirit               = { 101224, 450867, 1 }, -- When Aspect of Harmony ends, any remaining vitality is expelled as healing over 8 sec, split among nearby targets.
-    roar_from_the_heavens         = { 101221, 451043, 1 }, -- Tiger's Lust grants 20% movement speed to up to 2 allies near its target.
-    tigers_vigor                  = { 101221, 451041, 1 }, -- Casting Tiger's Lust reduces the remaining cooldown on Roll by 5 sec.
-    way_of_a_thousand_strikes     = { 101226, 450965, 1 }, -- Rising Sun Kick, Blackout Kick, and Tiger Palm contribute 30% additional vitality.
+    -- Conduit Of The Celestials
+    august_dynasty                 = { 101235,  442818, 1 }, -- Casting Jadefire Stomp increases the damage or healing of your next Rising Sun Kick by $s1% or Vivify by $s2%
+    celestial_conduit              = { 101243,  443028, 1 }, -- The August Celestials empower you, causing you to radiate $s2 healing onto up to $s3 injured allies and $s$s4 Nature damage onto enemies within $s5 yds over $s6 sec, split evenly among them. Healing and damage increased by $s7% per target, up to $s8%. You may move while channeling, but casting other healing or damaging spells cancels this effect
+    chijis_swiftness               = { 101240,  443566, 1 }, -- Your movement speed is increased by $s1% during Celestial Conduit and by $s2% for $s3 sec after being assisted by any Celestial
+    courage_of_the_white_tiger     = { 101242,  443087, 1 }, -- Tiger Palm and Vivify have a chance to cause Xuen to claw a nearby enemy for $s$s2 Physical damage, healing a nearby ally for $s3% of the damage done. Invoke Yu'lon, the Jade Serpent or Invoke Chi-Ji, the Red Crane guarantees your next cast activates this effect
+    flight_of_the_red_crane        = { 101234,  443255, 1 }, -- Refreshing Jade Wind and Spinning Crane Kick have a chance to cause Chi-Ji to grant you a stack of Mana Tea and quickly rush to $s1 allies, healing each target for $s2
+    heart_of_the_jade_serpent      = { 101237,  443294, 1 }, -- Sheilun's Gift calls upon Yu'lon to increase the cooldown recovery rate of Renewing Mist, Rising Sun Kick, Life Cocoon, and Thunder Focus Tea by $s1% for up to $s2 sec, based on the clouds of mist consumed
+    inner_compass                  = { 101235,  443571, 1 }, -- You switch between alignments after an August Celestial assists you, increasing a corresponding secondary stat by $s1%. Crane Stance: Haste Tiger Stance: Critical Strike Ox Stance: Versatility Serpent Stance: Mastery
+    jade_sanctuary                 = { 101238,  443059, 1 }, -- You heal for $s1% of your maximum health instantly when you activate Celestial Conduit and receive $s2% less damage for its duration. This effect lingers for an additional $s3 sec after Celestial Conduit ends
+    niuzaos_protection             = { 101238,  442747, 1 }, -- Fortifying Brew grants you an absorb shield for $s1% of your maximum health
+    restore_balance                = { 101233,  442719, 1 }, -- Gain Refreshing Jade Wind while Chi-Ji, the Red Crane or Yu'lon, the Jade Serpent is active
+    strength_of_the_black_ox       = { 101241,  443110, 1 }, -- After Xuen assists you, your next Enveloping Mist's cast time is reduced by $s1% and causes Niuzao to grant an absorb shield to $s2 nearby allies for $s3% of your maximum health
+    temple_training                = { 101236,  442743, 1 }, -- The healing of Enveloping Mist and Vivify is increased by $s1%
+    unity_within                   = { 101239,  443589, 1 }, -- Celestial Conduit can be recast once during its duration to call upon all of the August Celestials to assist you at $s1% effectiveness. Unity Within is automatically cast when Celestial Conduit ends if not used before expiration
+    xuens_guidance                 = { 101236,  442687, 1 }, -- Teachings of the Monastery has a $s2% chance to refund a charge when consumed$s$s3 The damage of Tiger Palm is increased by $s4%
+    yulons_knowledge               = { 101233,  443625, 1 }, -- Refreshing Jade Wind's duration is increased by $s1 sec
 
-    -- Conduit of the Celestials
-    august_dynasty                = { 101235, 442818, 1 }, -- Casting Jadefire Stomp increases the damage or healing of your next Rising Sun Kick by 30% or Vivify by 50%. This effect can only activate once every 8 sec.
-    celestial_conduit             = { 101243, 443028, 1, "conduit_of_the_celestials" }, -- The August Celestials empower you, causing you to radiate 465,318 healing onto up to 5 injured allies and 93,969 Nature damage onto enemies within 20 yds over 3.5 sec, split evenly among them. Healing and damage increased by 6% per target, up to 30%. You may move while channeling, but casting other healing or damaging spells cancels this effect.
-    chijis_swiftness              = { 101240, 443566, 1 }, -- Your movement speed is increased by 75% during Celestial Conduit and by 15% for 3 sec after being assisted by any Celestial.
-    courage_of_the_white_tiger    = { 101242, 443087, 1 }, -- Tiger Palm and Vivify have a chance to cause Xuen to claw a nearby enemy for 38,511 Physical damage, healing a nearby ally for 200% of the damage done. Invoke Yu'lon, the Jade Serpent or Invoke Chi-Ji, the Red Crane guarantees your next cast activates this effect.
-    flight_of_the_red_crane       = { 101234, 443255, 1 }, -- Refreshing Jade Wind and Spinning Crane Kick have a chance to cause Chi-Ji to grant you a stack of Mana Tea and quickly rush to 5 allies, healing each target for 13,324.
-    heart_of_the_jade_serpent     = { 101237, 443294, 1 }, -- Sheilun's Gift calls upon Yu'lon to decrease the cooldown time of Renewing Mist, Rising Sun Kick, Life Cocoon, and Thunder Focus Tea by 75% for up to 8 sec, based on the clouds of mist consumed.
-    inner_compass                 = { 101235, 443571, 1 }, -- You switch between alignments after an August Celestial assists you, increasing a corresponding secondary stat by 2%. Crane Stance: Haste Tiger Stance: Critical Strike Ox Stance: Versatility Serpent Stance: Mastery
-    jade_sanctuary                = { 101238, 443059, 1 }, -- You heal for 10% of your maximum health instantly when you activate Celestial Conduit and receive 15% less damage for its duration. This effect lingers for an additional 8 sec after Celestial Conduit ends.
-    niuzaos_protection            = { 101238, 442747, 1 }, -- Fortifying Brew grants you an absorb shield for 25% of your maximum health.
-    restore_balance               = { 101233, 442719, 1 }, -- Gain Refreshing Jade Wind while Chi-Ji, the Red Crane or Yu'lon, the Jade Serpent is active.
-    strength_of_the_black_ox      = { 101241, 443110, 1 }, -- After Xuen assists you, your next Enveloping Mist's cast time is reduced by 50% and causes Niuzao to grant an absorb shield to 5 nearby allies for 3% of your maximum health.
-    temple_training               = { 101236, 442743, 1 }, -- The healing of Enveloping Mist and Vivify is increased by 6%.
-    unity_within                  = { 101239, 443589, 1 }, -- Celestial Conduit can be recast once during its duration to call upon all of the August Celestials to assist you at 200% effectiveness. Unity Within is automatically cast when Celestial Conduit ends if not used before expiration.
-    xuens_guidance                = { 101236, 442687, 1 }, -- Teachings of the Monastery has a 15% chance to refund a charge when consumed. The damage of Tiger Palm is increased by 10%.
-    yulons_knowledge              = { 101233, 443625, 1 }, -- Refreshing Jade Wind's duration is increased by 6 sec.
+    -- Master Of Harmony
+    aspect_of_harmony              = { 101223,  450508, 1 }, -- Store vitality from $s1% of your damage dealt and $s2% of your healing. Vitality stored from overhealing is reduced. For $s3 sec after casting Thunder Focus Tea your spells and abilities draw upon the stored vitality to deal $s4% additional healing over $s5 sec
+    balanced_stratagem             = { 101230,  450889, 1 }, -- Casting a Physical spell or ability increases the damage and healing of your next Fire or Nature spell or ability by $s1%, and vice versa. Stacks up to $s2
+    clarity_of_purpose             = { 101228,  451017, 1 }, -- Casting Vivify stores $s1 vitality, increased based on your recent Gusts of Mist
+    coalescence                    = { 101227,  450529, 1 }, -- When Aspect of Harmony heals, it has a chance to spread to a nearby ally. When you directly heal an affected target, it has a chance to intensify$s$s2 Targets damaged or healed by your Aspect of Harmony take $s3% increased damage or healing from you
+    endless_draught                = { 101225,  450892, 1 }, -- Thunder Focus Tea has $s1 additional charge
+    harmonic_gambit                = { 101224,  450870, 1 }, -- During Aspect of Harmony, Rising Sun Kick, Blackout Kick, and Tiger Palm also withdraw vitality to damage enemies for an additional $s1% over $s2 sec
+    manifestation                  = { 101222,  450875, 1 }, -- Chi Burst and Chi Wave deal $s1% increased damage and healing
+    mantra_of_purity               = { 101229,  451036, 1 }, -- When cast on yourself, your single-target healing spells heal for $s1% more and restore an additional $s2 health over $s3 sec
+    mantra_of_tenacity             = { 101229,  451029, 1 }, -- Fortifying Brew grants $s1% Stagger
+    overwhelming_force             = { 101220,  451024, 1 }, -- Rising Sun Kick, Blackout Kick, and Tiger Palm deal $s1% additional damage to enemies in a line in front of you. Damage reduced above $s2 targets
+    path_of_resurgence             = { 101226,  450912, 1 }, -- Chi Wave increases vitality stored by $s1% for $s2 sec
+    purified_spirit                = { 101224,  450867, 1 }, -- When Aspect of Harmony ends, any remaining vitality is expelled as healing over $s1 sec, split among nearby targets
+    roar_from_the_heavens          = { 101221,  451043, 1 }, -- Tiger's Lust grants $s1% movement speed to up to $s2 allies near its target
+    tigers_vigor                   = { 101221,  451041, 1 }, -- Casting Tiger's Lust reduces the remaining cooldown on Roll by $s1 sec
+    way_of_a_thousand_strikes      = { 101226,  450965, 1 }, -- Rising Sun Kick, Blackout Kick, and Tiger Palm contribute $s1% additional vitality
 } )
 
 -- PvP Talents
 spec:RegisterPvpTalents( {
-    absolute_serenity = 5642, -- (455945)
-    counteract_magic  =  679, -- (353502)
-    dematerialize     = 5398, -- (353361)
-    eminence          =   70, -- (353584)
-    feather_feet      = 5669, -- (474441)
-    grapple_weapon    = 3732, -- (233759) You fire off a rope spear, grappling the target's weapons and shield, returning them to you for 5 sec.
-    healing_sphere    =  683, -- (205234) Coalesces a Healing Sphere out of the mists at the target location after 1.5 sec. If allies walk through it, they consume the sphere, healing themselves for 47,966 and dispelling all harmful periodic magic effects. Maximum of 3 Healing Spheres can be active by the Monk at any given time.
-    jadefire_accord   = 5565, -- (406888)
-    mighty_ox_kick    = 5539, -- (202370) You perform a Mighty Ox Kick, hurling your enemy a distance behind you.
-    peaceweaver       = 5395, -- (353313)
-    rodeo             = 5645, -- (355917)
-    zen_focus_tea     = 1928, -- (468430)
-    zen_spheres       = 5603, -- (410777) Forms a sphere of Hope or Despair above the target. Only one of each sphere can be active at a time.  Sphere of Hope: Heals for 26,648 and increases your healing done to the target by 15%.  Sphere of Despair: Deals 27,430 Nature damage, Target deals 3% less damage, and takes 10% increased damage from all sources.
+    absolute_serenity              = 5642, -- (455945)
+    counteract_magic               =  679, -- (353502)
+    dematerialize                  = 5398, -- (353361) Demateralize into mist while stunned, reducing damage taken by $s1%. Each second you remain stunned reduces this bonus by $s2%
+    eminence                       =   70, -- (353584)
+    feather_feet                   = 5669, -- (474441)
+    grapple_weapon                 = 3732, -- (233759) You fire off a rope spear, grappling the target's weapons and shield, returning them to you for $s1 sec
+    healing_sphere                 =  683, -- (205234)
+    jadefire_accord                = 5565, -- (406888)
+    mighty_ox_kick                 = 5539, -- (202370) You perform a Mighty Ox Kick, hurling your enemy a distance behind you
+    peaceweaver                    = 5395, -- (353313)
+    rodeo                          = 5645, -- (355917) Every $s1 sec while Clash is off cooldown, your next Clash can be reactivated immediately to wildly Clash an additional enemy. This effect can stack up to $s2 times
+    zen_focus_tea                  = 1928, -- (468430)
+    zen_spheres                    = 5603, -- (410777)
 } )
 
 -- Auras
@@ -338,6 +340,11 @@ spec:RegisterAuras( {
         duration = 3600,
         max_stack = 2
     },
+    heart_of_the_jade_serpent_cdr = {
+        id = 443421,
+        duration = 8,
+        max_stack = 1
+    },
     invoke_chiji_the_red_crane = { -- This is not the presence of the totem, but the buff stacks gained while totem is up.
         id = 343820,
         duration = 20,
@@ -406,7 +413,9 @@ spec:RegisterAuras( {
         id = 117907,
     },
     mystic_touch = {
-        id = 8647,
+        id = 113746,
+        duration = 3600,
+        max_stack = 1
     },
     overflowing_mists = {
         id = 388513,
@@ -617,7 +626,7 @@ spec:RegisterAuras( {
     },
     vivacious_vivification = {
         id = 392883,
-        duration = 3600,
+        duration = 20,
         max_stack = 1
     },
     yulons_whisper = { -- TODO: If needed, this would be triggered by TFT cast.
@@ -646,29 +655,54 @@ spec:RegisterAuras( {
     },
 } )
 
--- The War Within
-spec:RegisterGear( "tww2", 229301, 229299, 229298, 229297, 229296 )
-
--- Dragonflight
-spec:RegisterGear( "tier31", 207243, 207244, 207245, 207246, 207248, 217188, 217190, 217186, 217187, 217189 )
-spec:RegisterAuras( {
-    chi_harmony = {
-        id = 423439,
-        duration = 8,
-        max_stack = 1
-    }
-} )
-spec:RegisterGear( "tier30", 202509, 202507, 202506, 202505, 202504 )
-spec:RegisterAuras( {
-    soulfang_infusion = {
-        id = 410007,
-        duration = 3,
-        max_stack = 1
+spec:RegisterGear({
+    -- The War Within
+    tww3 = {
+        items = { 237673, 237671, 237676, 237674, 237672 },
+        auras = {
+            -- Master of Harmony
+            -- Mistweaver
+            potential_energy = {
+                id = 1239483,
+                duration = 30,
+                max_stack = 2
+            },
+            -- Conduit of the Celestials
+            jade_serpents_blessing = {
+                id = 1238901,
+                duration = 4,
+                max_stack = 1
+            },
+        }
     },
-    soulfang_vitality = {
-        id = 410082,
-        duration = 6,
-        max_stack = 1
+    tww2 = {
+        items = { 229301, 229299, 229298, 229297, 229296 }
+    },
+    -- Dragonflight
+    tier31 = {
+        items = { 207243, 207244, 207245, 207246, 207248, 217188, 217190, 217186, 217187, 217189 },
+        auras = {
+            chi_harmony = {
+                id = 423439,
+                duration = 8,
+                max_stack = 1
+            }
+        }
+    },
+    tier30 = {
+        items = { 202509, 202507, 202506, 202505, 202504 },
+        auras = {
+            soulfang_infusion = {
+                id = 410007,
+                duration = 3,
+                max_stack = 1
+            },
+            soulfang_vitality = {
+                id = 410082,
+                duration = 6,
+                max_stack = 1
+            }
+        }
     }
 } )
 
@@ -685,7 +719,7 @@ spec:RegisterTotems( {
 spec:RegisterStateTable( "gust_of_mist", setmetatable( {}, {
     __index = function( t,  k)
         if k == "count" then
-            t[ k ] = GetSpellCount( action.sheiluns_gift.id )
+            t[ k ] = GetSpellCastCount( action.sheiluns_gift.id )
             return t[ k ]
         end
     end
@@ -1178,20 +1212,22 @@ spec:RegisterAbilities( {
         spendType = "mana",
 
         handler = function ()
-                if talent.rapid_diffusion.enabled then
-                    if solo then applyBuff( "renewing_mist", 3 * talent.rapid_diffusion.rank )
-                    else active_dot.renewing_mist = max( group_members, active_dot.renewing_mist + 1 ) end
-                end
-                if pet.chiji.up then
-                    addStack( "invoke_chiji" )
-                    gust_of_mist.count = min( 10, gust_of_mist.count + 1 )
-                    -- if talent.jade_bond.enabled then reduceCooldown( talent.invoke_chiji.enabled and "invoke_chiji" or "invoke_yulon", 0.5 ) end
-                end
+            if talent.rapid_diffusion.enabled then
+                if solo then applyBuff( "renewing_mist", 3 * talent.rapid_diffusion.rank )
+                else active_dot.renewing_mist = max( group_members, active_dot.renewing_mist + 1 ) end
+            end
+            if pet.chiji.up then
+                addStack( "invoke_chiji" )
+                gust_of_mist.count = min( 10, gust_of_mist.count + 1 )
+                -- if talent.jade_bond.enabled then reduceCooldown( talent.invoke_chiji.enabled and "invoke_chiji" or "invoke_yulon", 0.5 ) end
+            end
 
-                if buff.lifecycles_em_rsk.up then
-                    addStack( "mana_tea_stack" )
-                    removeBuff( "lifecycles_em_rsk" )
-                end
+            if buff.lifecycles_em_rsk.up then
+                addStack( "mana_tea_stack" )
+                removeBuff( "lifecycles_em_rsk" )
+            end
+
+            if talent.vivacious_vivification.enabled then applyBuff( "vivacious_vivification" ) end
         end,
 
         copy = "rushing_wind_kick"
@@ -1342,7 +1378,12 @@ spec:RegisterAbilities( {
             if talent.jadefire_teachings.enabled then applyBuff( "jadefire_teachings" ) end
             if talent.refreshing_jade_wind.enabled then applyBuff( "refreshing_jade_wind" ) end
             if set_bonus.tier30_4pc > 0 or set_bonus.tier31_4pc > 0 then applyBuff( "soulfang_vitality" ) end
-            if talent.aspect_of_harmony.enabled then applyBuff( "aspect_of_harmony" ) end
+            if hero_tree.master_of_harmony then
+                if talent.aspect_of_harmony.enabled then applyBuff( "aspect_of_harmony" ) end
+                if set_bonus.tww3 >= 4 then
+                    addStack( "potential_energy", 2 )
+                end
+            end
         end,
     },
 
@@ -1362,6 +1403,9 @@ spec:RegisterAbilities( {
                 applyBuff( "eye_of_the_tiger" )
             end
             addStack( "teachings_of_the_monastery", nil, talent.awakened_jadefire.enabled and buff.jadefire_stomp.up and 2 or 1 )
+            if set_bonus.tww3 >= 2 then
+                removeStack( "potential_energy" )
+            end
         end,
     },
 
@@ -1408,7 +1452,6 @@ spec:RegisterAbilities( {
     },
 } )
 
-
 spec:RegisterSetting( "experimental_msg", nil, {
     type = "description",
     name = "|cFFFF0000警告|r：插件中的治疗仅专注于DPS输出。这在单人游戏或在团队/副本中你的治疗不太关键的空闲时段更有用。"
@@ -1424,17 +1467,6 @@ spec:RegisterSetting( "save_faeline", false, {
         Hekili:GetSpellLinkWithTexture( spec.auras.awakened_jadefire.id ), Hekili:GetSpellLinkWithTexture( spec.talents.jadefire_stomp[2] ) ),
     width = "full",
 } )
-
---[[ spec:RegisterSetting( "roll_movement", 5, {
-    type = "range",
-    name = strformat( "%s: 距离检测", Hekili:GetSpellLinkWithTexture( 109132 ), Hekili:GetSpellLinkWithTexture( 115008 ) ),
-    desc = strformat( "如果设置大于0，当你的目标距离至少该值时，%s（和 %s）才可能被推荐。", Hekili:GetSpellLinkWithTexture( 109132 ),
-        Hekili:GetSpellLinkWithTexture( 115008 ) ),
-    min = 0,
-    max = 100,
-    step = 1,
-    width = "full"
-} ) ]]
 
     spec:RegisterStateExpr( "distance_check", function()
         return target.minR > 0
@@ -1484,7 +1516,5 @@ spec:RegisterOptions( {
 
     strict = false
 } )
-
-
 
 spec:RegisterPack( "织雾Simc", 20250329, [[Hekili:TR16VnoUr8)wcoaNK724ZpYZIKa0hFOxUUhkQ3I9BsMrI2MRLivjPC2uyO)27qkBjskszN2nO7hUVKKvCMHdhoZV5b3OXrFkAwksIJ(TjJMC1OPtUB44RgD7OjrZKVwGJMvGswJwc)bfLd)8JeH8fmAdMRw61mgkvjcbRKNalhn75ssM8xOrp7vUaLf4e4J3mkA2ksAkUMsSijA2FfJYW8Q5fCcJtKeSOAoIJRM)x(7ZUa(cMkXPvZz0SxREQ6jqWxEX4Xxm6U)q18pIwde(p(8VwnpHrfGwcud0nNJlYqjQ1M9RwCDnW1)SqPJvZFcLIxquB1mjlVqXvgsVzsqLOsrlNJUyYuGZXJhoA4vnFE0Dxm5wdbUGbNJpHrjRi0LWXGTae1kyHpYOiq34TNGr3CX0raRFsT8NraFFMib2IMLbNcH(ccVavMjH)830xyOejHr12sepEfIMglKCYA4catrpNHtJ(trsWkBsCPahtK4CHdrtnj65mglnErj)vhQU0IkmxG5RHJMdvxzsvgz5kPi(lLPlZbBOdPxBsQY2R3AhIUXKienbdhtuwCcklZHYBT0p0Yy2IyWKKS294ENjHfS6FBrX4rksA)0SeWzeZjiiKGKJJLS4C0xJtwH4lvUO3)q18LjPdHp2kzoMIFbmqX5WLOwQJdk1ni4xWNhkXO4YIwHOoNX1)JyLZqTlrCDK4cwsPigyrl9jbLEbwoeCd)czOs0k)KefdgQAjn4MKWruSEdMgCdoPAUalLkh9HcaziEbcNrOG382T7dGgIEbcqP404VSluB4ozvnFq18NlxSWdjPSxOwsz)kQJDDOvxX4HgLCApVneiuX66d3LbpCkMGJeOx5A8OhHl7PEnJ9EzHy1wXRo6n6()R2hTVg8PcooHL)mQlMHxxElGcWOf)Cjx4gX66bWuUtyzlJ79Jv)vwjwLlaUpuo1qWyH6c81yUyn4hwFP6zzCEVRUY7QaweMscZDZ68dS(gNLxvstX84MinDeeCk3zS3fUQn4QlyxtDh(9z196m04idhPc2lyUcavRC94LBHCWH02zk8hTu0qXufETN7rNT9FJPXfLzcSLa3q2qw8AtMaVS3Gcagd1fTbedrO0fbG0SgWKBsv8wftPqDuJbG10gbDDqbDwdUrcodsDquPoy00sI0c24Kg6(AjMkIxwssvjBAj68AVcFGbxAMoMqvg5ynQzJcEt40jhn2OnMLLNqJdGoL3kCC((smgkKGxGgk5sBV(dZGbGJKSeCIlqz5njAdzUBTKDUQSotjmwMcuEOJJXqoohrOktB18jvZ)XMmR16FlFDeFpCEUEpp7Op(GeMcCzwve8DwPS5k9UJbVSUoI(CoSOxUpB7EyKEDzOjQYH7lpyxsAmr37PGLUGv9Iq9UPhyHadXEGEqL9Jw9UPcDlqimMNw(e6g2ACCDvwTorgXqy6gCgRWSGqRALDbi7Pw5UGGEQzouaQvmAp4onGfoap1vKD(rH(4MQ94I62hR(DkuspGcHrg7K3qFu9Mrb8ACYjT35fYCLW4ojMgCu3NhmfLfEM9bRpmnJmdUqzIUvEEuLdDCbetFlbeHdEpKD77X8VHRB63dVFxdVdxNzB3VWpZWXnvq3Ahpur13CmfuC7rg71gG1BPeCej9qnlzeL5oqJ3A4A40NEAYZiZ5xlWzXRq88JirSVg68zUdhe9w6R0SN1(s1RVu2G5c16Q5HE54XJUlA2liUclwentp7pc0QhxUB2HNUBMFNQMf5)QecrH7kblhOdvcXQ1tNmzfIUelgw90FtpWLXQrt(NzGgW1RFAiOaqSswpRVpgeO7SXF98dUbDBh1zhcp5M2TO6jp2bOjW3Mn4A)AyNwaDuWGTi6AcciF7whDeU)(kDL8T(LChemhHhea9awwDjaVnB74aUxU1x76EfQeDxlWe1i0PIYcLEQ2H6GkqsMTfCQf9VN6tOWPVvY)M35W1aY)BGhvVESEkznGfYtrTh7E8)UnYBuH4nc5E17M61R8)gCfw90VKVpo762qn9Robldz0kLRy8Oz)rYAefTw9wcC2cIAaV1elg2mN5F6HFUEYYvp5BTMsA8V8(jh)b1GvFqQNR6h0dr(bpjCRNH82THYf7FLvDwXo)EG149S2gJL8mRyLjE3PfoJDESoZfBECoZp2(yCwFT5X3m)QZJTzUuZJRz(r7htZs(MpEM5co3VWxSQj8dKfp459XU)H9vxBWO7ByuFV3y7uIY5rXS2w7hSQMzD2Spu)EjpmwjbZh(YKD7EEuuEI33VA72qXQdQNQK33RQHRUv8mWULlP17tDyZdujK15trq7SdE8HPhweWVdlH7NQCyBdqBUo8DtRAEOViMaIXUnHQN(HFy375pVu1Ue05O6xqJIK6hmNaqYCWtxx39()7aaydvZtz0tbqBiQIMQaSrzkeCyRa(Wi)BFBVeQJqiqc)8w38GlF2pDK)n1UFGGsOhORCBWeOLAqUDqCCwVJT2Ev38dUsVP9sDC9bsAnW)qsgCuZg4(lBp19t4yhL0QhDLEE2zNesv3ThEg4X5hunnVx6vdFC65dAuHoM4bhAygpo5h3bwUD7HhGrl1N7yxA9vdoAIbDglHJm8KX2XXW0JeWM63LSMGqplztqH(Z2V5zquttvUw8oXO(pD1K6CdyzR29UJDyX9I4yyYZax1oQH66CWjEBz88TBDH7VSJ1)78q2ATSBm7)hIxgC2rP9q4Chp4UHfbVOTtNQ)UVGeZBl3gh3vPrO3V6E3ARA2fZ(LFx2GUvr9nFlcL5S7ZT944UChm)xdbHtbUNKFpbtNem7nnba2CqPM2b3ACdcNNzamiO19a3nEcZmF1ezu0)5d]] )

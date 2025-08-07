@@ -15,7 +15,7 @@ local GetBuffDataByIndex, GetDebuffDataByIndex = C_UnitAuras.GetBuffDataByIndex,
 local FindAura = AuraUtil.FindAura
 local UnpackAuraData = AuraUtil.UnpackAuraData
 
-local GetSpellBookItemInfo = function(index, bookType)
+local GetSpellBookItemInfo = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
     if info then return info.name, info.iconID, info.spellID end
@@ -580,14 +580,16 @@ function ns.FindUnitDebuffByID( unit, id, filter )
     return UnitDebuffByID( unit, id, filter )
 end
 
-
 function ns.IsActiveSpell( id )
-    local slot = FindSpellBookSlotBySpellID( id )
+
+    local slot, bank = C_SpellBook.FindSpellBookSlotForSpell( id )
     if not slot then return false end
-    local _, _, spellID = GetSpellBookItemInfo( slot, "spell" )
+    local spellInfo = C_SpellBook.GetSpellBookItemInfo( slot, bank )
+
+    local spellID = spellInfo and spellInfo.spellID
+
     return id == spellID
 end
-
 
 function ns.GetUnpackedSpellInfo( spellID )
     if not spellID then
