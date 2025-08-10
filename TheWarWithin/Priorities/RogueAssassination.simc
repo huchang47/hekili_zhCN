@@ -27,7 +27,7 @@ actions+=/variable,name=in_cooldowns,value=dot.kingsbane.ticking|debuff.shiv.up
 # Checking for cooldowns soon
 actions+=/variable,name=cd_soon,value=talent.kingsbane&cooldown.kingsbane.remains<3&!cooldown.kingsbane.ready
 # Pooling Condition all together - [Syrif] - This is where upper_limit_energy is written out
-actions+=/variable,name=not_pooling,value=variable.in_cooldowns|buff.darkest_night.up|(energy.pct>=(80-10*talent.vicious_venoms.rank-30*talent.amplifying_poison))|raid&boss&fight_remains<=20
+actions+=/variable,name=not_pooling,value=variable.in_cooldowns|buff.darkest_night.up|(energy.pct>=(80-10*talent.vicious_venoms.rank-30*talent.amplifying_poison))|boss&fight_remains<=20
 ## Check what the maximum Scent of Blood stacks is currently
 ## actions+=/variable,name=scent_effective_max_stacks,value=(active_enemies*talent.scent_of_blood.rank*2)>?20
 # We are Scent Saturated when our stack count is hitting the maximum
@@ -70,8 +70,8 @@ actions.cds+=/call_action_list,name=items
 # Check for Applicable Shiv usage
 actions.cds+=/call_action_list,name=shiv,if=!buff.darkest_night.up
 # Cast Deathmark if the target will survive long enough
-actions.cds+=/deathmark,if=(variable.deathmark_condition&target.time_to_die>=10)|raid&boss&fight_remains<=20
-actions.cds+=/kingsbane,if=(debuff.shiv.up|cooldown.shiv.remains<6)&(buff.envenom.up|active_enemies>1)&(cooldown.deathmark.remains>=50-15*set_bonus.tww3_fatebound_4pc|dot.deathmark.ticking)|raid&boss&fight_remains<=15
+actions.cds+=/deathmark,if=(variable.deathmark_condition&target.time_to_die>=10)|boss&fight_remains<=20
+actions.cds+=/kingsbane,if=(debuff.shiv.up|cooldown.shiv.remains<6)&(buff.envenom.up|active_enemies>1)&(cooldown.deathmark.remains>=50-15*set_bonus.tww3_fatebound_4pc|dot.deathmark.ticking)|boss&fight_remains<=15
 # Use with shiv or in niche cases at the end of Kingsbane if not already up
 actions.cds+=/thistle_tea,if=!buff.thistle_tea.up&debuff.shiv.remains>=6|!buff.thistle_tea.up&dot.kingsbane.ticking&dot.kingsbane.remains<=6|!buff.thistle_tea.up&fight_remains<=cooldown.thistle_tea.charges*6
 # Potion/Racials/Other misc cooldowns
@@ -111,20 +111,20 @@ actions.direct+=/mutilate,cycle_targets=1,if=variable.use_filler&active_enemies=
 actions.direct+=/mutilate,if=variable.use_filler
 
 # Special Case Trinkets
-actions.items+=/variable,name=base_trinket_condition,value=dot.rupture.ticking&cooldown.deathmark.remains<2&!cooldown.deathmark.ready|dot.deathmark.ticking|raid&boss&fight_remains<=22
+actions.items+=/variable,name=base_trinket_condition,value=dot.rupture.ticking&cooldown.deathmark.remains<2&!cooldown.deathmark.ready|dot.deathmark.ticking|boss&fight_remains<=22
 actions.items+=/use_item,name=treacherous_transmitter,use_off_gcd=1,if=variable.base_trinket_condition
-actions.items+=/use_item,name=mad_queens_mandate,if=cooldown.deathmark.remains>=30&!dot.deathmark.ticking|raid&boss&fight_remains<=3
-actions.items+=/use_item,name=junkmaestros_mega_magnet,if=cooldown.deathmark.remains>=30&!dot.deathmark.ticking&!debuff.shiv.up&(!talent.deathstalkers_mark|buff.lingering_darkness.up&buff.junkmaestros_mega_magnet.stack>5)|raid&boss&fight_remains<=10
+actions.items+=/use_item,name=mad_queens_mandate,if=cooldown.deathmark.remains>=30&!dot.deathmark.ticking|boss&fight_remains<=3
+actions.items+=/use_item,name=junkmaestros_mega_magnet,if=cooldown.deathmark.remains>=30&!dot.deathmark.ticking&!debuff.shiv.up&(!talent.deathstalkers_mark|buff.lingering_darkness.up&buff.junkmaestros_mega_magnet.stack>5)|boss&fight_remains<=10
 ## actions.items+=/do_treacherous_transmitter_task,use_off_gcd=1,if=dot.deathmark.ticking&active_enemies=1|buff.realigning_nexus_convergence_divergence.up&buff.realigning_nexus_convergence_divergence.remains<=2|buff.cryptic_instructions.up&buff.cryptic_instructions.remains<=2|buff.errant_manaforge_emission.up&buff.errant_manaforge_emission.remains<=2|fight_remains<=15
-actions.items+=/use_item,name=unyielding_netherprism,use_off_gcd=1,if=dot.deathmark.ticking|raid&boss&fight_remains<=15
+actions.items+=/use_item,name=unyielding_netherprism,use_off_gcd=1,if=dot.deathmark.ticking|boss&fight_remains<=15
 actions.items+=/use_item,name=imperfect_ascendancy_serum,use_off_gcd=1,if=variable.base_trinket_condition
-actions.items+=/use_item,name=algethar_puzzle_box,use_off_gcd=1,if=dot.rupture.ticking&cooldown.deathmark.remains<2|raid&boss&fight_remains<=22
+actions.items+=/use_item,name=algethar_puzzle_box,use_off_gcd=1,if=dot.rupture.ticking&cooldown.deathmark.remains<2|boss&fight_remains<=22
 # Fallback case for using stat trinkets
-actions.items+=/use_items,slots=trinket1,if=(variable.trinket_sync_slot=1&(debuff.deathmark.up|dot.kingsbane.ticking)|(variable.trinket_sync_slot=2&!trinket.2.cooldown.ready&cooldown.deathmark.remains>20))|!variable.trinket_sync_slot|raid&boss&fight_remains<=20
-actions.items+=/use_items,slots=trinket2,if=(variable.trinket_sync_slot=2&(debuff.deathmark.up|dot.kingsbane.ticking)|(variable.trinket_sync_slot=1&!trinket.1.cooldown.ready&cooldown.deathmark.remains>20))|!variable.trinket_sync_slot|raid&boss&fight_remains<=20
+actions.items+=/use_items,slots=trinket1,if=(variable.trinket_sync_slot=1&(debuff.deathmark.up|dot.kingsbane.ticking)|(variable.trinket_sync_slot=2&!trinket.2.cooldown.ready&cooldown.deathmark.remains>20))|!variable.trinket_sync_slot|boss&fight_remains<=20
+actions.items+=/use_items,slots=trinket2,if=(variable.trinket_sync_slot=2&(debuff.deathmark.up|dot.kingsbane.ticking)|(variable.trinket_sync_slot=1&!trinket.1.cooldown.ready&cooldown.deathmark.remains>20))|!variable.trinket_sync_slot|boss&fight_remains<=20
 
 # Miscellaneous Cooldowns Potion
-actions.misc_cds+=/potion,if=buff.bloodlust.react|raid&boss&fight_remains<30|debuff.deathmark.up
+actions.misc_cds+=/potion,if=buff.bloodlust.react|boss&fight_remains<30|debuff.deathmark.up
 # Various special racials to be synced with cooldowns
 actions.misc_cds+=/blood_fury,if=debuff.deathmark.up
 actions.misc_cds+=/berserking,if=debuff.deathmark.up
@@ -163,7 +163,7 @@ actions.stealthed+=/envenom,if=effective_combo_points>=variable.effective_spend_
 # Envenom during Master Assassin in single target
 actions.stealthed+=/envenom,if=effective_combo_points>=variable.effective_spend_cp&buff.master_assassin_aura.up&variable.single_target&(debuff.deathstalkers_mark.up|buff.cold_blood.up|buff.darkest_night.up&combo_points=7)
 # Rupture during Indiscriminate Carnage
-actions.stealthed+=/rupture,cycle_targets=1,if=effective_combo_points>=variable.effective_spend_cp&buff.indiscriminate_carnage.up&(refreshable|!settings.cycle)&((talent.caustic_spatter&!debuff.caustic_spatter.up&!dot.rupture.ticking)|!buff.darkest_night.up)&(!variable.regen_saturated|!variable.scent_saturation|((!talent.dashing_scoundrel|!talent.poison_bomb)&buff.indiscriminate_carnage.up&!dot.rupture.ticking))&target.time_to_die>15
+actions.stealthed+=/rupture,cycle_targets=1,if=effective_combo_points>=variable.effective_spend_cp&buff.indiscriminate_carnage.up&(refreshable|(!settings.cycle&active_dot.rupture<active_enemies))&((talent.caustic_spatter&!debuff.caustic_spatter.up&!dot.rupture.ticking)|!buff.darkest_night.up)&(!variable.regen_saturated|!variable.scent_saturation|((!talent.dashing_scoundrel|!talent.poison_bomb)&buff.indiscriminate_carnage.up&!dot.rupture.ticking))&target.time_to_die>15
 # Improved Garrote: Apply or Refresh with buffed Garrotes, accounting for Indiscriminate Carnage
 actions.stealthed+=/garrote,cycle_targets=1,if=stealthed.improved_garrote&(remains<12|pmultiplier<=1|(buff.indiscriminate_carnage.up&active_dot.garrote<active_enemies))&!variable.single_target&target.time_to_die-remains>2&combo_points.deficit>2-buff.darkest_night.up*2
 # Improve Garrote: Apply or Refresh Improved Garrotes as a final check

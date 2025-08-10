@@ -1,20 +1,11 @@
 ## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/druid_feral.simc
-## Up to date with SimC: April 12 2025 - d935a4a
+## SimulationCraft Commit Sync: 5340e2f
+## Date: 2025-08-08
 
+## [Syrif] - This APL is VERY edited with CelestialRepose's rubber stamp. The true feral APL has 29 variables in it to essentially min-max trinkets, and CD sync on long fights.
 actions.precombat+=/mark_of_the_wild
 actions.precombat+=/prowl,if=!buff.prowl.up
 actions.precombat+=/cat_form,if=!buff.cat_form.up
-# check if trinket slot contains a stat on use (variable is just kept in case of things like mirror not working with has_use_buff)
-actions.precombat+=/variable,name=trinket_1_buffs,value=trinket.1.has_use_buff&!trinket.1.is.imperfect_ascendancy_serum&!trinket.1.is.ovinaxs_mercurial_egg&!trinket.1.is.concoction_kiss_of_death
-actions.precombat+=/variable,name=trinket_2_buffs,value=trinket.2.has_use_buff&!trinket.2.is.imperfect_ascendancy_serum&!trinket.2.is.ovinaxs_mercurial_egg&!trinket.2.is.concoction_kiss_of_death
-# if we are playing 2 minute convoke, we prefer 2 minute on-use over 3 minute on-use even without berserk: heart of the lion
-actions.precombat+=/variable,name=trinket_1_sync,op=setif,value=1,value_else=0.5,condition=talent.convoke_the_spirits&!talent.ashamanes_guidance&variable.trinket_1_buffs&(trinket.1.cooldown.duration%%120=0|120%%trinket.1.cooldown.duration=0)
-actions.precombat+=/variable,name=trinket_2_sync,op=setif,value=1,value_else=0.5,condition=talent.convoke_the_spirits&!talent.ashamanes_guidance&variable.trinket_2_buffs&(trinket.1.cooldown.duration%%120=0|120%%trinket.1.cooldown.duration=0)
-# if we aren't playing 2 minute convoke, then we can sync 3 minute cds with berserk sans hotl
-actions.precombat+=/variable,name=trinket_1_sync,op=setif,value=1,value_else=0.5,condition=!(talent.convoke_the_spirits&!talent.ashamanes_guidance)&variable.trinket_1_buffs&(trinket.1.cooldown.duration%%cooldown.bs_inc.duration=0|cooldown.bs_inc.duration%%trinket.1.cooldown.duration=0|trinket.1.cooldown.duration%%cooldown.convoke_the_spirits.duration=0|cooldown.convoke_the_spirits.duration%%trinket.1.cooldown.duration=0)
-actions.precombat+=/variable,name=trinket_2_sync,op=setif,value=1,value_else=0.5,condition=!(talent.convoke_the_spirits&!talent.ashamanes_guidance)&variable.trinket_2_buffs&(trinket.2.cooldown.duration%%cooldown.bs_inc.duration=0|cooldown.bs_inc.duration%%trinket.2.cooldown.duration=0|trinket.2.cooldown.duration%%cooldown.convoke_the_spirits.duration=0|cooldown.convoke_the_spirits.duration%%trinket.2.cooldown.duration=0)
-# prioritize trinkets that line-up with cds->main-stat on uses->longer cd trinkets->shorter duration trinkets
-actions.precombat+=/variable,name=trinket_priority,op=setif,value=2,value_else=1,condition=!variable.trinket_1_buffs&variable.trinket_2_buffs|variable.trinket_2_buffs&((trinket.2.cooldown.duration%trinket.2.proc.any_dps.duration)*(1.5+trinket.2.has_buff.agility)*(1.2+trinket.2.has_buff.mastery)*(variable.trinket_2_sync))>((trinket.1.cooldown.duration%trinket.1.proc.any_dps.duration)*(1.5+trinket.1.has_buff.agility)*(1.2+trinket.1.has_buff.mastery)*(variable.trinket_1_sync))
 
 actions+=/prowl,if=buff.bs_inc.down&!buff.prowl.up
 actions+=/cat_form,if=!buff.cat_form.up&!talent.fluid_form
@@ -32,17 +23,17 @@ actions+=/adaptive_swarm,cycle_targets=1,if=dot.adaptive_swarm_damage.stack<3&(!
 actions+=/adaptive_swarm,cycle_targets=1,if=buff.cat_form.up&dot.adaptive_swarm_damage.stack<3&talent.unbridled_swarm.enabled&spell_targets.swipe_cat>1&dot.rip.ticking
 actions+=/ferocious_bite,if=buff.apex_predators_craving.up&!(variable.need_bt&active_bt_triggers=2)
 actions+=/call_action_list,name=cooldown,strict=1,if=dot.rip.ticking
-# keep using this archaic 'nonsense' for veinripper because its better idk ill fix soon tm
-actions+=/rip,if=talent.veinripper&spell_targets=1&hero_tree.wildstalker&!(talent.raging_fury&talent.veinripper)&(buff.bloodtalons.up|!talent.bloodtalons)&(dot.rip.remains<5&buff.tigers_fury.remains>10&combo_points>=3|((buff.tigers_fury.remains<3&combo_points=5)|buff.tigers_fury.remains<=1)&buff.tigers_fury.up&combo_points>=3&remains<cooldown.tigers_fury.remains)
-# fix to work with veinripper idk
-actions+=/rip,if=!talent.veinripper&spell_targets=1&hero_tree.wildstalker&buff.tigers_fury.up&(buff.bloodtalons.up|!talent.bloodtalons)&(combo_points>=3&refreshable&cooldown.tigers_fury.remains>25|buff.tigers_fury.remains<5&variable.rip_duration>cooldown.tigers_fury.remains&cooldown.tigers_fury.remains>=dot.rip.remains)
+# with rip and tear, as wildstalker, we do 3cp rips
+actions+=/rip,if=talent.rip_and_tear&spell_targets=1&hero_tree.wildstalker&buff.tigers_fury.up&!buff.bs_inc.up&(buff.bloodtalons.up|!talent.bloodtalons)&(combo_points>=3&refreshable&cooldown.tigers_fury.remains>25|buff.tigers_fury.remains<5&variable.rip_duration>cooldown.tigers_fury.remains&cooldown.tigers_fury.remains>=dot.rip.remains)
 actions+=/call_action_list,name=builder,if=(buff.bs_inc.up&!buff.ravage.up&!buff.coiled_to_spring.up&hero_tree.druid_of_the_claw&talent.coiled_to_spring&spell_targets<=2)|buff.bloodtalons.stack=0&active_bt_triggers=2
 actions+=/wait,sec=action.tigers_fury.ready,if=combo_points=5&cooldown.tigers_fury.remains<3&spell_targets=1
 actions+=/call_action_list,name=finisher,if=combo_points=5
 ## [Syrif] - combo_points<5 added to stop from sending generators inappropriately
 actions+=/call_action_list,name=builder,if=spell_targets.swipe_cat=1&combo_points<5
 actions+=/call_action_list,name=aoe_builder,if=spell_targets.swipe_cat>=2&combo_points<5
-actions+=/regrowth,if=buff.predatory_swiftness.up&variable.regrowth&selection_time>gcd.max
+# if we cant do anything else, then sure, tigers fury early
+actions+=/tigers_fury
+actions+=/regrowth,if=buff.predatory_swiftness.up&variable.regrowth
 
 # maintain thrash highest prio
 actions.aoe_builder+=/thrash_cat,if=refreshable&!talent.thrashing_claws&!(variable.need_bt&buff.bt_thrash.up)
@@ -51,17 +42,17 @@ actions.aoe_builder+=/brutal_slash,cycle_targets=1,if=(cooldown.brutal_slash.ful
 actions.aoe_builder+=/swipe_cat,if=talent.wild_slashes&(time_to_die<4|raid_event.adds.remains<4|buff.bs_inc.up&spell_targets>=3-hero_tree.druid_of_the_claw)&!(variable.need_bt&buff.bt_swipe.up&(buff.bs_inc.down|spell_targets<3-hero_tree.druid_of_the_claw))
 # with wild slashes we swipe at 5+ targets over raking/moonfire
 actions.aoe_builder+=/swipe_cat,if=time_to_die<4|(talent.wild_slashes&spell_targets.swipe_cat>4&!(variable.need_bt&buff.bt_swipe.up))
-actions.aoe_builder+=/prowl,if=dot.rake.refreshable|dot.rake.pmultiplier<1.4&!(variable.need_bt&buff.bt_rake.up)&action.rake.ready&gcd.remains=0&!buff.sudden_ambush.up&!variable.cc_capped
-actions.aoe_builder+=/shadowmeld,if=dot.rake.refreshable|dot.rake.pmultiplier<1.4&!(variable.need_bt&buff.bt_rake.up)&action.rake.ready&!buff.sudden_ambush.up&!buff.prowl.up&!variable.cc_capped
+actions.aoe_builder+=/prowl,if=dot.rake.refreshable|dot.rake.pmultiplier<1.4&!(variable.need_bt&buff.bt_rake.up)&action.rake.ready&gcd.remains=0&!buff.sudden_ambush.up&!buff.clearcasting.at_max_stacks
+actions.aoe_builder+=/shadowmeld,if=dot.rake.refreshable|dot.rake.pmultiplier<1.4&!(variable.need_bt&buff.bt_rake.up)&action.rake.ready&!buff.sudden_ambush.up&!buff.prowl.up&!buff.clearcasting.at_max_stacks
 # dcr rake > moonfire
-actions.aoe_builder+=/rake,cycle_targets=1,if=refreshable&talent.doubleclawed_rake&!(variable.need_bt&buff.bt_rake.up)&!variable.cc_capped
+actions.aoe_builder+=/rake,cycle_targets=1,if=refreshable&talent.doubleclawed_rake&!(variable.need_bt&buff.bt_rake.up)&!buff.clearcasting.at_max_stacks
 # at 3t with wild slashes, swipe is better than moonfiring/st rake
 actions.aoe_builder+=/swipe_cat,if=talent.wild_slashes&spell_targets.swipe_cat>2&!(variable.need_bt&buff.bt_swipe.up)
 # if wildstalker make sure you have at least one rake up
 actions.aoe_builder+=/rake,cycle_targets=1,if=!dot.rake.ticking&hero_tree.wildstalker
 # li moonfire is better than non-dcr rake in aoe if we already have 1 rake
-actions.aoe_builder+=/moonfire_cat,cycle_targets=1,if=refreshable&!(variable.need_bt&buff.bt_moonfire.up)&!variable.cc_capped
-actions.aoe_builder+=/rake,cycle_targets=1,if=refreshable&!(variable.need_bt&buff.bt_rake.up)&!variable.cc_capped
+actions.aoe_builder+=/moonfire_cat,cycle_targets=1,if=refreshable&!(variable.need_bt&buff.bt_moonfire.up)&!buff.clearcasting.at_max_stacks
+actions.aoe_builder+=/rake,cycle_targets=1,if=refreshable&!(variable.need_bt&buff.bt_rake.up)&!buff.clearcasting.at_max_stacks
 # fillers
 actions.aoe_builder+=/brutal_slash,if=!(variable.need_bt&buff.bt_swipe.up)
 actions.aoe_builder+=/swipe_cat,if=!(variable.need_bt&buff.bt_swipe.up)
@@ -73,10 +64,10 @@ actions.aoe_builder+=/moonfire_cat,cycle_targets=1,if=variable.need_bt&buff.bt_m
 actions.aoe_builder+=/rake,cycle_targets=1,if=buff.sudden_ambush.up&variable.need_bt&buff.bt_rake.down
 actions.aoe_builder+=/shred,if=variable.need_bt&buff.bt_shred.down&!variable.easy_swipe
 actions.aoe_builder+=/rake,cycle_targets=1,if=dot.rake.pmultiplier<1.6&variable.need_bt&buff.bt_rake.down
-actions.aoe_builder+=/thrash_cat,if=variable.need_bt&buff.bt_shred.down
+actions.aoe_builder+=/thrash_cat,if=variable.need_bt&buff.bt_thrash.down
 
-actions.builder+=/prowl,if=gcd.remains=0&energy>=35&!buff.sudden_ambush.up&(dot.rake.refreshable|dot.rake.pmultiplier<1.4)*!(variable.need_bt&buff.bt_rake.up)&buff.tigers_fury.up&!buff.shadowmeld.up
-actions.builder+=/shadowmeld,if=gcd.remains=0&energy>=35&!buff.sudden_ambush.up&(dot.rake.refreshable|dot.rake.pmultiplier<1.4)*!(variable.need_bt&buff.bt_rake.up)&buff.tigers_fury.up&!buff.prowl.up
+actions.builder+=/prowl,if=gcd.remains=0&energy>=35&!buff.sudden_ambush.up&(dot.rake.refreshable|dot.rake.pmultiplier<1.4)&!(variable.need_bt&buff.bt_rake.up)&buff.tigers_fury.up&!buff.shadowmeld.up
+actions.builder+=/shadowmeld,if=gcd.remains=0&energy>=35&!buff.sudden_ambush.up&(dot.rake.refreshable|dot.rake.pmultiplier<1.4)&!(variable.need_bt&buff.bt_rake.up)&buff.tigers_fury.up&!buff.prowl.up
 # upgrade to stealth rakes, otherwise refresh in pandemic. Delay rake as long as possible if it would downgrade
 actions.builder+=/rake,if=((refreshable&persistent_multiplier>=dot.rake.pmultiplier|dot.rake.remains<3.5)|buff.sudden_ambush.up&persistent_multiplier>dot.rake.pmultiplier)&!(variable.need_bt&buff.bt_rake.up)&(hero_tree.wildstalker|!buff.bs_inc.up)
 # bt check is due to the overcap line, comes up with convoke/apex bites
@@ -97,52 +88,40 @@ actions.builder+=/rake,if=variable.need_bt&buff.bt_rake.down&persistent_multipli
 actions.builder+=/moonfire_cat,if=variable.need_bt&buff.bt_moonfire.down
 actions.builder+=/thrash_cat,if=variable.need_bt&buff.bt_thrash.down
 
-actions.cooldown+=/incarnation,if=fight_remains>17|boss
-# non-stat on use trinkets get used on cooldown, so long as it wont interfere with a stat on-use trinket
-actions.cooldown+=/use_item,slot=trinket1,if=trinket.1.has_use_damage&(trinket.2.cooldown.remains>20&(!trinket.1.is.junkmaestros_mega_magnet|cooldown.bestinslots.remains>20|!equipped.bestinslots)|!trinket.2.has_use_buff&(cooldown.bestinslots.remains>20|!equipped.bestinslots)|cooldown.tigers_fury.remains<25&cooldown.tigers_fury.remains>20)|boss&fight_remains<5
-actions.cooldown+=/use_item,slot=trinket2,if=trinket.2.has_use_damage&(trinket.1.cooldown.remains>20&(!trinket.2.is.junkmaestros_mega_magnet|cooldown.bestinslots.remains>20|!equipped.bestinslots)|!trinket.1.has_use_buff&(cooldown.bestinslots.remains>20|!equipped.bestinslots)|cooldown.tigers_fury.remains<25&cooldown.tigers_fury.remains>20)|boss&fight_remains<5
-# berserk with tigers fury
-actions.cooldown+=/berserk,if=buff.tigers_fury.up&(fight_remains>12|boss)
+# Trinket usage - damage on CD, buffs with cooldowns or short holds, fallbacks for fight end
+actions.cooldown+=/use_item,slot=trinket1,use_off_gcd=1,if=trinket.1.has_use_damage&(trinket.2.cooldown.remains>20|!trinket.2.has_use_buff)|trinket.1.has_use_buff&(buff.bs_inc.up|cooldown.bs_inc.remains<5|cooldown.bs_inc.remains<20&cooldown.convoke_the_spirits.remains>30)|boss&fight_remains<20
+actions.cooldown+=/use_item,slot=trinket2,use_off_gcd=1,if=trinket.2.has_use_damage&(trinket.1.cooldown.remains>20|!trinket.1.has_use_buff)|trinket.2.has_use_buff&(buff.bs_inc.up|trinket.2.cooldown.duration<=cooldown.bs_inc.remains)&(!trinket.1.has_use_buff|trinket.1.cooldown.remains>20)|boss&fight_remains<20
 actions.cooldown+=/berserking,if=buff.bs_inc.up
-# todo make last set of cds line up again now that we know potions.remains is the syntax
-actions.cooldown+=/potion,if=buff.bs_inc.up|boss&fight_remains<32|(!variable.lastzerk&variable.lastconvoke&cooldown.convoke_the_spirits.remains<10)
-# non trinket gear-on-uses have variable rules on whether or not they trigger the trinket shared CD. For the cases they do we will need specific APL entries. For now just use on cooldown.
-actions.cooldown+=/use_items
-# stat on-use trinkets, prefers trinket with higher priority.
-actions.cooldown+=/use_item,slot=trinket1,if=variable.trinket_1_buffs&(buff.bs_inc.up|((buff.tigers_fury.up&cooldown.tigers_fury.remains>25)&(cooldown.convoke_the_spirits.remains<6|(variable.trinket_2_buffs&cooldown.convoke_the_spirits.remains-trinket.2.cooldown.remains>0)|!talent.convoke_the_spirits&cooldown.bs_inc.remains-trinket.2.cooldown.remains>0)))&(!trinket.2.has_cooldown|trinket.2.cooldown.remains|variable.trinket_priority=1)|trinket.1.proc.any_dps.duration>=fight_remains&boss
-actions.cooldown+=/use_item,slot=trinket2,if=variable.trinket_2_buffs&(buff.bs_inc.up|((buff.tigers_fury.up&cooldown.tigers_fury.remains>25)&(cooldown.convoke_the_spirits.remains<6|(variable.trinket_1_buffs&cooldown.convoke_the_spirits.remains-trinket.1.cooldown.remains>0)|!talent.convoke_the_spirits&cooldown.bs_inc.remains-trinket.1.cooldown.remains>0)))&(!trinket.1.has_cooldown|trinket.1.cooldown.remains|variable.trinket_priority=2)|trinket.2.proc.any_dps.duration>=fight_remains&boss
+actions.cooldown+=/potion,if=buff.bs_inc.up|boss&fight_remains<32
+## actions.cooldown+=/use_items
 ## actions.cooldown+=/do_treacherous_transmitter_task,if=buff.tigers_fury.up|fight_remains<22
-actions.cooldown+=/feral_frenzy,if=combo_points<=1+buff.bs_inc.up&(buff.tigers_fury.up|!talent.savage_fury|!hero_tree.wildstalker|boss&fight_remains<cooldown.tigers_fury.remains)
+actions.cooldown+=/incarnation
+actions.cooldown+=/berserk
+actions.cooldown+=/feral_frenzy,if=combo_points<=1+buff.bs_inc.up
 # always line up convoke with berserk if you can
-actions.cooldown+=/convoke_the_spirits,if=boss&fight_remains<5|(cooldown.bs_inc.remains>45|buff.bs_inc.up|!talent.berserk_heart_of_the_lion)&(buff.tigers_fury.up&(combo_points<=4|buff.bs_inc.up&combo_points<=3)&(target.time_to_die>5-talent.ashamanes_guidance.enabled|boss))
+actions.cooldown+=/convoke_the_spirits,if=!(fight_remains<cooldown.convoke_the_spirits.duration&fight_remains>(20+cooldown.bs_inc.remains)&cooldown.bs_inc.remains<60)
 
 # maintain/upgrade pws, if we have 6.5+s left on pw, we will instead bite if we have rampant ferocity talented. Without rampant, we will bite a vined target with 6 or fewer targets. If we have Ravage, we use specifically Ravage at 7 or fewer targets.
 actions.finisher+=/primal_wrath,if=spell_targets.primal_wrath>1&((dot.primal_wrath.remains<6.5&!buff.bs_inc.up|dot.primal_wrath.refreshable)|(!talent.rampant_ferocity.enabled&(spell_targets.primal_wrath>1&!dot.bloodseeker_vines.ticking&!buff.ravage.up|spell_targets.primal_wrath>6+talent.ravage)))
 # rip if single target or pw isnt up. Rip with bloodtalons if talented. If tigers fury will be up before rip falls off, then delay refresh
-actions.finisher+=/rip,cycle_targets=1,if=refreshable&(!talent.primal_wrath|spell_targets=1)&(buff.bloodtalons.up|!talent.bloodtalons)&(buff.tigers_fury.up|dot.rip.remains<cooldown.tigers_fury.remains)&(remains<fight_remains|remains<4&buff.ravage.up)
+actions.finisher+=/rip,cycle_targets=1,if=(!talent.primal_wrath|spell_targets=1)&(buff.bloodtalons.up|!talent.bloodtalons)&(buff.tigers_fury.up|dot.rip.remains<cooldown.tigers_fury.remains)&(remains<fight_remains|remains<4&buff.ravage.up)
+# only bite with ravage in aoe with berserk
+actions.finisher+=/call_action_list,name=aoe_builder,if=hero_tree.druid_of_the_claw&buff.bs_inc.up&!buff.ravage.up&spell_targets>=2
+# actions.finisher+=/call_action_list,name=builder,if=buff.ravage.up&buff.preparing_to_strike.remains<2&buff.preparing_to_strike.up&buff.bs_inc.up
+actions.finisher+=/wait,sec=!buff.sabertooth.up,if=buff.sabertooth.up&energy.deficit>40
 actions.finisher+=/pool_resource,for_next=1
 actions.finisher+=/ferocious_bite,max_energy=1,cycle_targets=1,if=!buff.bs_inc.up
 actions.finisher+=/pool_resource,for_next=1
-actions.finisher+=/ferocious_bite,cycle_targets=1,if=buff.bs_inc.up
+actions.finisher+=/ferocious_bite,cycle_targets=1
 
 # what rips new duration would be if applied in current state
 actions.variable+=/variable,name=rip_duration,value=((4+(4*combo_points))*(1-(0.2*talent.circle_of_life_and_death))*(1+(0.25*talent.veinripper)))+(variable.rip_max_pandemic_duration>?dot.rip.remains)
 actions.variable+=/variable,name=rip_max_pandemic_duration,value=((4+(4*combo_points))*(1-(0.2*talent.circle_of_life_and_death))*(1+(0.25*talent.veinripper)))*0.3
 # this returns true if we have a dot nearing pandemic range
 actions.variable+=/variable,name=dot_refresh_soon,value=(!talent.thrashing_claws&(dot.thrash_cat.remains-dot.thrash_cat.duration*0.3<=2))|(talent.lunar_inspiration&(dot.moonfire_cat.remains-dot.moonfire_cat.duration*0.3<=2))|((dot.rake.pmultiplier<1.6|buff.sudden_ambush.up)&(dot.rake.remains-dot.rake.duration*0.3<=2))
-# try to proc bt if we have 1 or 0 sacks of bloodtalons
+# try to proc bt if we have 1 or 0 stacks of bloodtalons
 actions.variable+=/variable,name=need_bt,value=talent.bloodtalons&buff.bloodtalons.stack<=1
-# capped on clearcasting stacks
-actions.variable+=/variable,name=cc_capped,value=buff.clearcasting.stack=(1+talent.moment_of_clarity)
-# checks if theres exactly 1 convoke remaining in sim
-actions.variable+=/variable,name=lastconvoke,value=(cooldown.convoke_the_spirits.remains+cooldown.convoke_the_spirits.duration)>fight_remains&cooldown.convoke_the_spirits.remains<fight_remains
-# checks if theres exactly 1 berserk cast remaining in sim                 : at least 5s spare for now, TODO: check #s
-actions.variable+=/variable,name=lastzerk,value=(cooldown.bs_inc.remains+cooldown.bs_inc.duration+5)>fight_remains&cooldown.convoke_the_spirits.remains<fight_remains
-# approximates if theres exactly 1 potion cast remaining with duration to spare
-actions.variable+=/variable,name=lastpotion,value=(cooldown.potions.remains+cooldown.potions.duration+15)>fight_remains&cooldown.potions.remains+15<fight_remains
 # optional variable that sends regrowth and renewal casts. Turned off by default
 actions.variable+=/variable,name=regrowth,op=reset,value=settings.regrowth
 # optional variable that forgoes shredding in AoE. Turned off by default
 actions.variable+=/variable,name=easy_swipe,op=reset
-# track moonfire snapshot
-actions.variable+=/variable,name=moonfire_snapshotted,value=buff.tigers_fury.up,op=set,if=prev.lunar_inspiration

@@ -16,7 +16,7 @@ actions.precombat+=/variable,name=trinket_1_manual,value=trinket.1.is.algethar_p
 actions.precombat+=/variable,name=trinket_2_manual,value=trinket.2.is.algethar_puzzle_box
 
 actions+=/charge,if=time<=0.5|movement.distance>8
-actions+=/potion,if=gcd.remains=0&debuff.colossus_smash.remains>8|raid&boss&fight_remains<25
+actions+=/potion,if=gcd.remains=0&debuff.colossus_smash.remains>8|boss&fight_remains<25
 actions+=/pummel,if=target.debuff.casting.react
 actions+=/call_action_list,name=variables
 actions+=/call_action_list,name=trinkets

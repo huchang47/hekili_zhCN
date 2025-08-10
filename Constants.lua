@@ -691,3 +691,30 @@ ns.FrameStratas = {
     FULLSCREEN_DIALOG = 7,
     TOOLTIP = 8
 }
+
+-- Skeleton Generator Talent Enhancements
+ns.SkeletonTalentEnhancements = {
+    talentCopies = {
+        [102] = {
+            incarnation_chosen_of_elune = "incarnation"
+        },
+        [103] = {
+            incarnation_avatar_of_ashamane = "incarnation"
+        },
+        [104] = {
+            incarnation_guardian_of_ursoc = "incarnation"
+        },
+        [105] = {
+            incarnation_tree_of_life = "incarnation"
+        }
+        -- Add more specs/talents as needed
+    },
+
+    -- Choice node suffix mappings (same name, different spellIDs, same node)
+    choiceNodeSuffixes = {
+        earthquake      = { [61882]     = "_ground", [462620]   = "_targeted" },
+        rain_of_fire    = { [5740]      = "_ground", [1214467]  = "_targeted" },
+        shadow_crash    = { [205385]    = "_ground", [457042]   = "_targeted" }
+        -- Add more choice nodes as discovered
+    }
+}

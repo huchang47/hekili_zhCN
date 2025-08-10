@@ -534,26 +534,94 @@ function SkeletonGen:PrepareSpecData()
                         -- Skip this node.
                         -- (no-op, continue loop)
                     else
-                        for _, entryID in ipairs( nodeInfo.entryIDs or {} ) do
+                        -- Handle nodes with multiple entries
+                        local entryIDs = nodeInfo.entryIDs or {}
+
+                        -- For non-selection nodes with multiple entries, use activeEntry to get the correct one
+                        -- nodeInfo.type: 0=single, 1=tiered, 2=selection, 3=subtree_selection
+                        if nodeInfo.type ~= 2 and #entryIDs > 1 and nodeInfo.activeEntry and nodeInfo.activeEntry.entryID then
+                            entryIDs = { nodeInfo.activeEntry.entryID }
+                        end
+
+                        for _, entryID in ipairs( entryIDs ) do
                             local entryInfo = C_Traits.GetEntryInfo( configID, entryID )
                             if entryInfo and entryInfo.definitionID then
                                 local defInfo = C_Traits.GetDefinitionInfo( entryInfo.definitionID )
                                 if defInfo and defInfo.spellID then
                                     local name = defInfo.overrideName or GetSpellInfo( defInfo.spellID )
                                     local token = name and formatKey( name ) or "s" .. defInfo.spellID
+
                                     local tooltip = self:CleanTooltip( GetSpellDescription( defInfo.spellID ) )
 
-                                    self.idToToken[ defInfo.spellID ] = token
+                                    -- Handle duplicate talents - create _2 suffix
+                                    if not self.talents[ token ] then
+                                        self.talents[ token ] = {
+                                            node = nodeID,
+                                            id = defInfo.spellID,
+                                            ranks = nodeInfo.maxRanks,
+                                            tooltip = tooltip,
+                                            isSpec = isSpec,
+                                            isHero = isHero,
+                                            tree = treeName
+                                        }
+                                    else
+                                        local existingTalent = self.talents[ token ]
 
-                                    self.talents[ token ] = {
-                                        node = nodeID,
-                                        id = defInfo.spellID,
-                                        ranks = nodeInfo.maxRanks,
-                                        tooltip = tooltip,
-                                        isSpec = isSpec,
-                                        isHero = isHero,
-                                        tree = treeName
-                                    }
+                                        -- Check if this is a choice variant (same node, different spell ID) or true duplicate (different nodes)
+                                        local sameNode = existingTalent.node == nodeID
+                                        local sameSpellID = existingTalent.id == defInfo.spellID
+
+                                        if sameNode and not sameSpellID then
+                                            -- Same node, different spell ID = choice variant
+                                            -- Store with temporary suffix so both are available to Fix 3
+                                            local tempToken = token .. "_temp_" .. defInfo.spellID
+                                            self.talents[ tempToken ] = {
+                                                node = nodeID,
+                                                id = defInfo.spellID,
+                                                ranks = nodeInfo.maxRanks,
+                                                tooltip = tooltip,
+                                                isSpec = isSpec,
+                                                isHero = isHero,
+                                                tree = treeName,
+                                                isChoiceVariant = true,
+                                                baseToken = token
+                                            }
+                                            token = tempToken -- Use temp token for ability registration
+                                        elseif not sameNode then
+                                            -- Different nodes, same name = true duplicate (regardless of spell ID)
+                                            local duplicateToken = token .. "_2"
+                                            if not self.talents[ duplicateToken ] then
+                                                self.talents[ duplicateToken ] = {
+                                                    node = nodeID,
+                                                    id = defInfo.spellID,
+                                                    ranks = nodeInfo.maxRanks,
+                                                    tooltip = tooltip,
+                                                    isSpec = isSpec,
+                                                    isHero = isHero,
+                                                    tree = treeName,
+                                                    isDuplicate = true,
+                                                    originalToken = token
+                                                }
+
+                                                token = duplicateToken -- Use duplicate token for ability registration
+                                            else
+                                                -- Track alternative node IDs for same talent
+                                                if not existingTalent.alternativeNodes then
+                                                    existingTalent.alternativeNodes = {}
+                                                end
+                                                table.insert( existingTalent.alternativeNodes, nodeID )
+                                            end
+                                        else
+                                            -- Same node, same spell ID = should not happen, but track as alternative
+                                            if not existingTalent.alternativeNodes then
+                                                existingTalent.alternativeNodes = {}
+                                            end
+                                            table.insert( existingTalent.alternativeNodes, nodeID )
+                                        end
+                                    end
+
+                                    -- Set idToToken mapping after determining final token name
+                                    self.idToToken[ defInfo.spellID ] = token
 
                                     if not IsPassiveSpell( defInfo.spellID ) then
                                         local ability = self.abilities[ token ] or {}
@@ -568,6 +636,126 @@ function SkeletonGen:PrepareSpecData()
                 end
             end
 
+        end
+    end
+
+    -- Handle manually copied talents to avoid forgetting them
+    -- Example: Druid incarnation talent copies
+    local specTalentCopies = ns.SkeletonTalentEnhancements.talentCopies[ self.specID ]
+    if specTalentCopies then
+        for sourceToken, targetToken in pairs( specTalentCopies ) do
+            -- Find the source talent (actual detected talent)
+            local sourceTalent = self.talents[ sourceToken ]
+            if sourceTalent then
+                -- Create a copy with the target token name (SimC-compatible name)
+                if not self.talents[ targetToken ] then
+                    self.talents[ targetToken ] = {
+                        node = sourceTalent.node,
+                        id = sourceTalent.id,
+                        ranks = sourceTalent.ranks,
+                        tooltip = sourceTalent.tooltip,
+                        isSpec = sourceTalent.isSpec,
+                        isHero = sourceTalent.isHero,
+                        tree = sourceTalent.tree,
+                        manual = true,
+                        copiedFrom = sourceToken
+                    }
+
+                    self.idToToken[ sourceTalent.id ] = targetToken
+
+                    if not IsPassiveSpell( sourceTalent.id ) then
+                        local ability = self.abilities[ targetToken ] or {}
+                        ability.id = sourceTalent.id
+                        ability.talent = targetToken
+                        self.abilities[ targetToken ] = self:EmbedSpellData( sourceTalent.id, targetToken, ability )
+                    end
+                end
+            end
+        end
+    end
+
+    -- Handle choice nodes with same spellName but different SpellIDs (e.g; ground vs targeted)
+    local choiceNodeSuffixes = ns.SkeletonTalentEnhancements.choiceNodeSuffixes
+    local nameToSpells = {}
+
+    -- Helper function to update token mappings
+    local function updateTokenMapping(oldToken, newToken, spellID, suffix, choiceVariant)
+        if self.talents[ oldToken ] and oldToken ~= newToken then
+            self.talents[ newToken ] = self.talents[ oldToken ]
+            self.talents[ newToken ].choiceVariant = choiceVariant
+            self.talents[ newToken ].suffix = suffix
+
+            self.idToToken[ spellID ] = newToken
+
+            if self.abilities[ oldToken ] then
+                self.abilities[ newToken ] = self.abilities[ oldToken ]
+                self.abilities[ newToken ].talent = newToken
+                self.abilities[ oldToken ] = nil
+            end
+
+            self.talents[ oldToken ] = nil
+        end
+    end
+
+    -- First pass: Group spells by talent name/token (same name, different spell IDs)
+    -- Include choice variants, exclude manual copies and duplicates to avoid false choice node detection
+    for token, talent in pairs( self.talents ) do
+        if not talent.manual and not talent.isDuplicate then
+            local spellName = GetSpellInfo( talent.id )
+            if spellName then
+                local baseName = talent.baseToken or formatKey( spellName )
+                if not nameToSpells[ baseName ] then
+                    nameToSpells[ baseName ] = {}
+                end
+                table.insert( nameToSpells[ baseName ], { token = token, spellID = talent.id, talent = talent, spellName = spellName } )
+            end
+        end
+    end
+
+    -- Second pass: Process only names with multiple different spell IDs (same spell name, different mechanics)
+    for baseName, spells in pairs( nameToSpells ) do
+
+        if #spells > 1 then
+            -- Check if these are actually different spell IDs with same name
+            local uniqueSpellIDs = {}
+            for _, spellInfo in ipairs( spells ) do
+                uniqueSpellIDs[ spellInfo.spellID ] = true
+            end
+
+            local uniqueSpellCount = 0
+            for _ in pairs( uniqueSpellIDs ) do uniqueSpellCount = uniqueSpellCount + 1 end
+
+            if #spells == 2 and uniqueSpellCount == 2 then -- Only handle pairs with different spell IDs
+                -- Sort spells by ID to ensure consistent ordering
+                table.sort( spells, function( a, b ) return a.spellID < b.spellID end )
+
+                -- Check if we have custom suffixes for this talent in config
+                local customSuffixes = choiceNodeSuffixes[ baseName ]
+
+                if customSuffixes then
+                    -- Use custom suffixes from config table - apply to ALL spells that have matching suffixes
+                    for i, spellInfo in ipairs( spells ) do
+                        local suffix = customSuffixes[ spellInfo.spellID ]
+                        if suffix then -- Apply suffix to any spell that has one defined
+                            local variantToken = baseName .. suffix
+                            local choiceVariant = i == 1 and spells[ 2 ].token or spells[ 1 ].token
+                            updateTokenMapping( spellInfo.token, variantToken, spellInfo.spellID, suffix, choiceVariant )
+                        end
+                    end
+                else
+                    --[[Use generic suffixes for same-name spells without config
+                        This is essentially an "alert" that a new talent has been added to the game which is a choice node like earthquake/shadowcrash,
+                        and should be investigated and registered in the constants table. --]]
+
+                    for i, spellInfo in ipairs( spells ) do
+                        if i > 1 then -- Apply suffix to second+ spells
+                            local suffix = "_choice_" .. i
+                            local variantToken = baseName .. suffix
+                            updateTokenMapping( spellInfo.token, variantToken, spellInfo.spellID, suffix, spells[ 1 ].token )
+                        end
+                    end
+                end
+            end
         end
     end
 
@@ -714,6 +902,7 @@ function SkeletonGen:EmbedSpellData( spellID, token, ability )
     return ability
 end
 
+
 function SkeletonGen:Generate()
     local playerClass = UnitClass( "player" ):gsub( " ", "" )
     local playerSpec = select( 2, GetSpecializationInfo( GetSpecialization() ) ):gsub( " ", "" )
@@ -721,17 +910,52 @@ function SkeletonGen:Generate()
     local specInfo = ns.Specializations[ self.specID ]
     local isRanged = specInfo and specInfo.ranged or false
 
-    -- Top of skeleton
+    -- Complete skeleton template structure
+    local version, build, buildDate, tocversion = GetBuildInfo()
+
+    -- Header
     self:Append( "-- " .. playerClass .. playerSpec .. ".lua" )
     self:Append( "-- " .. date( "%B %Y" ) )
-    self:Append( string.format( [[if UnitClassBase("player") ~= "%s" then return end]], UnitClassBase( "player" ) ) )
+    self:Append( "-- Patch " .. version )
     self:Append( "" )
+
+    -- Class check
+    self:Append( string.format( [[if UnitClassBase( "player" ) ~= "%s" then return end]], UnitClassBase( "player" ) ) )
+    self:Append( "" )
+
+    -- Standard imports
     self:Append( "local addon, ns = ..." )
     self:Append( "local Hekili = _G[ addon ]" )
     self:Append( "local class, state = Hekili.Class, Hekili.State" )
-    self:Blank()
     self:Append( "local spec = Hekili:NewSpecialization( " .. self.specID .. ", " .. tostring( isRanged ) .. " )" )
-    self:Blank()
+    self:Append( "" )
+
+    -- Performance locals
+    self:Append( "---- Local function declarations for increased performance" )
+    self:Append( "-- Strings" )
+    self:Append( "local strformat = string.format" )
+    self:Append( "-- Tables" )
+    self:Append( "local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe" )
+    self:Append( "-- Math" )
+    self:Append( "local abs, ceil, floor, max, sqrt = math.abs, math.ceil, math.floor, math.max, math.sqrt" )
+    self:Append( "" )
+
+    -- WoW API locals (all uncommented)
+    self:Append( "-- Common WoW APIs, comment out unneeded per-spec" )
+    self:Append( "local GetSpellCastCount = C_Spell.GetSpellCastCount" )
+    self:Append( "local GetSpellInfo = C_Spell.GetSpellInfo" )
+    self:Append( "local GetSpellInfo = ns.GetUnpackedSpellInfo" )
+    self:Append( "local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID" )
+    self:Append( "local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID" )
+    self:Append( "local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed" )
+    self:Append( "local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook" )
+    self:Append( "local IsActiveSpell = ns.IsActiveSpell" )
+    self:Append( "" )
+
+    -- Spec-specific locals section
+    self:Append( "-- Specialization-specific local functions (if any)" )
+    self:Append( "" )
+    self:Append( "" )
 
     -- Resources
     for k in orderedPairs( self.resources ) do

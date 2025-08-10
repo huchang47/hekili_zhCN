@@ -1174,8 +1174,7 @@ local HekiliSpecMixin = {
                     self.totems[ id ] = copy
                 elseif type( copy ) == "table" then
                     for _, alias in ipairs( copy ) do
-                        self.totems[ alias ] = id
-                        self.totems[ id ] = alias
+                        self.totems[ alias ] = token
                     end
                 end
             end

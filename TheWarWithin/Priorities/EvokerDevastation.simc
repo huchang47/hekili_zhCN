@@ -39,7 +39,7 @@ actions.precombat+=/firestorm,if=talent.firestorm&(!talent.engulf|!talent.ruby_e
 actions.precombat+=/living_flame,if=!talent.firestorm|talent.engulf&talent.ruby_embers
 
 # Delay pot in ST if you are about to SS - mostly relevant for opener where you want DR->FB->SS->rotation
-actions+=/potion,if=(!talent.dragonrage|buff.dragonrage.up)&(!cooldown.shattering_star.up|debuff.shattering_star_debuff.up|active_enemies>=2)|raid&boss&fight_remains<35
+actions+=/potion,if=(!talent.dragonrage|buff.dragonrage.up)&(!cooldown.shattering_star.up|debuff.shattering_star_debuff.up|active_enemies>=2)|boss&fight_remains<35
 # Variable that evaluates when next dragonrage is by working out the maximum between the dragonrage cd and your empowers, ignoring CDR effect estimates.
 actions+=/variable,name=next_dragonrage,value=cooldown.dragonrage.remains<?((cooldown.eternity_surge.remains-8)>?(cooldown.fire_breath.remains-8))
 ## Invoke External Power Infusions if they're available during dragonrage
@@ -76,7 +76,7 @@ actions.aoe+=/call_action_list,name=fb,if=talent.dragonrage&cooldown.dragonrage.
 actions.aoe+=/tip_the_scales,if=(!talent.dragonrage|buff.dragonrage.up)&(cooldown.fire_breath.remains<=cooldown.eternity_surge.remains|(cooldown.eternity_surge.remains<=cooldown.fire_breath.remains&talent.font_of_magic)&!talent.engulf)
 # BaumChange 2: Do as FS - Neutral
 actions.aoe+=/shattering_star,cycle_targets=1,if=(cooldown.dragonrage.up&talent.arcane_vigor|talent.eternitys_span&active_enemies<=3)&talent.engulf
-actions.aoe+=/dragonrage,cycle_targets=1,if=target.time_to_die>=32|active_enemies>=3&target.time_to_die>=15|raid&boss&fight_remains<30
+actions.aoe+=/dragonrage,cycle_targets=1,if=target.time_to_die>=32|active_enemies>=3&target.time_to_die>=15|boss&fight_remains<30
 # Cast Fire Breath DS optimization: Only cast if current fight will last 8s+ or encounter ends in less than 30s
 actions.aoe+=/call_action_list,name=fb,strict=1,if=(!talent.dragonrage|buff.dragonrage.up|cooldown.dragonrage.remains>variable.dr_prep_time_aoe|!talent.animosity|talent.flame_siphon)&(target.time_to_die>=8|talent.mass_disintegrate)
 actions.aoe+=/call_action_list,name=es,strict_if=(!talent.dragonrage|buff.dragonrage.up|cooldown.dragonrage.remains>variable.dr_prep_time_aoe|!talent.animosity),if=(!talent.dragonrage|buff.dragonrage.up|cooldown.dragonrage.remains>variable.dr_prep_time_aoe|!talent.animosity)&(!buff.jackpot.up|!set_bonus.tww2_4pc|talent.mass_disintegrate)

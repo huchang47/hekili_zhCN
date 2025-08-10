@@ -8,7 +8,7 @@ actions.precombat+=/variable,name=bone_shield_refresh_value,value=7
 
 actions+=/mind_freeze
 actions+=/use_item,name=tome_of_lights_devotion,if=buff.inner_resilience.up,use_off_gcd=1
-actions+=/use_item,name=unyielding_netherprism,if=cooldown.dancing_rune_weapon.remains<1|raid&boss&fight_remains<=20,use_off_gcd=1
+actions+=/use_item,name=unyielding_netherprism,if=cooldown.dancing_rune_weapon.remains<1|boss&fight_remains<=20,use_off_gcd=1
 actions+=/use_items
 actions+=/use_item,name=bestinslots,use_off_gcd=1
 actions+=/blood_fury,if=buff.dancing_rune_weapon.up

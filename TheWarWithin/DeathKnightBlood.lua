@@ -313,7 +313,7 @@ spec:RegisterTalents( {
     antimagic_barrier              = {  76046,  205727, 1 }, -- Reduces the cooldown of Anti-Magic Shell by $s1 sec and increases its duration and amount absorbed by $s2%
     antimagic_zone                 = {  76065,   51052, 1 }, -- Places an Anti-Magic Zone for $s1 sec, reducing the magic damage taken by party or raid members by $s2%
     asphyxiate                     = {  76064,  221562, 1 }, -- Lifts the enemy target off the ground, crushing their throat with dark energy and stunning them for $s1 sec
-    assimilation                   = {  76048,  374383, 1 }, --
+    assimilation                   = {  76048,  374383, 1 }, -- The cooldown of Anti-Magic Zone is reduced by $s1 sec and its duration is increased by $s2 sec
     blinding_sleet                 = {  76044,  207167, 1 }, -- Targets in a cone in front of you are blinded, causing them to wander disoriented for $s1 sec. Damage may cancel the effect. When Blinding Sleet ends, enemies are slowed by $s2% for $s3 sec
     blood_draw                     = {  76056,  374598, 1 }, -- When you fall below $s1% health you drain $s2 health from nearby enemies, the damage you take is reduced by $s3% and your Death Strike cost is reduced by $s4 for $s5 sec. Can only occur every $s6 min
     blood_scent                    = {  76078,  374030, 1 }, -- Increases Leech by $s1%
@@ -324,11 +324,11 @@ spec:RegisterTalents( {
     death_pact                     = {  76075,   48743, 1 }, -- Create a death pact that heals you for $s1% of your maximum health, but absorbs incoming healing equal to $s2% of your max health for $s3 sec
     death_strike                   = {  76071,   49998, 1 }, -- Focuses dark power into a strike that deals $s$s2 Physical damage and heals you for $s3% of all damage taken in the last $s4 sec, minimum $s5% of maximum health
     deaths_echo                    = { 102007,  356367, 1 }, -- Death's Advance, Death and Decay, and Death Grip have $s1 additional charge
-    deaths_reach                   = { 102006,  276079, 1 }, --
-    enfeeble                       = {  76060,  392566, 1 }, --
+    deaths_reach                   = { 102006,  276079, 1 }, -- Increases the range of Death Grip by $s1 yds. Killing an enemy that yields experience or honor resets the cooldown of Death Grip
+    enfeeble                       = {  76060,  392566, 1 }, -- Your ghoul's attacks have a chance to apply Enfeeble, reducing the enemies movement speed by $s1% and the damage they deal to you by $s2% for $s3 sec
     gloom_ward                     = {  76052,  391571, 1 }, -- Absorbs are $s1% more effective on you
-    grip_of_the_dead               = {  76057,  273952, 1 }, --
-    ice_prison                     = {  76086,  454786, 1 }, --
+    grip_of_the_dead               = {  76057,  273952, 1 }, -- Death and Decay reduces the movement speed of enemies within its area by $s1%, decaying by $s2% every sec
+    ice_prison                     = {  76086,  454786, 1 }, -- Chains of Ice now also roots enemies for $s1 sec but its cooldown is increased to $s2 sec
     icebound_fortitude             = {  76081,   48792, 1 }, -- Your blood freezes, granting immunity to Stun effects and reducing all damage you take by $s1% for $s2 sec
     icy_talons                     = {  76085,  194878, 1 }, -- Your Runic Power spending abilities increase your melee attack speed by $s1% for $s2 sec, stacking up to $s3 times
     improved_death_strike          = {  76067,  374277, 1 }, -- Death Strike's cost is reduced by $s1, and its healing is increased by $s2%
@@ -336,9 +336,9 @@ spec:RegisterTalents( {
     march_of_darkness              = {  76074,  391546, 1 }, -- Death's Advance grants an additional $s1% movement speed over the first $s2 sec
     mind_freeze                    = {  76084,   47528, 1 }, -- Smash the target's mind with cold, interrupting spellcasting and preventing any spell in that school from being cast for $s1 sec
     null_magic                     = { 102008,  454842, 1 }, -- Magic damage taken is reduced by $s1% and the duration of harmful Magic effects against you are reduced by $s2%
-    osmosis                        = {  76088,  454835, 1 }, --
-    permafrost                     = {  76066,  207200, 1 }, --
-    proliferating_chill            = { 101708,  373930, 1 }, --
+    osmosis                        = {  76088,  454835, 1 }, -- Anti-Magic Shell increases healing received by $s1%
+    permafrost                     = {  76066,  207200, 1 }, -- Your auto attack damage grants you an absorb shield equal to $s1% of the damage dealt
+    proliferating_chill            = { 101708,  373930, 1 }, -- Chains of Ice affects $s1 additional nearby enemy
     raise_dead                     = {  76072,   46585, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time. Lasts $s1 min
     rune_mastery                   = {  76079,  374574, 2 }, -- Consuming a Rune has a chance to increase your Strength by $s1% for $s2 sec
     runic_attenuation              = {  76045,  207104, 1 }, -- Auto attacks have a chance to generate $s1 Runic Power
@@ -350,23 +350,23 @@ spec:RegisterTalents( {
     unholy_bond                    = {  76076,  374261, 1 }, -- Increases the effectiveness of your Runeforge effects by $s1%
     unholy_endurance               = {  76058,  389682, 1 }, -- Increases Lichborne duration by $s1 sec and while active damage taken is reduced by $s2%
     unholy_momentum                = {  76069,  374265, 1 }, -- Increases Haste by $s1%
-    unyielding_will                = {  76050,  457574, 1 }, --
-    vestigial_shell                = {  76053,  454851, 1 }, --
+    unyielding_will                = {  76050,  457574, 1 }, -- Anti-Magic Shell now removes all harmful magical effects when activated, but its cooldown is increased by $s1 sec
+    vestigial_shell                = {  76053,  454851, 1 }, -- Casting Anti-Magic Shell grants $s2 nearby allies a Lesser Anti-Magic Shell that Absorbs up to $s$s3 magic damage and reduces the duration of harmful Magic effects against them by $s4%
     veteran_of_the_third_war       = {  76068,   48263, 1 }, -- Stamina increased by $s1%
     will_of_the_necropolis         = {  76054,  206967, 2 }, -- Damage taken below $s1% Health is reduced by $s2%
     wraith_walk                    = {  76077,  212552, 1 }, -- Embrace the power of the Shadowlands, removing all root effects and increasing your movement speed by $s1% for $s2 sec. Taking any action cancels the effect. While active, your movement speed cannot be reduced below $s3%
 
     -- Blood
     blood_boil                     = {  76170,   50842, 1 }, -- Deals $s$s2 Shadow damage and infects all enemies within $s3 yds with Blood Plague.  Blood Plague A shadowy disease that drains $s6 health from the target over $s7 sec
-    blood_feast                    = { 102243,  391386, 1 }, --
+    blood_feast                    = { 102243,  391386, 1 }, -- Anti-Magic Shell heals you for $s1% of the damage it absorbs
     blood_tap                      = {  76039,  221699, 1 }, -- Consume the essence around you to generate $s1 Rune. Recharge time reduced by $s2 sec whenever a Bone Shield charge is consumed
     blooddrinker                   = { 102244,  206931, 1 }, -- Drains $s2 health from the target over $s3 sec$s$s4 The damage they deal to you is reduced by $s5% for the duration and $s6 sec after channeling it fully. You can move, parry, dodge, and use defensive abilities while channeling this ability. Generates $s7 additional Runic Power over the duration
-    bloodied_blade                 = { 102242,  458753, 1 }, --
-    bloodshot                      = {  76125,  391398, 1 }, --
-    bloodworms                     = {  76174,  195679, 1 }, --
+    bloodied_blade                 = { 102242,  458753, 1 }, -- Parrying an attack grants you a charge of Bloodied Blade, increasing your Strength by $s1%, up to $s2% for $s3 sec. At $s4 stacks, your next parry consumes all charges to unleash a Heart Strike at $s5% effectiveness, and increases your Strength by $s6% for $s7 sec
+    bloodshot                      = {  76125,  391398, 1 }, -- While Blood Shield is active, you deal $s1% increased Physical damage
+    bloodworms                     = {  76174,  195679, 1 }, -- Your auto attacks have a chance to summon a Bloodworm. Bloodworms deal minor damage to your target for $s1 sec and then burst, healing you for $s2% of your missing health. If you drop below $s3% health, your Bloodworms will immediately burst and heal you
     bone_collector                 = {  76171,  458572, 1 }, -- When you would pull an enemy generate $s1 charge of Bone Shield.  Bone Shield Surrounds you with a barrier of whirling bones, increasing Armor by $s4. Each melee attack against you consumes a charge. Lasts $s5 sec or until all charges are consumed
     bonestorm                      = {  76127,  194844, 1 }, -- Consume up to $s2 Bone Shield charges to create a whirl of bone and gore that batters all nearby enemies, dealing $s$s3 Shadow damage every $s4 sec, and healing you for $s5% of your maximum health every time it deals damage (up to $s6%). Deals reduced damage beyond $s7 targets. Lasts $s8 sec per Bone Shield charge spent and rapidly regenerates a Bone Shield every $s9 sec
-    carnage                        = { 102245,  458752, 1 }, --
+    carnage                        = { 102245,  458752, 1 }, -- Blooddrinker and Consumption now contribute to your Mastery: Blood Shield. Each time an enemy strikes your Blood Shield, the cooldowns of Blooddrinker and Consumption have a chance to be reset
     coagulopathy                   = {  76038,  391477, 1 }, -- Enemies affected by Blood Plague take $s1% increased damage from you and Death Strike increases the damage of your Blood Plague by $s2% for $s3 sec, stacking up to $s4 times
     consumption                    = { 102244,  274156, 1 }, -- Strikes all enemies in front of you with a hungering attack that deals $s$s2 Physical damage and heals you for $s3% of that damage. Deals reduced damage beyond $s4 targets. Causes your Blood Plague damage to occur $s5% more quickly for $s6 sec. Generates $s7 Runes
     dancing_rune_weapon            = {  76138,   49028, 1 }, -- Summons a rune weapon for $s1 sec that mirrors your melee attacks and bolsters your defenses. While active, you gain $s2% parry chance
@@ -376,13 +376,13 @@ spec:RegisterTalents( {
     heart_strike                   = {  76169,  206930, 1 }, -- Instantly strike the target and $s2 other nearby enemy, causing $s$s3 Physical damage, and reducing enemies' movement speed by $s4% for $s5 sec, plus $s6 Runic Power per additional enemy struck
     heartbreaker                   = {  76135,  221536, 1 }, -- Heart Strike generates $s1 additional Runic Power per target hit
     heartrend                      = {  76131,  377655, 1 }, -- Heart Strike has a chance to increase the damage of your next Death Strike by $s1%
-    hemostasis                     = {  76137,  273946, 1 }, --
+    hemostasis                     = {  76137,  273946, 1 }, -- Each enemy hit by Blood Boil increases the damage and healing done by your next Death Strike by $s1%, stacking up to $s2 times
     improved_bone_shield           = {  76142,  374715, 1 }, -- Bone Shield increases your Haste by $s1%
-    improved_heart_strike          = {  76126,  374717, 2 }, --
+    improved_heart_strike          = {  76126,  374717, 2 }, -- Heart Strike damage increased by $s1%
     improved_vampiric_blood        = {  76140,  317133, 2 }, -- Vampiric Blood's healing and absorb amount is increased by $s1% and duration by $s2 sec
     insatiable_blade               = {  76129,  377637, 1 }, -- Dancing Rune Weapon generates $s1 Bone Shield charges. When a charge of Bone Shield is consumed, the cooldown of Dancing Rune Weapon is reduced by $s2 sec
-    iron_heart                     = {  76172,  391395, 1 }, --
-    leeching_strike                = {  76145,  377629, 1 }, --
+    iron_heart                     = {  76172,  391395, 1 }, -- Blood Shield's duration is increased by $s1 sec and it absorbs $s2% more damage
+    leeching_strike                = {  76145,  377629, 1 }, -- Heart Strike heals you for $s1% health for each enemy hit while affected by Blood Plague
     mark_of_blood                  = {  76139,  206940, 1 }, -- Places a Mark of Blood on an enemy for $s1 sec. The enemy's damaging auto attacks will also heal their victim for $s2% of the victim's maximum health
     marrowrend                     = {  76168,  195182, 1 }, -- Smash the target, dealing $s$s2 Physical damage and generating $s3 charges of Bone Shield.  Bone Shield Surrounds you with a barrier of whirling bones, increasing Armor by $s6. Each melee attack against you consumes a charge. Lasts $s7 sec or until all charges are consumed
     ossified_vitriol               = {  76146,  458744, 1 }, -- When you lose a Bone Shield charge the damage of your next Marrowrend is increased by $s1%, stacking up to $s2%
@@ -392,32 +392,32 @@ spec:RegisterTalents( {
     rapid_decomposition            = {  76141,  194662, 1 }, -- Your Blood Plague and Death and Decay deal damage $s1% more often. Additionally, your Blood Plague leeches $s2% more Health
     red_thirst                     = {  76132,  205723, 1 }, -- Reduces the cooldown on Vampiric Blood by $s1 sec per $s2 Runic Power spent
     reinforced_bones               = {  76143,  374737, 1 }, -- Increases Armor gained from Bone Shield by $s1% and it can stack $s2 additional times
-    relish_in_blood                = {  76147,  317610, 1 }, --
+    relish_in_blood                = {  76147,  317610, 1 }, -- While Crimson Scourge is active, your next Death and Decay heals you for $s1 health per Bone Shield charge and you immediately gain $s2 Runic Power
     rune_tap                       = {  76166,  194679, 1 }, -- Reduces all damage taken by $s1% for $s2 sec
     sanguine_ground                = {  76041,  391458, 1 }, -- You deal $s1% more damage and receive $s2% more healing while standing in your Death and Decay
     shattering_bone                = {  76128,  377640, 1 }, -- When Bone Shield is consumed it shatters dealing $s$s3 Shadow damage to nearby enemies$s$s4 This damage is tripled while you are within your Death and Decay
-    tightening_grasp               = {  76165,  206970, 1 }, --
+    tightening_grasp               = {  76165,  206970, 1 }, -- Gorefiend's Grasp cooldown is reduced by $s1 sec and it now also Silences enemies for $s2 sec
     tombstone                      = {  76139,  219809, 1 }, -- Consume up to $s1 Bone Shield charges. For each charge consumed, you gain $s2 Runic Power and absorb damage equal to $s3% of your maximum health for $s4 sec
     umbilicus_eternus              = {  76040,  391517, 1 }, -- After Vampiric Blood expires, you absorb damage equal to $s1 times the damage your Blood Plague dealt during Vampiric Blood
     vampiric_blood                 = {  76173,   55233, 1 }, -- Embrace your undeath, increasing your maximum health by $s1% and increasing all healing and absorbs received by $s2% for $s3 sec
     voracious                      = {  76043,  273953, 1 }, -- Death Strike's healing is increased by $s1% and grants you $s2% Leech for $s3 sec
 
     -- Deathbringer
-    bind_in_darkness               = {  95043,  440031, 1 }, --
-    dark_talons                    = {  95057,  436687, 1 }, --
-    deaths_messenger               = {  95049,  437122, 1 }, --
-    expelling_shield               = {  95049,  439948, 1 }, --
-    exterminate                    = {  95068,  441378, 1 }, --
-    grim_reaper                    = {  95034,  434905, 1 }, --
-    pact_of_the_deathbringer       = {  95035,  440476, 1 }, --
-    reaper_of_souls                = {  95034,  440002, 1 }, --
+    bind_in_darkness               = {  95043,  440031, 1 }, -- Blood Boil deals $s2% increased damage, and is now Shadowfrost$s$s3 Shadowfrost damage applies $s4 stacks to Reaper's Mark and $s5 stacks when it is a critical strike
+    dark_talons                    = {  95057,  436687, 1 }, -- Marrowrend and Heart Strike have a $s1% chance to grant $s2 stacks of Icy Talons and increase its maximum stacks by the same amount for $s3 sec. Runic Power spending abilities count as Shadowfrost while Icy Talons is active
+    deaths_messenger               = {  95049,  437122, 1 }, -- Reduces the cooldowns of Lichborne and Raise Dead by $s1 sec
+    expelling_shield               = {  95049,  439948, 1 }, -- When an enemy deals direct damage to your Anti-Magic Shell, their cast speed is reduced by $s1% for $s2 sec
+    exterminate                    = {  95068,  441378, 1 }, -- After Reaper's Mark explodes, your next $s3 Marrowrends cost $s4 Rune and summon $s5 scythes to strike your enemies. The first scythe strikes your target for $s$s6 Shadowfrost damage and has a $s7% chance to reap a Bonestorm for $s8 sec, the second scythe strikes all enemies around your target for $s$s9 Shadowfrost damage. Deals reduced damage beyond $s10 targets
+    grim_reaper                    = {  95034,  434905, 1 }, -- Reaper's Mark initial strike grants $s1 charges of Bone Shield. Reaper's Mark explosion deals up to $s2% increased damage based on your target's missing health
+    pact_of_the_deathbringer       = {  95035,  440476, 1 }, -- When you suffer a damaging effect equal to $s1% of your maximum health, you instantly cast Death Pact at $s2% effectiveness. May only occur every $s3 min. When a Reaper's Mark explodes, the cooldowns of this effect and Death Pact are reduced by $s4 sec
+    reaper_of_souls                = {  95034,  440002, 1 }, -- When you apply Reaper's Mark, the cooldown of Soul Reaper is reset, your next Soul Reaper costs no runes, and it explodes on the target regardless of their health. Soul Reaper damage is increased by $s1%
     reapers_mark                   = {  95062,  439843, 1 }, -- Viciously slice into the soul of your enemy, dealing $s$s2 Shadowfrost damage and applying Reaper's Mark. Each time you deal Shadow or Frost damage, add a stack of Reaper's Mark. After $s3 sec or reaching $s4 stacks, the mark explodes, dealing $s5 damage per stack. Reaper's Mark travels to an unmarked enemy nearby if the target dies
-    reapers_onslaught              = {  95057,  469870, 1 }, --
-    rune_carved_plates             = {  95035,  440282, 1 }, --
-    soul_rupture                   = {  95061,  437161, 1 }, --
-    swift_and_painful              = {  95032,  443560, 1 }, --
-    wave_of_souls                  = {  95036,  439851, 1 }, --
-    wither_away                    = {  95058,  441894, 1 }, --
+    reapers_onslaught              = {  95057,  469870, 1 }, -- Reduces the cooldown of Reaper's Mark by $s1 sec, but the amount of Marrowrends empowered by Exterminate is reduced by $s2
+    rune_carved_plates             = {  95035,  440282, 1 }, -- Each Rune spent reduces the magic damage you take by $s1% and each Rune generated reduces the physical damage you take by $s2% for $s3 sec, up to $s4 times
+    soul_rupture                   = {  95061,  437161, 1 }, -- When Reaper's Mark explodes, it deals $s1% of the damage dealt to nearby enemies and causes them to deal $s2% reduced Physical damage to you for $s3 sec
+    swift_and_painful              = {  95032,  443560, 1 }, -- If no enemies are struck by Soul Rupture, you gain $s1% Strength for $s2 sec. Wave of Souls is $s3% more effective on the main target of your Reaper's Mark
+    wave_of_souls                  = {  95036,  439851, 1 }, -- Reaper's Mark sends forth bursts of Shadowfrost energy and back, dealing $s$s2 Shadowfrost damage both ways to all enemies caught in its path. Wave of Souls critical strikes cause enemies to take $s3% increased Shadowfrost damage for $s4 sec, stacking up to $s5 times, and it is always a critical strike on its way back
+    wither_away                    = {  95058,  441894, 1 }, -- Blood Plague deals its damage $s1% faster, and the second scythe of Exterminate applies Blood Plague
 
     -- Sanlayn
     bloodsoaked_ground             = {  95048,  434033, 1 }, -- While you are within your Death and Decay, your physical damage taken is reduced by $s1% and your chance to gain Vampiric Strike is increased by $s2%
@@ -426,9 +426,9 @@ spec:RegisterTalents( {
     gift_of_the_sanlayn            = {  95053,  434152, 1 }, -- While Dancing Rune Weapon is active you gain Gift of the San'layn. Gift of the San'layn increases the effectiveness of your Essence of the Blood Queen by $s1%, and Vampiric Strike replaces your Heart Strike for the duration
     incite_terror                  = {  95040,  434151, 1 }, -- Vampiric Strike and Heart Strike cause your targets to take $s1% increased Shadow damage, up to $s2% for $s3 sec. Vampiric Strike benefits from Incite Terror at $s4% effectiveness
     infliction_of_sorrow           = {  95033,  434143, 1 }, -- When Vampiric Strike damages an enemy affected by your Blood Plague, it extends the duration of the disease by $s1 sec, and deals $s2% of the remaining damage to the enemy. After Gift of the San'layn ends, you gain a charge of Death and Decay, and your next Heart Strike consumes the disease to deal $s3% of their remaining damage to the target
-    newly_turned                   = {  95064,  433934, 1 }, --
+    newly_turned                   = {  95064,  433934, 1 }, -- Raise Ally revives players at full health and grants you and your ally an absorb shield equal to $s1% of your maximum health
     pact_of_the_sanlayn            = {  95055,  434261, 1 }, -- You store $s1% of all Shadow damage dealt into your Blood Beast to explode for additional damage when it expires
-    sanguine_scent                 = {  95055,  434263, 1 }, --
+    sanguine_scent                 = {  95055,  434263, 1 }, -- Your Death Coil and Death Strike have a $s1% increased chance to trigger Vampiric Strike when damaging enemies below $s2% health
     the_blood_is_life              = {  95046,  434260, 1 }, -- Dancing Rune Weapon summons a Blood Beast to attack your enemy for $s1 sec. Each time the Blood Beast attacks, it stores a portion of the damage dealt. When the Blood Beast dies, it explodes, dealing $s2% of the damage accumulated to nearby enemies and healing the Death Knight for the same amount. Deals reduced damage beyond $s3 targets
     vampiric_aura                  = {  95056,  434100, 1 }, -- Your Leech is increased by $s1%. While Lichborne is active, the Leech bonus of this effect is increased by $s2%, and it affects $s3 allies within $s4 yds
     vampiric_speed                 = {  95064,  434028, 1 }, -- Death's Advance and Wraith Walk movement speed bonuses are increased by $s1%. Activating Death's Advance or Wraith Walk increases $s2 nearby allies movement speed by $s3% for $s4 sec
@@ -438,15 +438,15 @@ spec:RegisterTalents( {
 
 -- PvP Talents
 spec:RegisterPvpTalents( {
-    bloodforged_armor              = 5587, -- (410301)
+    bloodforged_armor              = 5587, -- (410301) Death Strike reduces all Physical damage taken by $s1% for $s2 sec
     dark_simulacrum                = 3511, -- (77606) Places a dark ward on an enemy player that persists for $s1 sec, triggering when the enemy next spends mana on a spell, and allowing the Death Knight to unleash an exact duplicate of that spell
     death_chain                    =  609, -- (203173) Chains $s2 enemies together, dealing $s$s3 Shadow damage and causing $s4% of all damage taken to also be received by the others in the chain. Lasts for $s5 sec
-    decomposing_aura               = 3441, -- (199720)
-    last_dance                     =  608, -- (233412)
-    murderous_intent               =  841, -- (207018)
-    price_of_progress              = 5712, -- (1233429)
-    rot_and_wither                 =  204, -- (202727)
-    spellwarden                    = 5592, -- (410320)
+    decomposing_aura               = 3441, -- (199720) All enemies within $s1 yards slowly decay, losing up to $s2% of their max health every $s3 sec. Max $s4 stacks. Lasts $s5 sec
+    last_dance                     =  608, -- (233412) Reduces the cooldown of Dancing Rune Weapon by $s1% and its duration by $s2%
+    murderous_intent               =  841, -- (207018) You focus the assault on this target, increasing their damage taken by $s1% for $s2 sec. Each unique player that attacks the target increases the damage taken by an additional $s3%, stacking up to $s4 times. Your melee attacks refresh the duration of Focused Assault
+    price_of_progress              = 5712, -- (1233429) You sacrifice $s1% of your health every $s2 sec and in exchange you cannot be slowed below $s3% of normal speed, and you are immune to forced movement effects and knockbacks. Lasts until canceled
+    rot_and_wither                 =  204, -- (202727) Your Death and Decay rots enemies each time it deals damage, absorbing healing equal to $s1% of damage dealt
+    spellwarden                    = 5592, -- (410320) Anti-Magic Shell is now usable on allies and its cooldown is reduced by $s1 sec
     strangulate                    =  206, -- (47476) Shadowy tendrils constrict an enemy's throat, silencing them for $s1 sec
 } )
 

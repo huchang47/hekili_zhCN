@@ -61,11 +61,11 @@ actions.build+=/backstab
 
 # Cooldowns
 actions.cds+=/cold_blood,if=cooldown.secret_technique.up&buff.shadow_dance.up&combo_points>=6&variable.secret&buff.flagellation_persist.up
-actions.cds+=/potion,if=buff.bloodlust.up|raid&boss&fight_remains<30|buff.flagellation_buff.up
-actions.cds+=/symbols_of_death,if=(buff.symbols_of_death.remains<=3.5&variable.maintenance&(active_enemies>=3|!buff.flagellation_buff.up|dot.rupture.remains>=30)&(!talent.flagellation|cooldown.flagellation.remains>=30-15*!talent.death_perception&cooldown.secret_technique.remains<8|!talent.death_perception)|raid&boss&fight_remains<=15)
+actions.cds+=/potion,if=buff.bloodlust.up|boss&fight_remains<30|buff.flagellation_buff.up
+actions.cds+=/symbols_of_death,if=(buff.symbols_of_death.remains<=3.5&variable.maintenance&(active_enemies>=3|!buff.flagellation_buff.up|dot.rupture.remains>=30)&(!talent.flagellation|cooldown.flagellation.remains>=30-15*!talent.death_perception&cooldown.secret_technique.remains<8|!talent.death_perception)|boss&fight_remains<=15)
 actions.cds+=/shadow_blades,if=variable.maintenance&variable.shd_cp&buff.shadow_dance.up&!buff.premeditation.up
 actions.cds+=/thistle_tea,if=buff.shadow_dance.remains>2&!buff.thistle_tea.up
-actions.cds+=/flagellation,if=combo_points>=5&cooldown.shadow_blades.remains<=3|raid&boss&fight_remains<=25
+actions.cds+=/flagellation,if=combo_points>=5&cooldown.shadow_blades.remains<=3|boss&fight_remains<=25
 
 # This list usually contains Cooldowns with neglectable impact that causes global cooldowns
 actions.fill+=/arcane_torrent,if=energy.deficit>=15+energy.regen
@@ -74,7 +74,7 @@ actions.fill+=/lights_judgment
 actions.fill+=/bag_of_tricks
 
 # [Syrif] - This variable prevents rupture spam when CDs are toggled off, or otherwise desynced due to dungeon gameplay environment 
-actions.finish+=/variable,name=cooldowns_soon,op=setif,condition=!toggle.cooldowns,value=false,value_else=cooldown.shadow_blades.remains<=13&cooldown.flagellation.remains<10&(dot.rupture.remains<(cooldown.shadow_blades.remains+buff.shadow_blades.duration))
+actions.finish+=/variable,name=cooldowns_soon,op=setif,condition=!toggle.cooldowns,value=false,value_else=cooldown.shadow_blades.remains<=13&(cooldown.flagellation.remains<10|!talent.flagellation)&(dot.rupture.remains<(cooldown.shadow_blades.remains+buff.shadow_blades.duration))
 actions.finish+=/secret_technique,if=variable.secret
 # Maintenance Finisher
 actions.finish+=/rupture,if=!variable.skip_rupture&(!dot.rupture.ticking|refreshable|buff.flagellation_buff.up&!buff.symbols_of_death.up&active_enemies<=2)&target.time_to_die-remains>6
@@ -82,11 +82,11 @@ actions.finish+=/rupture,cycle_targets=1,if=!variable.skip_rupture&!variable.pri
 # [Syrif] Uses Hekili-specific variable as a workaround
 actions.finish+=/rupture,if=talent.unseen_blade&variable.cooldowns_soon&active_enemies>=3&dot.rupture.remains<fight_remains
 # Direct Damage Finisher
-actions.finish+=/coup_de_grace,if=debuff.fazed.up&cooldown.flagellation.remains>=20|fight_remains<=10
+actions.finish+=/coup_de_grace,if=debuff.fazed.up&(cooldown.flagellation.remains>=20|!talent.flagellation)|fight_remains<=10
 actions.finish+=/black_powder,if=!variable.priority_rotation&variable.maintenance&(((active_enemies>=2&talent.deathstalkers_mark&(!buff.darkest_night.up|buff.shadow_dance.up&active_enemies>=5))|talent.unseen_blade&active_enemies>=5)|action.coup_de_grace.ready&active_enemies>=3)
-actions.finish+=/eviscerate,if=cooldown.flagellation.remains>=10|active_enemies>=3
+actions.finish+=/eviscerate,if=(cooldown.flagellation.remains>=10|!talent.flagellation)|active_enemies>=3
 
 # Shadow Dance, Vanish, Shadowmeld
-actions.stealth_cds+=/shadow_dance,if=(variable.shd_cp|!talent.premeditation)&variable.maintenance&(cooldown.secret_technique.remains<=24|talent.the_first_dance&buff.shadow_blades.up)&(buff.symbols_of_death.remains>=6|buff.shadow_blades.remains>=6)|raid&boss&fight_remains<=10
+actions.stealth_cds+=/shadow_dance,if=(variable.shd_cp|!talent.premeditation)&variable.maintenance&(cooldown.secret_technique.remains<=24|talent.the_first_dance&buff.shadow_blades.up)&(buff.symbols_of_death.remains>=6|buff.shadow_blades.remains>=6)|boss&fight_remains<=10
 actions.stealth_cds+=/vanish,if=energy>=40&!buff.subterfuge.up&effective_combo_points<=3
 actions.stealth_cds+=/shadowmeld,if=energy>=40&combo_points.deficit>=3

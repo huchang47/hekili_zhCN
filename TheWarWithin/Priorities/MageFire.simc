@@ -29,25 +29,25 @@ actions+=/run_action_list,name=ff_filler,if=talent.frostfire_bolt
 actions+=/run_action_list,name=sf_filler
 
 actions.cds+=/variable,name=combustion_precast_time,value=talent.frostfire_bolt*(action.fireball.cast_time*(!improved_scorch.active|(action.scorch.cast_time<gcd.max))+action.scorch.cast_time*((action.scorch.cast_time>=gcd.max)&improved_scorch.active))+talent.spellfire_spheres*(action.fireball.cast_time*((action.scorch.cast_time<gcd.max)&buff.hot_streak.up|!talent.scorch)+action.scorch.cast_time*((action.scorch.cast_time>=gcd.max)|!buff.hot_streak.up))-variable.cast_remains_time
-actions.cds+=/potion,if=time=0|buff.combustion.remains>6|raid&boss&fight_remains<35
-actions.cds+=/use_item,name=arazs_ritual_forge,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=neural_synapse_enhancer,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,effect_name=gladiators_badge,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=signet_of_the_priory,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=sunblood_amethyst,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=lily_of_the_eternal_weave,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=funhouse_lens,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=mereldars_toll,if=buff.combustion.remains>6|raid&boss&fight_remains<15
-actions.cds+=/use_item,name=flarendos_pilot_light,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=house_of_cards,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=soulletting_ruby,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/use_item,name=quickwick_candlestick,if=buff.combustion.remains>6|raid&boss&fight_remains<20
+actions.cds+=/potion,if=time=0|buff.combustion.remains>6|boss&fight_remains<35
+actions.cds+=/use_item,name=arazs_ritual_forge,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=neural_synapse_enhancer,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,effect_name=gladiators_badge,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=signet_of_the_priory,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=sunblood_amethyst,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=lily_of_the_eternal_weave,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=funhouse_lens,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=mereldars_toll,if=buff.combustion.remains>6|boss&fight_remains<15
+actions.cds+=/use_item,name=flarendos_pilot_light,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=house_of_cards,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=soulletting_ruby,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/use_item,name=quickwick_candlestick,if=buff.combustion.remains>6|boss&fight_remains<20
 actions.cds+=/use_item,name=hyperthread_wristwraps,if=hyperthread_wristwraps.fire_blast>=2&buff.combustion.remains&action.fire_blast.charges=0
 actions.cds+=/use_items
-actions.cds+=/ancestral_call,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/berserking,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/blood_fury,if=buff.combustion.remains>6|raid&boss&fight_remains<20
-actions.cds+=/fireblood,if=buff.combustion.remains>6|raid&boss&fight_remains<10
+actions.cds+=/ancestral_call,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/berserking,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/blood_fury,if=buff.combustion.remains>6|boss&fight_remains<20
+actions.cds+=/fireblood,if=buff.combustion.remains>6|boss&fight_remains<10
 ## actions.cds+=/invoke_external_buff,name=power_infusion,if=buff.power_infusion.down&(buff.combustion.remains>6|fight_remains<25)
 ## actions.cds+=/invoke_external_buff,name=blessing_of_summer,if=buff.blessing_of_summer.down
 

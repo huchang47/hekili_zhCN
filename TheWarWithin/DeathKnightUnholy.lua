@@ -221,7 +221,7 @@ spec:RegisterTalents( {
     blood_draw                     = {  76056,  374598, 1 }, -- When you fall below $s1% health you drain $s2 health from nearby enemies, the damage you take is reduced by $s3% and your Death Strike cost is reduced by $s4 for $s5 sec. Can only occur every $s6 min
     blood_scent                    = {  76078,  374030, 1 }, -- Increases Leech by $s1%
     brittle                        = {  76061,  374504, 1 }, -- Your diseases have a chance to weaken your enemy causing your attacks against them to deal $s1% increased damage for $s2 sec
-    cleaving_strikes               = {  76073,  316916, 1 }, -- Scourge Strike hits up to $s1 additional enemies while you remain in Death and Decay. When leaving your Death and Decay you retain its bonus effects for $s2 sec
+    cleaving_strikes               = {  76073,  316916, 1 }, -- Clawing Shadows hits up to $s1 additional enemies while you remain in Death and Decay. When leaving your Death and Decay you retain its bonus effects for $s2 sec
     coldthirst                     = {  76083,  378848, 1 }, -- Successfully interrupting an enemy with Mind Freeze grants $s1 Runic Power and reduces its cooldown by $s2 sec
     control_undead                 = {  76059,  111673, 1 }, -- Dominates the target undead creature up to level $s1, forcing it to do your bidding for $s2 min
     death_pact                     = {  76075,   48743, 1 }, -- Create a death pact that heals you for $s1% of your maximum health, but absorbs incoming healing equal to $s2% of your max health for $s3 sec
@@ -242,7 +242,7 @@ spec:RegisterTalents( {
     osmosis                        = {  76088,  454835, 1 }, -- Anti-Magic Shell increases healing received by $s1%
     permafrost                     = {  76066,  207200, 1 }, -- Your auto attack damage grants you an absorb shield equal to $s1% of the damage dealt
     proliferating_chill            = { 101708,  373930, 1 }, -- Chains of Ice affects $s1 additional nearby enemy
-    raise_dead                     = {  76072,   46585, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time
+    raise_dead                     = {  76072,   46585, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time. Lasts $s1 min
     rune_mastery                   = {  76079,  374574, 2 }, -- Consuming a Rune has a chance to increase your Strength by $s1% for $s2 sec
     runic_attenuation              = {  76045,  207104, 1 }, -- Auto attacks have a chance to generate $s1 Runic Power
     runic_protection               = {  76055,  454788, 1 }, -- Your chance to be critically struck is reduced by $s1% and your Armor is increased by $s2%
@@ -260,7 +260,7 @@ spec:RegisterTalents( {
     wraith_walk                    = {  76077,  212552, 1 }, -- Embrace the power of the Shadowlands, removing all root effects and increasing your movement speed by $s1% for $s2 sec. Taking any action cancels the effect. While active, your movement speed cannot be reduced below $s3%
 
     -- Unholy
-    all_will_serve                 = {  76181,  194916, 1 }, -- Raise Dead summons an additional skeletal archer at your command that shoots Blighted Arrows. Blighted Arrow An unholy arrow that deals $s$s4 Shadow damage. When consuming Sudden Doom, your Death Coil commands your archer to fire an additional Blighted Arrow at $s5% effectiveness. Epidemic will instead cause Blighted Arrow to ricochet and hit up to $s6 additional targets
+    all_will_serve                 = {  76181,  194916, 1 }, -- Raise Dead summons an additional skeletal archer at your command that shoots Blighted Arrows. Blighted Arrow
     apocalypse                     = {  76185,  275699, 1 }, -- Bring doom upon the enemy, dealing $s$s2 Shadow damage and bursting up to $s3 Festering Wounds on the target. Summons $s4 Army of the Dead ghouls for $s5 sec. Generates $s6 Runes
     army_of_the_dead               = {  76196,   42650, 1 }, -- Summons a legion of ghouls who swarms your enemies, fighting anything they can for $s1 sec
     bursting_sores                 = {  76164,  207264, 1 }, -- Bursting a Festering Wound deals $s2% more damage, and deals $s$s3 Shadow damage to up to $s4 nearby enemies
@@ -270,13 +270,13 @@ spec:RegisterTalents( {
     dark_transformation            = {  76187,   63560, 1 }, -- Your ghoul deals $s$s2 Shadow damage to $s3 nearby enemies and transforms into a powerful undead monstrosity for $s4 sec. Granting them $s5% energy and the ghoul's abilities are empowered and take on new functions while the transformation is active
     death_rot                      = {  76158,  377537, 1 }, -- Death Coil and Epidemic debilitate your enemy applying Death Rot causing them to take $s1% increased Shadow damage, up to $s2% from you for $s3 sec. If Death Coil or Epidemic consume Sudden Doom it applies two stacks of Death Rot
     decomposition                  = {  76154,  455398, 2 }, -- Virulent Plague has a chance to abruptly flare up, dealing $s1% of the damage it dealt to target in the last $s2 sec. When this effect triggers, the duration of your active minions are increased by $s3 sec, up to $s4 sec
-    defile                         = {  76180,  152280, 1 }, -- Defile the targeted ground, dealing $s$s2 Shadow damage to all enemies over $s3 sec. While you remain within your Defile, your Scourge Strike will hit $s4 enemies near the target. Every sec, if any enemies are standing in the Defile, it grows in size and deals increased damage
-    desecrate                      = {  76161, 1234559, 1 }, -- Death and Decay deals $s1% more damage, has its cooldown reduced by $s2 sec, and is replaced by Desecrate after it is cast. Desecrate
+    defile                         = {  76161,  152280, 1 }, -- Defile the targeted ground, dealing $s$s2 Shadow damage to all enemies over $s3 sec. While you remain within your Defile, your Clawing Shadows will hit $s4 enemies near the target. Every sec, if any enemies are standing in the Defile, it grows in size and deals increased damage
+    desecrate                      = {  76161, 1234559, 1 }, -- Death and Decay deals $s1% more damage, has its cooldown reduced by $s2 sec, and is replaced by Desecrate after it is cast. Desecrate Consume your Death and Decay and crush your enemies within, dealing $s5% of its remaining damage instantly. Applies or bursts $s6-$s7 Festering Wounds, depending on whether the target is already affected by Festering Wounds. Grants you the benefits of standing in Death and Decay
     doomed_bidding                 = {  76176,  455386, 1 }, -- Consuming Sudden Doom calls upon a Magus of the Dead to assist you for $s1 sec
     ebon_fever                     = {  76160,  207269, 1 }, -- Diseases deal $s1% more damage over time in half the duration
     eternal_agony                  = {  76182,  390268, 1 }, -- Death Coil and Epidemic increase the duration of Dark Transformation by $s1 sec
     festering_scythe               = {  76193,  455397, 1 }, -- Every $s2 Festering Wound you burst empowers your next Festering Strike to become Festering Scythe. Festering Scythe Sweep through all enemies within $s5 yds in front of you, dealing $s$s6 Shadow damage and infecting them with $s7-$s8 Festering Wounds
-    festering_strike               = {  76189,   85948, 1 }, -- Strikes for $s$s3 Physical damage and infects the target with $s4-$s5 Festering Wounds.  Festering Wound A pustulent lesion that will burst on death or when damaged by Scourge Strike, dealing $s$s8 Shadow damage and generating $s9 Runic Power
+    festering_strike               = {  76189,   85948, 1 }, -- Strikes for $s$s3 Physical damage and infects the target with $s4-$s5 Festering Wounds.  Festering Wound A pustulent lesion that will burst on death or when damaged by Clawing Shadows, dealing $s$s8 Shadow damage and generating $s9 Runic Power
     festermight                    = {  76152,  377590, 2 }, -- Popping a Festering Wound increases your Strength by $s1% for $s2 sec stacking. Multiple instances may overlap
     foul_infections                = {  76162,  455396, 1 }, -- Your diseases deal $s1% more damage and have a $s2% increased chance to critically strike
     ghoulish_frenzy                = {  76194,  377587, 1 }, -- Dark Transformation also increases the attack speed and damage of you and your Monstrosity by $s1%
@@ -285,7 +285,7 @@ spec:RegisterTalents( {
     improved_death_coil            = {  76184,  377580, 1 }, -- Death Coil deals $s1% additional damage and seeks out $s2 additional nearby enemy
     improved_festering_strike      = {  76192,  316867, 1 }, -- Festering Strike and Festering Wound damage increased by $s1%
     infected_claws                 = {  76195,  207272, 1 }, -- Your ghoul's Claw attack has a $s1% chance to cause a Festering Wound on the target
-    legion_of_souls                = {  76153,  383269, 1 }, -- Summon a legion of clawing souls to assist you, dealing $s1 million Shadow damage and applying up to $s2 Festering Wounds over $s3 sec to all nearby enemies. Deals reduced damage beyond $s4 targets. Grants you the benefits of standing in Death and Decay
+    legion_of_souls                = {  76153,  383269, 1 }, -- Summon a legion of clawing souls to assist you, dealing $s$s2 Shadow damage and applying up to $s3 Festering Wounds over $s4 sec to all nearby enemies. Deals reduced damage beyond $s5 targets. Grants you the benefits of standing in Death and Decay
     magus_of_the_dead              = {  76148,  390196, 1 }, -- Apocalypse and Army of the Dead also summon a Magus of the Dead who hurls Frostbolts and Shadow Bolts at your foes
     menacing_magus                 = { 101882,  455135, 1 }, -- Your Magus of the Dead Shadow Bolt now fires a volley of Shadow Bolts at up to $s1 nearby enemies
     morbidity                      = {  76197,  377592, 2 }, -- Diseased enemies take $s1% increased damage from you per disease they are affected by
@@ -293,8 +293,8 @@ spec:RegisterTalents( {
     plaguebringer                  = {  76183,  390175, 1 }, -- Scourge Strike causes your disease damage to occur $s1% more quickly for $s2 sec
     raise_abomination              = {  76153,  455395, 1 }, -- Raises an Abomination for $s1 sec which wanders and attacks enemies, applying Festering Wound when it melees targets, and affecting all those nearby with Virulent Plague
     raise_dead_2                   = {  76188,   46584, 1 }, -- Raises a ghoul to fight by your side. You can have a maximum of one ghoul at a time
-    reaping                        = {  76179,  377514, 1 }, -- Your Soul Reaper, Scourge Strike, Festering Strike, and Death Coil deal $s1% additional damage to enemies below $s2% health. Soul Reaper's execute effect increases the damage of your minions by $s3% for $s4 sec
-    rotten_touch                   = {  76175,  390275, 1 }, -- Sudden Doom causes your next Death Coil to also increase your Scourge Strike damage against the target by $s1% for $s2 sec
+    reaping                        = {  76179,  377514, 1 }, -- Your Soul Reaper, Clawing Shadows, Festering Strike, and Death Coil deal $s1% additional damage to enemies below $s2% health. Soul Reaper's execute effect increases the damage of your minions by $s3% for $s4 sec
+    rotten_touch                   = {  76175,  390275, 1 }, -- Sudden Doom causes your next Death Coil to also increase your Clawing Shadows damage against the target by $s1% for $s2 sec
     scourge_strike                 = {  76190,   55090, 1 }, -- An unholy strike that deals $s$s3 Physical damage and $s$s4 Shadow damage, and causes $s5 Festering Wound to burst. Critical strikes cause the Festering Wound to burst for $s6% increased damage
     sudden_doom                    = {  76191,   49530, 1 }, -- Your auto attacks have a $s1% chance to make your next Death Coil or Epidemic to critically strike. Additionally, your next Death Coil will cost $s2 less Runic Power and burst $s3 Festering Wound
     summon_gargoyle                = {  76176,   49206, 1 }, -- Summon a Gargoyle into the area to bombard the target for $s1 sec. The Gargoyle gains $s2% increased damage for every $s3 Runic Power you spend. Generates $s4 Runic Power
@@ -311,30 +311,44 @@ spec:RegisterTalents( {
     fury_of_the_horsemen           = {  95042,  444069, 1 }, -- Every $s1 Runic Power you spend extends the duration of the Horsemen's aid in combat by $s2 sec, up to $s3 sec
     horsemens_aid                  = {  95037,  444074, 1 }, -- While at your aid, the Horsemen will occasionally cast Anti-Magic Shell on you and themselves at $s1% effectiveness. You may only benefit from this effect every $s2 sec
     hungering_thirst               = {  95044,  444037, 1 }, -- The damage of your diseases and Death Coil are increased by $s1%
-    mawsworn_menace                = {  95054,  444099, 1 }, -- Scourge Strike deals $s1% increased damage and the cooldown of your Defile is reduced by $s2
+    mawsworn_menace                = {  95054,  444099, 1 }, -- Clawing Shadows deals $s1% increased damage and the cooldown of your Defile is reduced by $s2
     mograines_might                = {  95067,  444047, 1 }, -- Your damage is increased by $s1% and you gain the benefits of your Death and Decay while inside Mograine's Death and Decay
     nazgrims_conquest              = {  95059,  444052, 1 }, -- If an enemy dies while Nazgrim is active, the strength of Apocalyptic Conquest is increased by $s1%. Additionally, each Rune you spend increase its value by $s2%
     on_a_paler_horse               = {  95060,  444008, 1 }, -- While outdoors you are able to mount your Acherus Deathcharger in combat
     pact_of_the_apocalypse         = {  95037,  444083, 1 }, -- When you take damage, $s1% of the damage is redirected to each active horsemen
     riders_champion                = {  95066,  444005, 1 }, -- Spending Runes has a chance to call forth the aid of a Horsemen for $s2 sec. Mograine Casts Death and Decay at his location that follows his position. Whitemane Casts Undeath on your target dealing $s$s3 Shadowfrost damage per stack every $s4 sec, for $s5 sec. Each time Undeath deals damage it gains a stack. Cannot be refreshed. Trollbane Casts Chains of Ice on your target slowing their movement speed by $s6% and increasing the damage they take from you by $s7% for $s8 sec. Nazgrim While Nazgrim is active you gain Apocalyptic Conquest, increasing your Strength by $s9%
-    trollbanes_icy_fury            = {  95063,  444097, 1 }, -- Scourge Strike shatters Trollbane's Chains of Ice when hit, dealing $s$s2 Shadowfrost damage to nearby enemies, and slowing them by $s3% for $s4 sec. Deals reduced damage beyond $s5 targets
-    whitemanes_famine              = {  95047,  444033, 1 }, -- When Scourge Strike damages an enemy affected by Undeath it gains $s1 stack and infects another nearby enemy
+    trollbanes_icy_fury            = {  95063,  444097, 1 }, -- Clawing Shadows shatters Trollbane's Chains of Ice when hit, dealing $s$s2 Shadowfrost damage to nearby enemies, and slowing them by $s3% for $s4 sec. Deals reduced damage beyond $s5 targets
+    whitemanes_famine              = {  95047,  444033, 1 }, -- When Clawing Shadows damages an enemy affected by Undeath it gains $s1 stack and infects another nearby enemy
 
     -- Sanlayn
     bloodsoaked_ground             = {  95048,  434033, 1 }, -- While you are within your Death and Decay, your physical damage taken is reduced by $s1% and your chance to gain Vampiric Strike is increased by $s2%
     bloody_fortitude               = {  95056,  434136, 1 }, -- Icebound Fortitude reduces all damage you take by up to an additional $s1% based on your missing health. Killing an enemy that yields experience or honor reduces the cooldown of Icebound Fortitude by $s2 sec
     frenzied_bloodthirst           = {  95065,  434075, 1 }, -- Essence of the Blood Queen stacks $s1 additional times and increases the damage of your Death Coil and Death Strike by $s2% per stack
-    gift_of_the_sanlayn            = {  95053,  434152, 1 }, -- While Dark Transformation is active you gain Gift of the San'layn. Gift of the San'layn increases the effectiveness of your Essence of the Blood Queen by $s1%, and Vampiric Strike replaces your Scourge Strike for the duration
-    incite_terror                  = {  95040,  434151, 1 }, -- Vampiric Strike and Scourge Strike cause your targets to take $s1% increased Shadow damage, up to $s2% for $s3 sec. Vampiric Strike benefits from Incite Terror at $s4% effectiveness
-    infliction_of_sorrow           = {  95033,  434143, 1 }, -- When Vampiric Strike damages an enemy affected by your Virulent Plague, it extends the duration of the disease by $s1 sec, and deals $s2% of the remaining damage to the enemy. After Gift of the San'layn ends, you gain a charge of Defile, and your next Scourge Strike consumes the disease to deal $s3% of their remaining damage to the target
+    gift_of_the_sanlayn            = {  95053,  434152, 1 }, -- While Dark Transformation is active you gain Gift of the San'layn. Gift of the San'layn increases the effectiveness of your Essence of the Blood Queen by $s1%, and Vampiric Strike replaces your Clawing Shadows for the duration
+    incite_terror                  = {  95040,  434151, 1 }, -- Vampiric Strike and Clawing Shadows cause your targets to take $s1% increased Shadow damage, up to $s2% for $s3 sec. Vampiric Strike benefits from Incite Terror at $s4% effectiveness
+    infliction_of_sorrow           = {  95033,  434143, 1 }, -- When Vampiric Strike damages an enemy affected by your Virulent Plague, it extends the duration of the disease by $s1 sec, and deals $s2% of the remaining damage to the enemy. After Gift of the San'layn ends, you gain a charge of Defile, and your next Clawing Shadows consumes the disease to deal $s3% of their remaining damage to the target
     newly_turned                   = {  95064,  433934, 1 }, -- Raise Ally revives players at full health and grants you and your ally an absorb shield equal to $s1% of your maximum health
     pact_of_the_sanlayn            = {  95055,  434261, 1 }, -- You store $s1% of all Shadow damage dealt into your Blood Beast to explode for additional damage when it expires
     sanguine_scent                 = {  95055,  434263, 1 }, -- Your Death Coil, Epidemic and Death Strike have a $s1% increased chance to trigger Vampiric Strike when damaging enemies below $s2% health
     the_blood_is_life              = {  95046,  434260, 1 }, -- Apocalypse summons a Blood Beast to attack your enemy for $s1 sec. Each time the Blood Beast attacks, it stores a portion of the damage dealt. When the Blood Beast dies, it explodes, dealing $s2% of the damage accumulated to nearby enemies and healing the Death Knight for the same amount. Deals reduced damage beyond $s3 targets
     vampiric_aura                  = {  95056,  434100, 1 }, -- Your Leech is increased by $s1%. While Lichborne is active, the Leech bonus of this effect is increased by $s2%, and it affects $s3 allies within $s4 yds
     vampiric_speed                 = {  95064,  434028, 1 }, -- Death's Advance and Wraith Walk movement speed bonuses are increased by $s1%. Activating Death's Advance or Wraith Walk increases $s2 nearby allies movement speed by $s3% for $s4 sec
-    vampiric_strike                = {  95051,  433901, 1 }, -- Your Death Coil, Epidemic and Death Strike have a $s1% chance to make your next Scourge Strike become Vampiric Strike. Vampiric Strike heals you for $s2% of your maximum health and grants you Essence of the Blood Queen, increasing your Haste by $s3%, up to $s4% for $s5 sec
+    vampiric_strike                = {  95051,  433901, 1 }, -- Your Death Coil, Epidemic and Death Strike have a $s1% chance to make your next Clawing Shadows become Vampiric Strike. Vampiric Strike heals you for $s2% of your maximum health and grants you Essence of the Blood Queen, increasing your Haste by $s3%, up to $s4% for $s5 sec
     visceral_strength              = {  95045,  434157, 1 }, -- When Sudden Doom is consumed, you gain $s1% Strength for $s2 sec. When Scourge Strike consumes Virulent Plague, your next Outbreak costs no Runes and casts Death Coil or Epidemic at $s3% effectiveness, whichever you most recently cast
+} )
+
+-- PvP Talents
+spec:RegisterPvpTalents( {
+    bloodforged_armor              = 5585, -- (410301) Death Strike reduces all Physical damage taken by $s1% for $s2 sec
+    dark_simulacrum                =   41, -- (77606) Places a dark ward on an enemy player that persists for $s1 sec, triggering when the enemy next spends mana on a spell, and allowing the Death Knight to unleash an exact duplicate of that spell
+    doomburst                      = 5436, -- (356512) Sudden Doom also causes your next Death Coil to burst up to $s1 Festering Wounds and reduce the target's movement speed by $s2% per burst. Lasts $s3 sec
+    life_and_death                 =   40, -- (288855) When targets afflicted by your Virulent Plague are healed, you are also healed for $s1% of the amount. In addition, your Virulent Plague now erupts for $s2% of normal eruption damage when dispelled
+    necromancers_bargain           = 3746, -- (288848) The cooldown of your Apocalypse is reduced by $s1 sec, but your Apocalypse no longer summons ghouls but instead applies Crypt Fever to the target. Crypt Fever Deals up to $s2% of the targets maximum health in Shadow damage over $s3 sec. Healing spells cast on this target will refresh the duration of Crypt Fever
+    necrotic_wounds                =  149, -- (356520) Bursting a Festering Wound converts it into a Necrotic Wound, absorbing $s1% of all healing received for $s2 sec. Max $s3 stacks. Adding a stack does not refresh the duration
+    reanimation                    =  152, -- (210128) Reanimates a nearby corpse, summoning a zombie for $s1 sec that slowly moves towards your target. If your zombie reaches its target, it explodes after $s2 sec. The explosion stuns all enemies within $s3 yards for $s4 sec and deals $s5% of their health in Shadow damage
+    rot_and_wither                 = 5511, -- (202727) Your Death and Decay rots enemies each time it deals damage, absorbing healing equal to $s1% of damage dealt
+    spellwarden                    = 5590, -- (410320) Anti-Magic Shell is now usable on allies and its cooldown is reduced by $s1 sec
+    strangulate                    = 5430, -- (47476) Shadowy tendrils constrict an enemy's throat, silencing them for $s1 sec
 } )
 
 -- PvP Talents
@@ -410,9 +424,9 @@ spec:RegisterAuras( {
         max_stack = 1
     },
     -- Draining $w1 health from the target every $t1 sec.
-    -- https://wowhead.com/spell=55078
+    -- https://wowhead.com/spell=1235372
     blood_plague = {
-        id = 55078,
+        id = 1235372,
         duration = function() return 24 * ( talent.ebon_fever.enabled and 0.5 or 1 ) end,
         tick_time = function() return 3 * ( talent.ebon_fever.enabled and 0.5 or 1 ) * ( buff.plaguebringer.up and 0.5 or 1 ) end,
         type = "Disease",
@@ -591,7 +605,8 @@ spec:RegisterAuras( {
     festering_scythe_stack = {
         id = 459238,
         duration = 3600,
-        max_stack = 20
+        max_stack = 20,
+        copy = "festering_scythe_stacks"
     },
     -- Suffering from a wound that will deal [(20.7% of Attack power) / 1] Shadow damage when damaged by Scourge Strike.
     festering_wound = {
@@ -614,9 +629,9 @@ spec:RegisterAuras( {
         max_stack = 20
     },
     -- Suffering $w1 Frost damage every $t1 sec.
-    -- https://wowhead.com/spell=55095
+    -- https://wowhead.com/spell=1235371
     frost_fever = {
-        id = 55095,
+        id = 1235371,
         duration = function() return 24 * ( talent.ebon_fever.enabled and 0.5 or 1 ) end,
         tick_time = function() return 3 * ( talent.ebon_fever.enabled and 0.5 or 1 ) * ( buff.plaguebringer.up and 0.5 or 1 ) end,
         max_stack = 1,
@@ -1000,13 +1015,13 @@ spec:RegisterAuras( {
     },
     -- Visceral Strength Your Strength is increased by $s1%. $s2 seconds remaining
     -- https://www.wowhead.com/spell=434159
-    visceral_strength = {
+    visceral_strength_buff = {
         id = 434159,
         duration = 5,
         max_stack = 1
     },
     -- https://www.wowhead.com/spell=1234532
-    visceral_strength_discount = {
+    visceral_strength_unholy = {
         id = 1234532,
         duration = 30,
         max_stack = 1
@@ -2318,7 +2333,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function() return buff.visceral_strength_discount.up and 0 or 1 end,
+        spend = function() return buff.visceral_strength_unholy.up and 0 or 1 end,
         spendType = "runes",
 
         startsCombat = true,
@@ -2334,13 +2349,13 @@ spec:RegisterAbilities( {
                 applyDebuff( "target", "blood_plague" )
                 active_dot.blood_plague = active_enemies
             end
-            if buff.visceral_strength_discount.up then
+            if buff.visceral_strength_unholy.up then
                 if action.death_coil.last_cast >= action.epidemic.last_Cast then
                     spec.abilities.death_coil.handler()
                 else
                     spec.abilities.epidemic.handler()
                 end
-                removeBuff( "visceral_strength_discount" )
+                removeBuff( "visceral_strength_unholy" )
             end
         end
     },
@@ -2506,7 +2521,7 @@ spec:RegisterAbilities( {
             if buff.infliction_of_sorrow.up then
                 removeDebuff( "target", "virulent_plague" )
                 removeBuff( "infliction_of_sorrow" )
-                applyBuff( "visceral_strength_discount" )
+                applyBuff( "visceral_strength_unholy" )
             end
 
             if conduit.lingering_plague.enabled and debuff.virulent_plague.up then

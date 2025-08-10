@@ -62,16 +62,16 @@ actions.cds+=/call_action_list,name=trinkets
 actions.cds+=/desperate_prayer,if=health.pct<=75
 
 # Use Halo to acquire Twist of Fate if an ally can be healed for it and it is not currently up.
-actions.heal_for_tof=halo
+actions.heal_for_tof+=/halo
 # Use Divine Star to acquire Twist of Fate if an ally can be healed for it and it is not currently up.
 actions.heal_for_tof+=/divine_star
 # Use Holy Nova when Rhapsody is fully stacked to acquire Twist of Fate if an ally can be healed for it and it is not currently up.
 actions.heal_for_tof+=/holy_nova,if=buff.rhapsody.stack=20&talent.rhapsody
 
 actions.main+=/variable,name=dots_up,op=set,value=active_dot.vampiric_touch=active_enemies|action.shadow_crash.in_flight,if=active_enemies<3
-actions.main+=/call_action_list,name=cds,if=raid&boss&fight_remains<30|target.time_to_die>15&(!variable.holding_crash|active_enemies>2)
+actions.main+=/call_action_list,name=cds,if=boss&fight_remains<30|target.time_to_die>15&(!variable.holding_crash|active_enemies>2)
 # Use Shadowfiend and Mindbender on cooldown as long as Vampiric Touch and Shadow Word: Pain are active and sync with Dark Ascension
-actions.main+=/mindbender,if=(dot.shadow_word_pain.ticking&variable.dots_up|action.shadow_crash.in_flight)&(!cooldown.halo.up|!talent.power_surge.enabled)&(raid&boss&fight_remains<30|target.time_to_die>15)&(!talent.dark_ascension|cooldown.dark_ascension.remains<gcd.max|raid&boss&fight_remains<15)
+actions.main+=/mindbender,if=(dot.shadow_word_pain.ticking&variable.dots_up|action.shadow_crash.in_flight)&(!cooldown.halo.up|!talent.power_surge.enabled)&(boss&fight_remains<30|target.time_to_die>15)&(!talent.dark_ascension|cooldown.dark_ascension.remains<gcd.max|boss&fight_remains<15)
 # High Priority Shadow Word: Death when you are forcing the bonus from Devour Matter
 actions.main+=/shadow_word_death,cycle_targets=1,if=priest.force_devour_matter&talent.devour_matter
 # Blast more burst :wicked:
@@ -83,7 +83,7 @@ actions.main+=/void_bolt,cycle_targets=1,if=insanity.deficit>16&cooldown.void_bo
 # Do not overcap on insanity
 actions.main+=/devouring_plague,cycle_targets=1,if=active_dot.devouring_plague<=1&dot.devouring_plague.remains<=gcd.max&(!talent.void_eruption|cooldown.void_eruption.remains>=gcd.max*3)|insanity.deficit<=35|buff.mind_devourer.up|buff.entropic_rift.up|buff.power_surge.up&buff.tww3_archon_4pc_helper.stack<4&buff.ascension.up
 # Use Void Torrent if it will get near full Mastery Value
-actions.main+=/void_torrent,cycle_targets=1,if=!variable.holding_crash&(dot.devouring_plague.remains>=2.5&(cooldown.dark_ascension.remains>=12|!talent.dark_ascension|!talent.void_blast)|cooldown.void_eruption.remains<=3&talent.void_eruption),interrupt_if=!talent.entropic_rift,interrupt_immediate=1
+actions.main+=/void_torrent,cycle_targets=1,if=!variable.holding_crash&(dot.devouring_plague.remains>=2.5&(cooldown.dark_ascension.remains>=12|!talent.dark_ascension|!talent.void_blast)|cooldown.void_eruption.remains<=3&talent.void_eruption),interrupt_if=talent.entropic_rift.disabled,interrupt_immediate=1
 # Use Void Volley if it would expire soon
 actions.main+=/void_volley,if=buff.void_volley.remains<=5|buff.entropic_rift.up&action.void_blast.usable_in>buff.entropic_rift.remains|target.time_to_die<=5
 # MFI is a good button

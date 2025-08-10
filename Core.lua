@@ -1967,7 +1967,7 @@ function Hekili.Update()
 
                         local ability = class.abilities[ action ]
                         wait = ability.cast or 0
-/rl
+
                         slot.scriptType = "simc"
                         slot.script = nil
                         slot.hook = nil

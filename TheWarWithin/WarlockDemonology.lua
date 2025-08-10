@@ -30,6 +30,7 @@ local IsActiveSpell = ns.IsActiveSpell
 
 -- Specialization-specific local functions (if any)
 local Glyphed = IsSpellKnownOrOverridesKnown
+local FindPlayerAuraByID = ns.FindPlayerAuraByID
 
 spec:RegisterResource( Enum.PowerType.SoulShards, {
     rampaging_demonic_soul = {
@@ -178,6 +179,18 @@ spec:RegisterTalents( {
     shared_fate                    = {  94823,  449704, 1 }, -- When you kill a target, its tortured soul is flung into a nearby enemy for $s2 sec. This effect inflicts $s$s3 Shadow damage to enemies within $s4 yds every $s5 sec. Deals reduced damage beyond $s6 targets
     soul_anathema                  = {  94847,  449624, 1 }, -- Unleashing your demonic soul bestows a fiendish entity unto the soul of its targets, dealing $s$s2 Shadow damage over $s3 sec. If this effect is reapplied, any remaining damage will be added to the new Soul Anathema
     wicked_reaping                 = {  94821,  449631, 1 }, -- Damage dealt by your demonic soul is increased by $s2%. Consuming Demonic Core feeds the demonic entity within you, causing it to appear and deal $s$s3 Shadow damage to your target
+} )
+
+-- PvP Talents
+spec:RegisterPvpTalents( {
+    bloodstones                    = 5694, -- (1218692) Your Healthstones are replaced with Bloodstones which increase their user's haste by $s1% for $s2 sec instead of healing
+    bonds_of_fel                   = 5545, -- (353753) Encircle enemy players with Bonds of Fel. If any affected player leaves the $s2 yd radius they explode, dealing $s$s3 Fire damage split amongst all nearby enemies
+    call_fel_lord                  =  162, -- (212459) Summon a fel lord to guard the location for $s2 sec. Any enemy that comes within $s3 yards will suffer $s$s4 Physical damage, and players struck will be stunned for $s5 sec
+    gateway_mastery                = 3506, -- (248855) Increases the range of your Demonic Gateway by $s1 yards, and reduces the cast time by $s2%. Reduces the time between how often players can take your Demonic Gateway by $s3 sec
+    impish_instincts               = 5577, -- (409835) Taking direct Physical damage reduces the cooldown of Demonic Circle by $s1 sec. Cannot occur more than once every $s2 sec
+    nether_ward                    = 3624, -- (212295) Surrounds the caster with a shield that lasts $s1 sec, reflecting all harmful spells cast on you
+    shadow_rift                    = 5394, -- (353294) Conjure a Shadow Rift at the target location lasting $s1 sec. Enemy players within the rift when it expires are teleported to your Demonic Circle. Must be within $s2 yds of your Demonic Circle to cast
+    soul_rip                       = 5606, -- (410598) Fracture the soul of up to $s1 target players within $s2 yds into the shadows, reducing their damage done by $s3% and healing received by $s4% for $s5 sec. Souls are fractured up to $s6 yds from the player's location. Players can retrieve their souls to remove this effect
 } )
 
 -- Demon Handling

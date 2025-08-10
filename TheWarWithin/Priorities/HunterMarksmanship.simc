@@ -1,6 +1,6 @@
 ## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/hunter_marksmanship.simc
-## SimulationCraft Commit Sync: 7badbb5
-## Date: 2025-08-04
+## SimulationCraft Commit Sync: fd7df65
+## Date: 2025-08-07
 
 actions.precombat+=/summon_pet,if=talent.unbreakable_bond
 # Determine the stronger trinket to sync with cooldowns. In descending priority: buff effects > damage effects, longer > shorter cooldowns, longer > shorter cast times. Special case to consider Mirror of Fractured Tomorrows weaker than other buff effects since its power is split between the dmg effect and the buff effect.
@@ -41,8 +41,10 @@ actions.cleave+=/volley,if=!talent.double_tap&(buff.precise_shots.down|buff.movi
 actions.cleave+=/trueshot,if=variable.trueshot_ready&(buff.double_tap.down|!talent.volley)&(hero_tree.dark_ranger|buff.lunar_storm_cooldown.up|!talent.double_tap|!talent.volley)&(buff.precise_shots.down|buff.moving_target.up|!talent.volley)
 # Sentinel
 actions.cleave+=/rapid_fire,if=talent.lunar_storm&buff.lunar_storm_cooldown.down&(buff.precise_shots.down|buff.moving_target.up|cooldown.volley.remains&cooldown.trueshot.remains|!talent.volley)
-actions.cleave+=/kill_shot,if=talent.black_arrow&(talent.headshot&buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)|!talent.headshot&buff.razor_fragments.up)
+# Sentinel
 actions.cleave+=/kill_shot,cycle_targets=1,if=!talent.black_arrow&(talent.headshot&buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)|!talent.headshot&buff.razor_fragments.up)
+# Dark Ranger
+actions.cleave+=/kill_shot,cycle_targets=1,if=talent.black_arrow&(talent.headshot&buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)|!talent.headshot&buff.razor_fragments.up)
 actions.cleave+=/multishot,cycle_targets=1,if=buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)&!talent.aspect_of_the_hydra&(talent.symphonic_arsenal|talent.small_game_hunter)
 actions.cleave+=/arcane_shot,cycle_targets=1,if=buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)
 actions.cleave+=/aimed_shot,cycle_targets=1,if=(buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up)&full_recharge_time<action.rapid_fire.execute_time+cast_time&(!talent.bulletstorm|buff.bulletstorm.up)&talent.windrunner_quiver
@@ -57,30 +59,36 @@ actions.cleave+=/steady_shot
 actions.st+=/explosive_shot,if=talent.precision_detonation&action.aimed_shot.in_flight&buff.trueshot.down
 actions.st+=/volley,if=buff.double_tap.down
 actions.st+=/trueshot,if=variable.trueshot_ready&buff.double_tap.down
+# Sentinel only seems to like it due to the Precise Shots gcd bug.
+actions.st+=/steady_shot,if=talent.black_arrow&focus+cast_regen<focus.max&action.aimed_shot.in_flight&!buff.deathblow.react&buff.trueshot.down&cooldown.trueshot.remains
 # Sentinel
 actions.st+=/rapid_fire,if=talent.lunar_storm&buff.lunar_storm_cooldown.down
-actions.st+=/kill_shot,if=talent.black_arrow&(talent.headshot&buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)|!talent.headshot&buff.razor_fragments.up)
+# Sentinel
+actions.st+=/kill_shot,if=!talent.black_arrow&(talent.headshot&buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)|!talent.headshot&buff.razor_fragments.up)
+# Dark Ranger
+actions.st+=/kill_shot,if=talent.black_arrow&(!talent.headshot|talent.headshot&buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down))
 actions.st+=/arcane_shot,if=buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)
 actions.st+=/aimed_shot,if=(buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up)&full_recharge_time<action.rapid_fire.execute_time+cast_time&(!talent.bulletstorm|buff.bulletstorm.up)&talent.windrunner_quiver
-actions.st+=/rapid_fire,if=!talent.bulletstorm|buff.bulletstorm.stack<=10
-actions.st+=/aimed_shot,if=buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up
 actions.st+=/rapid_fire
+actions.st+=/aimed_shot,if=buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up
 actions.st+=/explosive_shot,if=talent.precision_detonation|buff.trueshot.down
-actions.st+=/kill_shot,if=talent.black_arrow&!talent.headshot
 actions.st+=/steady_shot
 
 # ################ 3+ target (with trickshot)
 actions.trickshots+=/explosive_shot,if=talent.precision_detonation&action.aimed_shot.in_flight&buff.trueshot.down&(!talent.shrapnel_shot|buff.lock_and_load.down)
 actions.trickshots+=/volley,if=buff.double_tap.down&(!talent.shrapnel_shot|buff.lock_and_load.down)
+actions.trickshots+=/rapid_fire,if=talent.bulletstorm&buff.bulletstorm.down&buff.trick_shots.remains>execute_time
 # Sentinel
 actions.trickshots+=/rapid_fire,if=hero_tree.sentinel&buff.lunar_storm_cooldown.down&buff.trick_shots.remains>execute_time
 # Dark Ranger
-actions.trickshots+=/kill_shot,if=talent.black_arrow&(!talent.headshot|buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)|buff.trick_shots.down)
-actions.trickshots+=/multishot,cycle_targets=1,if=buff.precise_shots.up&(debuff.spotters_mark.down|buff.moving_target.down)|buff.trick_shots.down
+actions.trickshots+=/steady_shot,if=talent.black_arrow&focus+cast_regen<focus.max&action.aimed_shot.in_flight&!buff.deathblow.react&buff.trueshot.down&cooldown.trueshot.remains
+# Dark Ranger
+actions.trickshots+=/kill_shot,if=talent.black_arrow&(!talent.headshot|buff.precise_shots.up|buff.trick_shots.down)
+actions.trickshots+=/multishot,cycle_targets=1,if=buff.precise_shots.up&buff.moving_target.down|buff.trick_shots.down
 actions.trickshots+=/trueshot,if=variable.trueshot_ready&buff.double_tap.down
 actions.trickshots+=/volley,if=buff.double_tap.down&(!talent.salvo|!talent.precision_detonation|(buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up))
 actions.trickshots+=/aimed_shot,if=(buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up)&buff.trick_shots.up&buff.bulletstorm.up&full_recharge_time<gcd
-actions.trickshots+=/rapid_fire,if=buff.trick_shots.remains>execute_time
+actions.trickshots+=/rapid_fire,if=buff.trick_shots.remains>execute_time&(!talent.black_arrow|buff.deathblow.down)&(!talent.no_scope|debuff.spotters_mark.down)&(talent.no_scope|buff.bulletstorm.down)
 actions.trickshots+=/explosive_shot,if=talent.precision_detonation&talent.shrapnel_shot&buff.lock_and_load.down&(buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up)
 actions.trickshots+=/aimed_shot,if=(buff.precise_shots.down|debuff.spotters_mark.up&buff.moving_target.up)&buff.trick_shots.up
 actions.trickshots+=/explosive_shot,if=!talent.shrapnel_shot

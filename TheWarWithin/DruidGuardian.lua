@@ -151,7 +151,7 @@ spec:RegisterTalents( {
     brambles                       = {  82161,  203953, 1 }, -- Sharp brambles protect you, absorbing and reflecting up to $s2 damage from each attack. While Barkskin is active, the brambles also deal $s$s3 Nature damage to all nearby enemies every $s4 sec
     bristling_fur                  = {  82161,  155835, 1 }, -- Bristle your fur, causing you to generate Rage based on damage taken for $s1 sec
     circle_of_life_and_death       = {  82137,  391969, 1 }, -- Your damage over time effects deal their damage in $s1% less time, and your healing over time effects in $s2% less time
-    convoke_the_spirits            = {  82136,  391528, 1 }, -- Call upon the spirits for an eruption of energy, channeling a rapid flurry of $s1 Druid spells and abilities over $s2 sec. You will cast Mangle, Ironfur, Moonfire, Wrath, Regrowth, Rejuvenation, Rake, and Thrash on appropriate nearby targets, favoring your current shapeshift form
+    convoke_the_spirits            = {  82136,  391528, 1 }, -- Call upon the spirits for an eruption of energy, channeling a rapid flurry of $s1 Druid spells and abilities over $s2 sec. You will cast Wild Growth, Swiftmend, Moonfire, Wrath, Regrowth, Rejuvenation, Rake, and Thrash on appropriate nearby targets, favoring your current shapeshift form
     dream_of_cenarius              = {  92227,  372119, 1 }, -- When you take non-periodic damage, you have a chance equal to your critical strike to cause your next Regrowth to heal for an additional $s1%, and to be instant, free, and castable in all forms for $s2 sec. This effect cannot occur more than once every $s3 sec
     earthwarden                    = {  82156,  203974, 1 }, -- When you deal direct damage with Thrash, you gain a charge of Earthwarden, reducing the damage of the next auto attack you take by $s1%. Earthwarden may have up to $s2 charges
     elunes_favored                 = {  82134,  370586, 1 }, -- While in Bear Form, you deal $s1% increased Arcane damage, and are healed for $s2% of all Arcane damage done
@@ -162,6 +162,7 @@ spec:RegisterTalents( {
     gory_fur                       = {  82132,  200854, 1 }, -- Mangle has a $s1% chance to reduce the Rage cost of your next Ironfur by $s2%
     guardian_of_elune              = {  82140,  155578, 1 }, -- Mangle increases the duration of your next Ironfur by $s1 sec, or the healing of your next Frenzied Regeneration by $s2%
     improved_survival_instincts    = {  82128,  328767, 1 }, -- Survival Instincts now has $s1 charges
+    incarnation                    = {  82136,  102558, 1 }, -- An improved Bear Form that grants the benefits of Berserk, causes Mangle to hit up to $s1 targets, and increases maximum health by $s2%. Lasts $s3 sec. You may freely shapeshift in and out of this improved Bear Form for its duration
     incarnation_guardian_of_ursoc  = {  82136,  102558, 1 }, -- An improved Bear Form that grants the benefits of Berserk, causes Mangle to hit up to $s1 targets, and increases maximum health by $s2%. Lasts $s3 sec. You may freely shapeshift in and out of this improved Bear Form for its duration
     infected_wounds                = {  82162,  345208, 1 }, -- Mangle and Maul cause an Infected Wound in the target, reducing their movement speed by $s1% for $s2 sec
     innate_resolve                 = {  82160,  377811, 1 }, -- Frenzied Regeneration's healing is increased by up to $s1% based on your missing health. Frenzied Regeneration has $s2 additional charge
@@ -199,7 +200,7 @@ spec:RegisterTalents( {
     fount_of_strength              = {  94618,  441675, 1 }, -- Your maximum Energy and Rage are increased by $s1. Frenzied Regeneration also increases your maximum health by $s2%
     killing_strikes                = {  94619,  441824, 1 }, -- Ravage increases your Agility by $s1% and the armor granted by Ironfur by $s2% for $s3 sec. Your first Mangle after entering combat makes your next Maul become Ravage
     packs_endurance                = {  94615,  441844, 1 }, -- Stampeding Roar's duration is increased by $s1%
-    ravage                         = {  94609,  441583, 1 }, -- Your auto-attacks have a chance to make your next Maul become Ravage. Ravage Slash through your target in a wide arc, dealing $s3 million Physical damage to your target and $s4 to all other enemies in front of you
+    ravage                         = {  94609,  441583, 1 }, -- Your auto-attacks have a chance to make your next Maul become Ravage. Ravage Slash through your target in a wide arc, dealing $s$s4 Physical damage to your target and $s5 to all other enemies in front of you
     ruthless_aggression            = {  94619,  441814, 1 }, -- Ravage increases your auto-attack speed by $s1% for $s2 sec
     strike_for_the_heart           = {  94614,  441845, 1 }, -- Shred, Swipe, and Mangle's critical strike chance and critical strike damage are increased by $s1%. Mangle heals you for $s2% of maximum health
     tear_down_the_mighty           = {  94614,  441846, 1 }, -- The cooldown of Pulverize is reduced by $s1 sec
@@ -227,17 +228,17 @@ spec:RegisterTalents( {
 -- PvP Talents
 spec:RegisterPvpTalents( {
     alpha_challenge                =  842, -- (207017) You focus the assault on this target, increasing their damage taken by $s1% for $s2 sec. Each unique player that attacks the target increases the damage taken by an additional $s3%, stacking up to $s4 times. Your melee attacks refresh the duration of Focused Assault
-    charging_bash                  =  194, -- (228431)
+    charging_bash                  =  194, -- (228431) Increases the range of your Skull Bash by $s1 yards
     demoralizing_roar              =   52, -- (201664) Demoralizes all enemies within $s1 yards, reducing the damage they do by $s2% for $s3 sec
-    den_mother                     =   51, -- (236180)
+    den_mother                     =   51, -- (236180) You bolster nearby allies within $s1 yards, increasing their maximum health by $s2%. The duration of all stun effects on you is reduced by $s3%
     emerald_slumber                =  197, -- (329042) Embrace the Emerald Dream, causing you to enter a deep slumber for $s2 sec. While sleeping, all other cooldowns recover $s3% faster, and allies within $s4 yds are healed for $s5 every $s6 sec$s$s7 Direct damage taken may awaken you
-    entangling_claws               =  195, -- (202226)
-    freedom_of_the_herd            = 3750, -- (213200)
+    entangling_claws               =  195, -- (202226) Entangling Roots is now an instant cast spell with a $s1 second cooldown but with a $s2 yard range. It can also be cast while in shapeshift forms
+    freedom_of_the_herd            = 3750, -- (213200) Your Stampeding Roar clears all roots and snares from yourself and allies
     grove_protection               = 5410, -- (354654) Summon a grove to protect allies in the area for $s1 sec, reducing damage taken by $s2% from enemies outside the grove
-    malornes_swiftness             = 1237, -- (236147)
-    master_shapeshifter            =   49, -- (236144)
+    malornes_swiftness             = 1237, -- (236147) Your Travel Form movement speed while within a Battleground or Arena is increased by $s1% and you always move at $s2% movement speed while in Travel Form
+    master_shapeshifter            =   49, -- (236144) Your abilities are amplified based on your current shapeshift form, granting an additional effect.  Caster Form Rejuvenation heals for $s3% more and causes you to instantly generate $s4 Rage after entering Bear Form.  Moonkin Form Wrath, Starfire, and Starsurge deal $s7% additional damage and cause you to instantly generate $s8 Rage after entering Bear Form.  Cat Form Rip, Ferocious Bite, and Maim deal $s11% additional damage and cause you to instantly generate $s12 Rage after entering Bear Form when cast with $s13 combo points
     overrun                        =  196, -- (202246) Charge to an enemy, stunning them for $s1 sec and knocking back their allies within $s2 yards
-    tireless_pursuit               = 5648, -- (377801)
+    tireless_pursuit               = 5648, -- (377801) For $s1 sec after leaving Cat Form or Travel Form, you retain up to $s2% movement speed
 } )
 
 local mod_circle_hot = setfenv( function( x )

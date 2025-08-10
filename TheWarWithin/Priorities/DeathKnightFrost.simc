@@ -19,12 +19,12 @@ actions.precombat+=/variable,name=trinket_2_manual,value=0
 ## actions.variables+=/variable,name=st_planning,op=setif,value=1,value_else=0,condition=active_enemies=1&(!raid_event.adds.exists|!raid_event.adds.in|raid_event.adds.in>15)
 ## actions.variables+=/variable,name=adds_remain,value=active_enemies>=2&(!raid_event.adds.exists|!raid_event.pull.exists&raid_event.adds.remains>5|raid_event.pull.exists&raid_event.adds.in>20)
 ## actions.variables+=/variable,name=sending_cds,value=(variable.st_planning|variable.adds_remain)
-actions+=/variable,name=cooldown_check,value=(talent.pillar_of_frost&buff.pillar_of_frost.up)|!talent.pillar_of_frost|raid&boss&fight_remains<20
+actions+=/variable,name=cooldown_check,value=(talent.pillar_of_frost&buff.pillar_of_frost.up)|!talent.pillar_of_frost|boss&fight_remains<20
 actions+=/variable,name=fwf_buffs,value=(buff.pillar_of_frost.remains<gcd.max|(buff.unholy_strength.up&buff.unholy_strength.remains<gcd.max)|(talent.bonegrinder.rank=2&buff.bonegrinder_frost.up&buff.bonegrinder_frost.remains<gcd.max))&(active_enemies>1|debuff.razorice.stack=5|talent.shattering_blade)
 actions+=/variable,name=rune_pooling,value=hero_tree.deathbringer&cooldown.reapers_mark.remains<6&rune<3
 actions+=/variable,name=rp_pooling,value=talent.breath_of_sindragosa&cooldown.breath_of_sindragosa.remains<4*gcd.max&runic_power<60+(35+5*buff.icy_onslaught.up)-(10*rune)
 # Frostscythe is equal at 3 targets, except with Rider 4pc which brings Obliterate higher at 3, unless cleaving strikes is up
-actions+=/variable,name=frostscythe_prio,value=3+(1*(set_bonus.tww3_rider_of_the_apocalypse_4pc&!(talent.cleaving_strikes&buff.remorseless_winter.up)))
+actions+=/variable,name=frostscythe_prio,value=4,value_else=3,condition=set_bonus.tww3_rider_of_the_apocalypse_4pc>0&!(talent.cleaving_strikes&buff.remorseless_winter.up)
 actions+=/mind_freeze
 # Trinkets  
 # The trinket with the highest estimated value, will be used first and paired with Pillar of Frost.
@@ -34,9 +34,9 @@ actions+=/use_item,slot=trinket2,if=!trinket.2.cast_time>0&variable.trinket_2_bu
 actions+=/use_item,slot=trinket1,use_off_gcd=1,if=trinket.1.cast_time>0&variable.trinket_1_buffs&!variable.trinket_1_manual&cooldown.pillar_of_frost.remains<trinket.1.cast_time&(!trinket.2.has_cooldown|trinket.2.cooldown.remains|variable.trinket_priority=1)|variable.trinket_1_duration>=fight_remains
 actions+=/use_item,slot=trinket2,use_off_gcd=1,if=trinket.2.cast_time>0&variable.trinket_2_buffs&!variable.trinket_2_manual&cooldown.pillar_of_frost.remains<trinket.2.cast_time&(!trinket.1.has_cooldown|trinket.1.cooldown.remains|variable.trinket_priority=2)|variable.trinket_2_duration>=fight_remains
 # If only one on use trinket provides a buff, use the other on cooldown. Or if neither trinket provides a buff, use both on cooldown.
-actions+=/use_item,slot=trinket1,if=!variable.trinket_1_buffs&!variable.trinket_1_manual&(variable.damage_trinket_priority=1|(!trinket.2.has_cooldown|trinket.2.cooldown.remains))&((trinket.1.cast_time>0&(!talent.breath_of_sindragosa|!buff.breath_of_sindragosa.up)&!buff.pillar_of_frost.up|!trinket.1.cast_time>0)&(!variable.trinket_2_buffs|cooldown.pillar_of_frost.remains>20)|!talent.pillar_of_frost)|raid&boss&fight_remains<15
-actions+=/use_item,slot=trinket2,if=!variable.trinket_2_buffs&!variable.trinket_2_manual&(variable.damage_trinket_priority=2|(!trinket.1.has_cooldown|trinket.1.cooldown.remains))&((trinket.2.cast_time>0&(!talent.breath_of_sindragosa|!buff.breath_of_sindragosa.up)&!buff.pillar_of_frost.up|!trinket.2.cast_time>0)&(!variable.trinket_1_buffs|cooldown.pillar_of_frost.remains>20)|!talent.pillar_of_frost)|raid&boss&fight_remains<15
-actions+=/use_item,slot=main_hand,if=buff.pillar_of_frost.up|(buff.breath_of_sindragosa.up&cooldown.pillar_of_frost.remains)|(variable.trinket_1_buffs&variable.trinket_2_buffs&(trinket.1.cooldown.remains<cooldown.pillar_of_frost.remains|trinket.2.cooldown.remains<cooldown.pillar_of_frost.remains)&cooldown.pillar_of_frost.remains>20)|raid&boss&fight_remains<15
+actions+=/use_item,slot=trinket1,if=!variable.trinket_1_buffs&!variable.trinket_1_manual&(variable.damage_trinket_priority=1|(!trinket.2.has_cooldown|trinket.2.cooldown.remains))&((trinket.1.cast_time>0&(!talent.breath_of_sindragosa|!buff.breath_of_sindragosa.up)&!buff.pillar_of_frost.up|!trinket.1.cast_time>0)&(!variable.trinket_2_buffs|cooldown.pillar_of_frost.remains>20)|!talent.pillar_of_frost)|boss&fight_remains<15
+actions+=/use_item,slot=trinket2,if=!variable.trinket_2_buffs&!variable.trinket_2_manual&(variable.damage_trinket_priority=2|(!trinket.1.has_cooldown|trinket.1.cooldown.remains))&((trinket.2.cast_time>0&(!talent.breath_of_sindragosa|!buff.breath_of_sindragosa.up)&!buff.pillar_of_frost.up|!trinket.2.cast_time>0)&(!variable.trinket_1_buffs|cooldown.pillar_of_frost.remains>20)|!talent.pillar_of_frost)|boss&fight_remains<15
+actions+=/use_item,slot=main_hand,if=buff.pillar_of_frost.up|(buff.breath_of_sindragosa.up&cooldown.pillar_of_frost.remains)|(variable.trinket_1_buffs&variable.trinket_2_buffs&(trinket.1.cooldown.remains<cooldown.pillar_of_frost.remains|trinket.2.cooldown.remains<cooldown.pillar_of_frost.remains)&cooldown.pillar_of_frost.remains>20)|boss&fight_remains<15
 ## actions.high_prio_actions+=/invoke_external_buff,name=power_infusion,if=variable.cooldown_check
 actions+=/antimagic_shell,if=runic_power.deficit>40&death_knight.first_ams_cast<time
 # Choose Action list to run
@@ -68,15 +68,15 @@ actions.aoe+=/obliterate,cycle_targets=1,if=!variable.rune_pooling&!(talent.obli
 actions.aoe+=/howling_blast,if=!buff.killing_machine.up&(talent.obliteration&buff.pillar_of_frost.up)
 
 # Cooldowns
-actions.cooldowns+=/potion,use_off_gcd=1,if=variable.cooldown_check|raid&boss&fight_remains<25
+actions.cooldowns+=/potion,use_off_gcd=1,if=variable.cooldown_check|boss&fight_remains<25
 actions.cooldowns+=/remorseless_winter,if=(active_enemies>1|talent.gathering_storm)|(buff.gathering_storm.stack=10&buff.remorseless_winter.remains<gcd.max)&fight_remains>10
-actions.cooldowns+=/frostwyrms_fury,if=hero_tree.rider_of_the_apocalypse&talent.apocalypse_now&(cooldown.pillar_of_frost.remains<gcd.max|raid&boss&fight_remains<20)&!talent.breath_of_sindragosa
-actions.cooldowns+=/frostwyrms_fury,if=hero_tree.rider_of_the_apocalypse&talent.apocalypse_now&(cooldown.pillar_of_frost.remains<gcd.max|raid&boss&fight_remains<20)&talent.breath_of_sindragosa&runic_power>=60
-actions.cooldowns+=/pillar_of_frost,if=!talent.breath_of_sindragosa&(!hero_tree.deathbringer|rune>=2)|raid&boss&fight_remains<20
+actions.cooldowns+=/frostwyrms_fury,if=hero_tree.rider_of_the_apocalypse&talent.apocalypse_now&(cooldown.pillar_of_frost.remains<gcd.max|boss&fight_remains<20)&!talent.breath_of_sindragosa
+actions.cooldowns+=/frostwyrms_fury,if=hero_tree.rider_of_the_apocalypse&talent.apocalypse_now&(cooldown.pillar_of_frost.remains<gcd.max|boss&fight_remains<20)&talent.breath_of_sindragosa&runic_power>=60
+actions.cooldowns+=/pillar_of_frost,if=!talent.breath_of_sindragosa&(!hero_tree.deathbringer|rune>=2)|boss&fight_remains<20
 actions.cooldowns+=/pillar_of_frost,if=talent.breath_of_sindragosa&(cooldown.breath_of_sindragosa.remains>20|(cooldown.breath_of_sindragosa.up&runic_power>=(60-20*hero_tree.deathbringer)))&(!hero_tree.deathbringer|rune>=2)
-actions.cooldowns+=/breath_of_sindragosa,use_off_gcd=1,if=!buff.breath_of_sindragosa.up&(buff.pillar_of_frost.up|raid&boss&fight_remains<20)
-actions.cooldowns+=/reapers_mark,cycle_targets=1,if=buff.pillar_of_frost.up|cooldown.pillar_of_frost.remains>5|raid&boss&fight_remains<20
-actions.cooldowns+=/frostwyrms_fury,if=!talent.apocalypse_now&active_enemies=1&(talent.pillar_of_frost&buff.pillar_of_frost.up&!talent.obliteration|!talent.pillar_of_frost)&(!raid_event.adds.exists|raid_event.adds.in>cooldown.frostwyrms_fury.duration+raid_event.adds.duration)&variable.fwf_buffs|raid&boss&fight_remains<3
+actions.cooldowns+=/breath_of_sindragosa,use_off_gcd=1,if=!buff.breath_of_sindragosa.up&(buff.pillar_of_frost.up|boss&fight_remains<20)
+actions.cooldowns+=/reapers_mark,cycle_targets=1,if=buff.pillar_of_frost.up|cooldown.pillar_of_frost.remains>5|boss&fight_remains<20
+actions.cooldowns+=/frostwyrms_fury,if=!talent.apocalypse_now&active_enemies=1&(talent.pillar_of_frost&buff.pillar_of_frost.up&!talent.obliteration|!talent.pillar_of_frost)&(!raid_event.adds.exists|raid_event.adds.in>cooldown.frostwyrms_fury.duration+raid_event.adds.duration)&variable.fwf_buffs|boss&fight_remains<3
 actions.cooldowns+=/frostwyrms_fury,if=!talent.apocalypse_now&active_enemies>=2&(talent.pillar_of_frost&buff.pillar_of_frost.up|raid_event.adds.exists&raid_event.adds.up&raid_event.adds.in<cooldown.pillar_of_frost.remains-raid_event.adds.in-raid_event.adds.duration)&variable.fwf_buffs
 actions.cooldowns+=/frostwyrms_fury,if=!talent.apocalypse_now&talent.obliteration&(talent.pillar_of_frost&buff.pillar_of_frost.up&!main_hand.2h|!buff.pillar_of_frost.up&main_hand.2h&cooldown.pillar_of_frost.remains|!talent.pillar_of_frost)&variable.fwf_buffs&(!raid_event.adds.exists|raid_event.adds.in>cooldown.frostwyrms_fury.duration+raid_event.adds.duration)
 actions.cooldowns+=/raise_dead,use_off_gcd=1

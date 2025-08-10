@@ -4679,11 +4679,8 @@ found = true end
         while( true ) do
             local id, name, description, texture, role = GetSpecializationInfo( i )
 
-            -- 检查id是否有效，如果id为0或nil则跳过
             if not id or id == 0 then break end
             if description then description = description:match( "^(.-)\n" ) end
-
-
 
             local spec = class.specs[ id ]
 
@@ -8575,6 +8572,17 @@ do
                         width = "full"
                     },
 
+                    wowdata = {
+                        type = "input",
+                        name = "大漩涡数据港",
+                        desc = "你想要的魔兽数据，都在这里",
+                        order = 6.5,
+                        get = function () return "https://www.wowdata.cn/" end,
+                        set = function () end,
+                        width = "full",
+                        dialogControl = "SFX-Info-URL",
+                    },
+
                     discord = {
                         type = "input",
                         name = "Discord",
@@ -8667,7 +8675,7 @@ do
                         width = "full",
                         dialogControl = "SFX-Info-URL",
                     },
-		    newbee = {
+		            newbee = {
                         type = "input",
                         name = "新手盒子",
                         order = 23,
@@ -9010,7 +9018,7 @@ do
                                 order = 3,
                                 width = "full"
                             },
-                            issueReporting_snapshot_next_info_3 = {
+                            issueReporting_snapshot_next_info_4 = {
                                 type = "input",
                                 name = "Discord频道",
                                 dialogControl = "SFX-Info-URL",
@@ -9019,7 +9027,7 @@ do
                                 order = 2,
                                 width = "full",
                             },
-                            issueReporting_snapshot_next_info_2 = {
+                            issueReporting_snapshot_next_info_5 = {
                                 type = "input",
                                 name = "GitHub问题报告",
                                 dialogControl = "SFX-Info-URL",

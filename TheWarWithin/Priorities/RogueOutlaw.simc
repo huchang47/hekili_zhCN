@@ -99,16 +99,16 @@ actions.finish+=/cold_blood
 actions.finish+=/dispatch
 
 # Trinkets
-actions.items+=/use_item,name=imperfect_ascendancy_serum,if=!stealthed.all|raid&boss&fight_remains<=22
-actions.items+=/use_item,name=mad_queens_mandate,if=!stealthed.all|raid&boss&fight_remains<=5
-actions.items+=/use_item,name=cursed_stone_idol,if=!stealthed.all|raid&boss&fight_remains<=15
+actions.items+=/use_item,name=imperfect_ascendancy_serum,if=!stealthed.all|boss&fight_remains<=22
+actions.items+=/use_item,name=mad_queens_mandate,if=!stealthed.all|boss&fight_remains<=5
+actions.items+=/use_item,name=cursed_stone_idol,if=!stealthed.all|boss&fight_remains<=15
 # Send Unyielding Netherprism alongside a Vanish window after KIR is used.
-actions.items+=/use_item,name=unyielding_netherprism,if=(rtb_buffs>=4|!talent.keep_it_rolling)&(buff.vanish.up|!talent.subterfuge)|raid&boss&fight_remains<=20
+actions.items+=/use_item,name=unyielding_netherprism,if=(rtb_buffs>=4|!talent.keep_it_rolling)&(buff.vanish.up|!talent.subterfuge)|boss&fight_remains<=20
 # Let the magnet trinket stack up just so it does not disrupt a 2nd on-use trinket.
-actions.items+=/use_item,name=junkmaestros_mega_magnet,if=buff.between_the_eyes.up&buff.junkmaestros_mega_magnet.stack>25|raid&boss&fight_remains<=5
+actions.items+=/use_item,name=junkmaestros_mega_magnet,if=buff.between_the_eyes.up&buff.junkmaestros_mega_magnet.stack>25|boss&fight_remains<=5
 # Default conditions for usable items.
-actions.items+=/use_items,slots=trinket1,if=buff.between_the_eyes.up|trinket.1.has_stat.any_dps|raid&boss&fight_remains<=20
-actions.items+=/use_items,slots=trinket2,if=buff.between_the_eyes.up|trinket.2.has_stat.any_dps|raid&boss&fight_remains<=20
+actions.items+=/use_items,slots=trinket1,if=buff.between_the_eyes.up|trinket.1.has_stat.any_dps|boss&fight_remains<=20
+actions.items+=/use_items,slots=trinket2,if=buff.between_the_eyes.up|trinket.2.has_stat.any_dps|boss&fight_remains<=20
 
 # Maintain Roll the Bones: roll with 0 buffs.
 actions.roll_the_bones+=/roll_the_bones,if=rtb_buffs=0
@@ -141,4 +141,4 @@ actions.vanish+=/vanish,if=(!talent.unseen_blade|!talent.killing_spree)&buff.sup
 # Trickster builds with Killing Spree should Vanish if Killing Spree is not up soon. With TWW3 Trickster, attempt to align Vanish with a recently used Coup de Grace.
 actions.vanish+=/vanish,if=talent.unseen_blade&talent.killing_spree&cooldown.killing_spree.remains>30&(time-action.coup_de_grace.last_used<=10|!set_bonus.tww3_trickster_4pc)
 # Vanish if it is about to cap charges or sim duration is ending soon.
-actions.vanish+=/vanish,if=cooldown.vanish.full_recharge_time<15|raid&boss&fight_remains<charges*8
+actions.vanish+=/vanish,if=cooldown.vanish.full_recharge_time<15|boss&fight_remains<charges*8
