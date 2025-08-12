@@ -1,6 +1,6 @@
 ## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/priest_shadow.simc
 ## SimulationCraft Commit Sync: bd9a80c
-## Date: 2025-08-05
+## Date: 2025-08-10
 
 actions.precombat+=/power_word_fortitude
 actions.precombat+=/shadowform,if=!buff.shadowform.up
@@ -14,9 +14,10 @@ actions.precombat+=/variable,name=pooling_mindblasts,default=0,op=reset
 ## actions.precombat+=/use_item,name=ingenious_mana_battery
 actions.precombat+=/arcane_torrent
 ## actions.precombat+=/use_item,name=aberrant_spellforge
-actions.precombat+=/halo,if=boss&active_enemies<=4&(fight_remains>=120|active_enemies<=2)&!talent.power_surge
-actions.precombat+=/shadow_crash,if=active_enemies<=12
-actions.precombat+=/vampiric_touch,if=(!talent.whispering_shadows|!action.shadow_crash.in_flight)&(!talent.shadow_crash.enabled|active_enemies>12|!boss)
+actions.precombat+=/halo,if=active_enemies<=4&(fight_remains>=120|active_enemies<=2)&!talent.power_surge
+## [Syrif] - Even with startsCombat = true, this spell doesnt like to start combat. time_since prevents double-cast
+actions.precombat+=/shadow_crash,line_cd=5,if=active_enemies<=12
+actions.precombat+=/vampiric_touch,if=!talent.shadow_crash.enabled|active_enemies>8
 
 actions+=/silence
 actions+=/variable,name=holding_crash,op=set,value=false

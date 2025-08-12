@@ -5447,9 +5447,8 @@ found = true end
 
                 shareBtn = {
                     type = "execute",
-                    name = "分享优先级配置",
-                    desc = "每个优先级配置都可以使用导出字符串分享给其他本插件用户。\n\n" ..
-                    "你也可以在这里导入他人分享的字符串。",
+                    name = "导入 / 导出",
+                    desc = "优先级可通过编码字符串进行导入或导出。",
                     func = function ()
                         ACD:SelectGroup( "Hekili", "packs", "sharePacks" )
                     end,
@@ -5458,9 +5457,8 @@ found = true end
 
                 sharePacks = {
                     type = "group",
-                    name = "|cFF1EFF00分享优先级配置|r",
-                    desc = "你的优先级配置可以通过导出字符串分享给其他本插件用户。\n\n" ..
-                    "你也可以在这里导入他人分享的字符串。",
+                    name = "|cFF1EFF00导入 / 导出|r",
+                    desc = "优先级可通过编码字符串进行导入或导出。",
                     childGroups = "tab",
                     get = 'GetPackShareOption',
                     set = 'SetPackShareOption',
@@ -7688,8 +7686,8 @@ do
 
                                 value = {
                                     type = "toggle",
-                                    name = "启用漏斗伤害",
-                                    desc = "如果勾选，对于支持漏斗伤害机制的专精，其技能循环可能会轻微调整，以便在范围伤害（AoE）情况下使用针对单个目标的终结技能。\n\n",
+                                    name = "启用药剂",
+                                    desc = "如果勾选，将会推荐 |cFFFFD100药剂|r 类别中的指令（物品）。",
                                     width = 2,
                                     order = 2,
                                 },

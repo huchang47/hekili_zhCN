@@ -706,7 +706,24 @@ ns.SkeletonTalentEnhancements = {
         },
         [105] = {
             incarnation_tree_of_life = "incarnation"
-        }
+        },
+        [259] = {
+            inevitabile_end = "inevitable_end"
+        },
+        [261] = {
+            inevitabile_end = "inevitable_end"
+        },
+        [268] = {
+            invoke_niuzao_the_black_ox = "invoke_niuzao",
+            improved_invoke_niuzao_the_black_ox = "improved_invoke_niuzao"
+        },
+        [269] = {
+            invoke_xuen_the_white_tiger = "invoke_xuen"
+        },
+        [270] = {
+            invoke_yulon_the_jade_serpent = "invoke_yulon",
+            invoke_chiji_the_red_crane = "invoke_chiji"
+        },
         -- Add more specs/talents as needed
     },
 

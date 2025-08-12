@@ -12,7 +12,7 @@ local RegisterEvent = ns.RegisterEvent
 
 -- 11.0
 all:RegisterAbilities( {
-   signet_of_the_priory = {
+    signet_of_the_priory = {
         cast = 0,
         cooldown = 120,
         gcd = "off",
@@ -1498,6 +1498,33 @@ all:RegisterAbilities( {
                 max_stack = 1,
             }
         }
+    },
+} )
+
+-- 11.2
+all:RegisterAbilities( {
+    lily_of_the_eternal_weave = {
+        cast = 0,
+        cooldown = 90,
+        gcd = "off",
+
+        item = 242494,
+        toggle = "cooldowns",
+
+        proc = "secondary",
+        self_buff = "woven_fate",
+
+        handler = function()
+            applyBuff( "woven_fate" )
+        end,
+
+        auras = {
+            woven_fate = {
+                id = 1244029,
+                duration = 15,
+                max_stack = 1
+            },
+        },
     },
 } )
 

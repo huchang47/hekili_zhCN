@@ -760,8 +760,6 @@ spec:RegisterHook( "reset_precast", function( amt, resource )
 
     class.abilities.apply_poison = class.abilities[ action.apply_poison_actual.next_poison ]
 
-    if buff.cold_blood.up then setCooldown( "cold_blood", action.cold_blood.cooldown ) end
-
     if talent.lingering_darkness.enabled and buff.shadow_blades.up then
         state:QueueAuraEvent( "lingering_darkness", TriggerLingeringDarkness, buff.shadow_blades.expires, "AURA_EXPIRATION" )
     end

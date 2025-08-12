@@ -112,7 +112,9 @@ spec:RegisterTalents( {
     gift_of_the_celestials         = { 101113,  388212, 1 }, -- Reduces the cooldown of Invoke Chi-Ji, the Red Crane by $s1 min, but decreases its duration to $s2 sec
     healing_elixir                 = { 101109,  122280, 1 }, -- You consume a healing elixir when you drop below $s1% health or generate excess healing elixirs, instantly healing you for $s2% of your maximum health. You generate $s3 healing elixir every $s4 sec, stacking up to $s5 times
     invigorating_mists             = { 101110,  274586, 1 }, -- Vivify heals all allies with your Renewing Mist active for $s1, reduced beyond $s2 allies
+    invoke_chiji                   = { 101129,  325197, 1 }, -- Summon an effigy of Chi-Ji for $s1 sec that kicks up $s2 Gust of Mists when you Blackout Kick, Rising Sun Kick, or Spinning Crane Kick, healing up to $s3 allies for $s4, and reducing the cost and cast time of your next Enveloping Mist by $s5%, stacking. Chi-Ji's presence makes you immune to movement impairing effects
     invoke_chiji_the_red_crane     = { 101129,  325197, 1 }, -- Summon an effigy of Chi-Ji for $s1 sec that kicks up $s2 Gust of Mists when you Blackout Kick, Rising Sun Kick, or Spinning Crane Kick, healing up to $s3 allies for $s4, and reducing the cost and cast time of your next Enveloping Mist by $s5%, stacking. Chi-Ji's presence makes you immune to movement impairing effects
+    invoke_yulon                   = { 101129,  322118, 1 }, -- Summons an effigy of Yu'lon, the Jade Serpent for $s1 sec. Yu'lon will heal injured allies with Soothing Breath, healing the target and up to $s2 allies for $s3 over $s4 sec. Enveloping Mist costs $s5% less mana while Yu'lon is active
     invoke_yulon_the_jade_serpent  = { 101129,  322118, 1 }, -- Summons an effigy of Yu'lon, the Jade Serpent for $s1 sec. Yu'lon will heal injured allies with Soothing Breath, healing the target and up to $s2 allies for $s3 over $s4 sec. Enveloping Mist costs $s5% less mana while Yu'lon is active
     invokers_delight               = { 101123,  388661, 1 }, -- You gain $s1% haste for $s2 sec after summoning your Celestial
     jade_bond                      = { 101113,  388031, 1 }, -- Chi Cocoons now apply Enveloping Mist for $s1 sec when they expire or are consumed, and Chi-Ji's Gusts of Mists healing is increased by $s2% and Yu'lon's Soothing Breath healing is increased by $s3%
@@ -191,19 +193,19 @@ spec:RegisterTalents( {
 
 -- PvP Talents
 spec:RegisterPvpTalents( {
-    absolute_serenity              = 5642, -- (455945)
-    counteract_magic               =  679, -- (353502)
-    dematerialize                  = 5398, -- (353361) Demateralize into mist while stunned, reducing damage taken by $s1%. Each second you remain stunned reduces this bonus by $s2%
-    eminence                       =   70, -- (353584)
-    feather_feet                   = 5669, -- (474441)
+    absolute_serenity              = 5642, -- (455945) Celestial Conduit now prevents all crowd control for its duration
+    counteract_magic               =  679, -- (353502) Removing hostile magic effects from a target increases the healing they receive from you by $s1% for $s2 sec, stacking up to $s3 times
+    dematerialize                  = 5398, -- (353361)
+    eminence                       =   70, -- (353584) Transcendence: Transfer can now be cast if you are stunned. Cooldown reduced by $s1 sec if you are not
+    feather_feet                   = 5669, -- (474441) You may now cast while moving during Lighter Than Air and its duration is now $s1 sec
     grapple_weapon                 = 3732, -- (233759) You fire off a rope spear, grappling the target's weapons and shield, returning them to you for $s1 sec
-    healing_sphere                 =  683, -- (205234)
-    jadefire_accord                = 5565, -- (406888)
+    healing_sphere                 =  683, -- (205234) Coalesces a Healing Sphere out of the mists at the target location after $s1 sec. If allies walk through it, they consume the sphere, healing themselves for $s2 and dispelling all harmful periodic magic effects. Maximum of $s3 Healing Spheres can be active by the Monk at any given time
+    jadefire_accord                = 5565, -- (406888) Jadefire Stomp's cooldown is reduced by $s1 sec. Enemies struck by Jadefire Stomp are snared by $s2% for $s3 sec
     mighty_ox_kick                 = 5539, -- (202370) You perform a Mighty Ox Kick, hurling your enemy a distance behind you
-    peaceweaver                    = 5395, -- (353313)
+    peaceweaver                    = 5395, -- (353313) Revival's cooldown is reduced by $s1%, and provides immunity to magical damage and harmful effects for $s2 sec
     rodeo                          = 5645, -- (355917) Every $s1 sec while Clash is off cooldown, your next Clash can be reactivated immediately to wildly Clash an additional enemy. This effect can stack up to $s2 times
-    zen_focus_tea                  = 1928, -- (468430)
-    zen_spheres                    = 5603, -- (410777)
+    zen_focus_tea                  = 1928, -- (468430) Thunder Focus Tea provides immunity to Silence and Interrupt effects for $s1 sec
+    zen_spheres                    = 5603, -- (410777) Forms a sphere of Hope or Despair above the target. Only one of each sphere can be active at a time.  Sphere of Hope: Heals for $s4 and increases your healing done to the target by $s5%.  Sphere of Despair: Deals $s$s8 Nature damage, Target deals $s9% less damage, and takes $s10% increased damage from all sources
 } )
 
 -- Auras

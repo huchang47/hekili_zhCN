@@ -136,6 +136,7 @@ spec:RegisterTalents( {
     hardened_soles                 = { 101047,  391383, 1 }, -- Blackout Kick critical strike chance increased by $s1% and critical damage increased by $s2%
     hit_combo                      = { 101216,  196740, 1 }, -- Each successive attack that triggers Combo Strikes in a row grants $s1% increased damage, stacking up to $s2 times
     inner_peace                    = { 101214,  397768, 1 }, -- Increases maximum Energy by $s1. Tiger Palm's Energy cost reduced by $s2
+    invoke_xuen                    = { 101206,  123904, 1 }, -- Summons an effigy of Xuen, the White Tiger for $s2 sec. Xuen attacks your primary target, and strikes $s3 enemies within $s4 yards every $s5 sec with Tiger Lightning for $s$s6 Nature damage. Every $s7 sec, Xuen strikes your enemies with Empowered Tiger Lightning dealing $s8% of the damage you have dealt to those targets in the last $s9 sec
     invoke_xuen_the_white_tiger    = { 101206,  123904, 1 }, -- Summons an effigy of Xuen, the White Tiger for $s2 sec. Xuen attacks your primary target, and strikes $s3 enemies within $s4 yards every $s5 sec with Tiger Lightning for $s$s6 Nature damage. Every $s7 sec, Xuen strikes your enemies with Empowered Tiger Lightning dealing $s8% of the damage you have dealt to those targets in the last $s9 sec
     invokers_delight               = { 101207,  388661, 1 }, -- You gain $s1% haste for $s2 sec after summoning your Celestial
     jade_ignition                  = { 101050,  392979, 1 }, -- Whenever you deal damage to a target with Fists of Fury, you gain a stack of Chi Energy up to a maximum of $s3 stacks. Using Spinning Crane Kick will cause the energy to detonate in a Chi Explosion, dealing $s$s4 Nature damage to all enemies within $s5 yards, reduced beyond $s6 targets$s$s7 The damage is increased by $s8% for each stack of Chi Energy
@@ -171,7 +172,7 @@ spec:RegisterTalents( {
 
     -- Conduit Of The Celestials
     august_dynasty                 = { 101235,  442818, 1 }, -- Casting Jadefire Stomp increases the damage of your next Rising Sun Kick by $s1%
-    celestial_conduit              = { 101243,  443028, 1 }, -- The August Celestials empower you, causing you to radiate $s$s2 Nature damage onto enemies and $s3 healing onto up to $s4 injured allies within $s5 yds over $s6 sec, split evenly among them. Healing and damage increased by $s7% per enemy struck, up to $s8%. You may move while channeling, but casting other healing or damaging spells cancels this effect
+    celestial_conduit              = { 101243,  443028, 1 }, -- The August Celestials empower you, causing you to radiate $s1 million Nature damage onto enemies and $s2 healing onto up to $s3 injured allies within $s4 yds over $s5 sec, split evenly among them. Healing and damage increased by $s6% per enemy struck, up to $s7%. You may move while channeling, but casting other healing or damaging spells cancels this effect
     chijis_swiftness               = { 101240,  443566, 1 }, -- Your movement speed is increased by $s1% during Celestial Conduit and by $s2% for $s3 sec after being assisted by any Celestial
     courage_of_the_white_tiger     = { 101242,  443087, 1 }, -- Tiger Palm has a chance to cause Xuen to claw your target for $s$s2 Physical damage, healing a nearby ally for $s3% of the damage done. Invoke Xuen, the White Tiger guarantees your next cast activates this effect
     flight_of_the_red_crane        = { 101234,  443255, 1 }, -- Rushing Jade Wind and Spinning Crane Kick have a chance to cause Chi-Ji to increase your energy regeneration by $s2% for $s3 sec and quickly rush to $s4 enemies, dealing $s$s5 Physical damage to each target struck
@@ -207,15 +208,15 @@ spec:RegisterTalents( {
 spec:RegisterPvpTalents( {
     absolute_serenity              = 5641, -- (455945) Celestial Conduit now prevents all crowd control for its duration
     grapple_weapon                 = 3052, -- (233759) You fire off a rope spear, grappling the target's weapons and shield, returning them to you for $s1 sec
-    perpetual_paralysis            = 5448, -- (357495)
-    predestination                 = 3744, -- (345829)
-    ride_the_wind                  =   77, -- (201372)
-    rising_dragon_sweep            = 5643, -- (460276)
+    perpetual_paralysis            = 5448, -- (357495) Paralysis range reduced by $s1 yards, but spreads to $s2 new enemies when removed
+    predestination                 = 3744, -- (345829) Killing a player with Touch of Death reduces the remaining cooldown of Touch of Karma by $s1 sec
+    ride_the_wind                  =   77, -- (201372) Flying Serpent Kick clears all snares from you when used and forms a path of wind in its wake, causing all allies who stand in it to have $s1% increased movement speed and to be immune to movement slowing effects
+    rising_dragon_sweep            = 5643, -- (460276) Whirling Dragon Punch knocks enemies up into the air and causes them to fall slowly until they reach the ground
     rodeo                          = 5644, -- (355917) Every $s1 sec while Clash is off cooldown, your next Clash can be reactivated immediately to wildly Clash an additional enemy. This effect can stack up to $s2 times
-    stormspirit_strikes            = 5610, -- (411098)
+    stormspirit_strikes            = 5610, -- (411098) Striking more than one enemy with Fists of Fury summons a Storm Spirit to focus your secondary target for $s1 sec, which will mimic any of your attacks that do not also strike the target for $s2% of normal damage
     tigereye_brew                  =  675, -- (247483) Consumes up to $s1 stacks of Tigereye Brew to empower your Physical abilities with wind for $s2 sec per stack consumed. Damage of your strikes are reduced, but bypass armor. For each $s3 Chi you consume, you gain a stack of Tigereye Brew
-    turbo_fists                    = 3745, -- (287681)
-    wind_waker                     = 3737, -- (357633)
+    turbo_fists                    = 3745, -- (287681) Fists of Fury now reduces all targets movement speed by $s1%, and you Parry all attacks while channelling Fists of Fury
+    wind_waker                     = 3737, -- (357633) Your movement enhancing abilities increases Windwalking on allies by $s1%, stacking $s2 additional times. Movement impairing effects are removed at $s3 stacks
 } )
 
 -- Auras

@@ -553,6 +553,8 @@ function Hekili:CheckChannel( ability, prio )
 
         -- We are concerned with chain and early_chain_if.
 
+        -- FIXME
+        -- Why are some conditions not correctly making it to/through here? Example: "!talent.entropic_rift" on shadowpriest void_torrent cancel
         if modifiers.interrupt_if and modifiers.interrupt_if() then
             local timing = last_tick or ( state.query_time - state.buff.casting.applied ) % tick_time < 0.25
             local imm = modifiers.interrupt_immediate and modifiers.interrupt_immediate()
@@ -795,7 +797,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                         state.this_list = listName
                         entryReplaced = true
                     elseif action == "trinket1" then
-                        if state.trinket.t1.usable and state.trinket.t1.ability and not Hekili:IsItemScripted( state.trinket.t1.ability, true ) then
+                        if state.trinket.t1.usable and state.trinket.t1.ability then -- and not Hekili:IsItemScripted( state.trinket.t1.ability, true ) then
                             action = state.trinket.t1.ability
                             ability = class.abilities[ action ]
                             state.this_action = action
@@ -808,7 +810,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                             ability = nil
                         end
                     elseif action == "trinket2" then
-                        if state.trinket.t2.usable and state.trinket.t2.ability and not Hekili:IsItemScripted( state.trinket.t2.ability, true ) then
+                        if state.trinket.t2.usable and state.trinket.t2.ability then -- and not Hekili:IsItemScripted( state.trinket.t2.ability, true ) then
                             action = state.trinket.t2.ability
                             ability = class.abilities[ action ]
                             state.this_action = action
