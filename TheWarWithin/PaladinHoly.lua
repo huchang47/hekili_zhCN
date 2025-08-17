@@ -1602,7 +1602,8 @@ spec:RegisterAbilities( {
 
 
     lay_on_hands = {
-        id = 633,
+        id = function() return talent.empyreal_ward.enabled and 471195 or 633 end,
+        known = 633,
         cast = 0,
         cooldown = function () return ( talent.unbreakable_spirit.enabled and 0.7 or 1 ) * 600 end,
         gcd = "spell",
@@ -1617,6 +1618,8 @@ spec:RegisterAbilities( {
             if talent.empyreal_ward.enabled then applyBuff( "empyreal_ward" ) end
             if talent.tirions_devotion.enabled then gain( 0.05 * mana.max, "mana" ) end
         end,
+
+        copy = { "empyreal_ward", 471195, 633 }
     },
 
 

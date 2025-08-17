@@ -26,7 +26,7 @@ local GetSpellInfo = C_Spell.GetSpellInfo
 -- local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
 -- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
--- local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
+local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
 local IsActiveSpell = ns.IsActiveSpell
 
 -- Specialization-specific local functions (if any)
@@ -274,8 +274,12 @@ spec:RegisterPvpTalents( {
     soul_rip                       = 5607, -- (410598) Fracture the soul of up to $s1 target players within $s2 yds into the shadows, reducing their damage done by $s3% and healing received by $s4% for $s5 sec. Souls are fractured up to $s6 yds from the player's location. Players can retrieve their souls to remove this effect
 } )
 
+
+
+
 spec:RegisterHook( "TALENTS_UPDATED", function()
     talent.rain_of_fire = talent.rain_of_fire_targeted.enabled and talent.rain_of_fire_targeted or talent.rain_of_fire_ground
+    talent.cataclysm.rank = IsSpellKnownOrOverridesKnown( 152108 ) and 1 or 0
 end )
 
 -- Auras

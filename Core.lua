@@ -1261,7 +1261,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                                                             if debug then
                                                                 self:Debug( "Action chosen:  %s at %.2f!", rAction, state.delay )
-                                                                self:Debug( "显示的纹理：%s", slot.texture )
                                                             end
                                                         end
 

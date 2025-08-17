@@ -31,6 +31,8 @@ actions.ar+=/metamorphosis,use_off_gcd=1,if=!buff.metamorphosis.up
 actions.ar+=/fel_devastation,use_off_gcd=1,if=!buff.rending_strike.up&!buff.glaive_flurry.up
 # Always Soul Cleave if Rending Strike isn't up and Glaive Flurry is
 actions.ar+=/soul_cleave,if=!buff.rending_strike.up&buff.glaive_flurry.up
+# If Soul Cleave and Rending Strike are up in single target, spend Soul Cleave first then we can Fracture
+actions.ar+=/soul_cleave,if=variable.single_target&buff.rending_strike.up&buff.glaive_flurry.up
 # Spend Rending Strike or generate Fury for empowered Soul Cleave
 actions.ar+=/shear,if=talent.fracture&buff.glaive_flurry.up
 # Spend Rending Strike or generate Fury for empowered Soul Cleave

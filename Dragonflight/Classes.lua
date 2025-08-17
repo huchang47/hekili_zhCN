@@ -38,7 +38,7 @@ do
 
             if not node or not node.activeEntry then
                 talent.rank = 0
-                talent.max = 1
+                talent.max = data[3] or 1
             else
                 local entryID = node.activeEntry.entryID
                 local entry   = entryID and C_Traits.GetEntryInfo( configID, entryID )

@@ -99,7 +99,7 @@ actions.cooldown+=/incarnation
 actions.cooldown+=/berserk
 actions.cooldown+=/feral_frenzy,if=combo_points<=1+buff.bs_inc.up
 # always line up convoke with berserk if you can
-actions.cooldown+=/convoke_the_spirits,if=!(fight_remains<cooldown.convoke_the_spirits.duration&fight_remains>(20+cooldown.bs_inc.remains)&cooldown.bs_inc.remains<60)
+actions.cooldown+=/convoke_the_spirits,if=boss&fight_remains<5|buff.bs_inc.up&buff.bs_inc.remains<5-talent.ashamanes_guidance|buff.tigers_fury.up&!(fight_remains<cooldown.convoke_the_spirits.duration&fight_remains>(20+cooldown.bs_inc.remains)&cooldown.bs_inc.remains<60)&(combo_points<=4|buff.bs_inc.up&combo_points<=3)
 
 # maintain/upgrade pws, if we have 6.5+s left on pw, we will instead bite if we have rampant ferocity talented. Without rampant, we will bite a vined target with 6 or fewer targets. If we have Ravage, we use specifically Ravage at 7 or fewer targets.
 actions.finisher+=/primal_wrath,if=spell_targets.primal_wrath>1&((dot.primal_wrath.remains<6.5&!buff.bs_inc.up|dot.primal_wrath.refreshable)|(!talent.rampant_ferocity.enabled&(spell_targets.primal_wrath>1&!dot.bloodseeker_vines.ticking&!buff.ravage.up|spell_targets.primal_wrath>6+talent.ravage)))

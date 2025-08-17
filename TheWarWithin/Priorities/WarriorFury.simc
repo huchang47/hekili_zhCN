@@ -20,29 +20,28 @@ actions.precombat+=/recklessness,if=!equipped.fyralath_the_dreamrender
 actions.precombat+=/avatar
 
 # Executed every time the actor is available.
-actions=auto_attack
 actions+=/charge,if=time<=0.5|movement.distance>5
 actions+=/heroic_leap,if=movement.distance>25
-actions+=/potion,if=boss&(fight_remains>300|boss&fight_remains<35&buff.recklessness.up|boss&fight_remains<25)
+actions+=/potion,if=boss&fight_remains>300|fight_remains<300&target.health.pct<35&buff.recklessness.up|boss&fight_remains<25
 actions+=/use_item,name=treacherous_transmitter
 actions+=/pummel
 # Trinkets
-## actions.trinkets+=/do_treacherous_transmitter_task
-actions.trinkets+=/use_item,name=cursed_stone_idol,if=cooldown.avatar.remains<1
-actions.trinkets+=/use_item,name=unyielding_netherprism,if=cooldown.avatar.remains<=85
+## actions+=/do_treacherous_transmitter_task
+actions+=/use_item,name=cursed_stone_idol,if=cooldown.avatar.remains<1
+actions+=/use_item,name=unyielding_netherprism,if=cooldown.avatar.remains<=85
 # Trinkets The trinket with the highest estimated value, will be used first and paired with Avatar.
-actions.trinkets+=/use_item,slot=trinket1,if=variable.trinket_1_buffs&!variable.trinket_1_manual&(!buff.avatar.up&trinket.1.cast_time>0|!trinket.1.cast_time>0)&buff.avatar.up&(variable.trinket_2_exclude|!trinket.2.has_cooldown|trinket.2.cooldown.remains|variable.trinket_priority=1)|trinket.1.proc.any_dps.duration>=fight_remains
-actions.trinkets+=/use_item,slot=trinket2,if=variable.trinket_2_buffs&!variable.trinket_2_manual&(!buff.avatar.up&trinket.2.cast_time>0|!trinket.2.cast_time>0)&buff.avatar.up&(variable.trinket_1_exclude|!trinket.1.has_cooldown|trinket.1.cooldown.remains|variable.trinket_priority=2)|trinket.2.proc.any_dps.duration>=fight_remains
+actions+=/use_item,slot=trinket1,if=variable.trinket_1_buffs&!variable.trinket_1_manual&(!buff.avatar.up&trinket.1.cast_time>0|!trinket.1.cast_time>0)&buff.avatar.up&(variable.trinket_2_exclude|!trinket.2.has_cooldown|trinket.2.cooldown.remains|variable.trinket_priority=1)|trinket.1.proc.any_dps.duration>=fight_remains
+actions+=/use_item,slot=trinket2,if=variable.trinket_2_buffs&!variable.trinket_2_manual&(!buff.avatar.up&trinket.2.cast_time>0|!trinket.2.cast_time>0)&buff.avatar.up&(variable.trinket_1_exclude|!trinket.1.has_cooldown|trinket.1.cooldown.remains|variable.trinket_priority=2)|trinket.2.proc.any_dps.duration>=fight_remains
 # If only one on use trinket provides a buff, use the other on cooldown. Or if neither trinket provides a buff, use both on cooldown.
-actions.trinkets+=/use_item,slot=trinket1,if=!variable.trinket_1_buffs&(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)&!variable.trinket_1_manual&(!variable.trinket_1_buffs&(trinket.2.cooldown.remains|!variable.trinket_2_buffs)|(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)|cooldown.avatar.remains_expected>20)
-actions.trinkets+=/use_item,slot=trinket2,if=!variable.trinket_2_buffs&(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)&!variable.trinket_2_manual&(!variable.trinket_2_buffs&(trinket.1.cooldown.remains|!variable.trinket_1_buffs)|(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)|cooldown.avatar.remains_expected>20)
-actions.trinkets+=/use_item,slot=main_hand,if=!equipped.fyralath_the_dreamrender&!equipped.bestinslots&(!variable.trinket_1_buffs|trinket.1.cooldown.remains)&(!variable.trinket_2_buffs|trinket.2.cooldown.remains)
-actions.trinkets+=/use_item,name=bestinslots,if=target.time_to_die>120&(cooldown.avatar.remains>20&(trinket.1.cooldown.remains|trinket.2.cooldown.remains)|cooldown.avatar.remains>20&(!trinket.1.has_cooldown|!trinket.2.has_cooldown))|target.time_to_die<=120&target.health.pct<35&cooldown.avatar.remains>85|target.time_to_die<15
+actions+=/use_item,slot=trinket1,if=!variable.trinket_1_buffs&(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)&!variable.trinket_1_manual&(!variable.trinket_1_buffs&(trinket.2.cooldown.remains|!variable.trinket_2_buffs)|(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)|cooldown.avatar.remains_expected>20)
+actions+=/use_item,slot=trinket2,if=!variable.trinket_2_buffs&(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)&!variable.trinket_2_manual&(!variable.trinket_2_buffs&(trinket.1.cooldown.remains|!variable.trinket_1_buffs)|(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)|cooldown.avatar.remains_expected>20)
+actions+=/use_item,slot=main_hand,if=!equipped.fyralath_the_dreamrender&!equipped.bestinslots&(!variable.trinket_1_buffs|trinket.1.cooldown.remains)&(!variable.trinket_2_buffs|trinket.2.cooldown.remains)
+actions+=/use_item,name=bestinslots,if=target.time_to_die>120&(cooldown.avatar.remains>20&(trinket.1.cooldown.remains|trinket.2.cooldown.remains)|cooldown.avatar.remains>20&(!trinket.1.has_cooldown|!trinket.2.has_cooldown))|target.time_to_die<=120&target.health.pct<35&cooldown.avatar.remains>85|target.time_to_die<15
 # Variables
-actions.variables+=/variable,name=st_planning,value=active_enemies=1&(raid_event.adds.in>15|!raid_event.adds.exists)
-actions.variables+=/variable,name=adds_remain,value=active_enemies>=2&(!raid_event.adds.exists|raid_event.adds.exists&raid_event.adds.remains>5)
-actions.variables+=/variable,name=execute_phase,value=(talent.massacre.enabled&target.health.pct<35)|target.health.pct<20
-actions.variables+=/variable,name=on_gcd_racials,value=buff.recklessness.down&buff.avatar.down&rage<80&buff.sudden_death.down&!cooldown.bladestorm.ready&(!cooldown.execute.ready|!variable.execute_phase)
+actions+=/variable,name=st_planning,value=active_enemies=1&(raid_event.adds.in>15|!raid_event.adds.exists)
+actions+=/variable,name=adds_remain,value=active_enemies>=2&(!raid_event.adds.exists|raid_event.adds.exists&raid_event.adds.remains>5)
+actions+=/variable,name=execute_phase,value=(talent.massacre.enabled&target.health.pct<35)|target.health.pct<20
+actions+=/variable,name=on_gcd_racials,value=buff.recklessness.down&buff.avatar.down&rage<80&buff.sudden_death.down&!cooldown.bladestorm.ready&(!cooldown.execute.ready|!variable.execute_phase)
 actions+=/lights_judgment,if=variable.on_gcd_racials
 actions+=/bag_of_tricks,if=variable.on_gcd_racials
 actions+=/berserking,if=buff.recklessness.up

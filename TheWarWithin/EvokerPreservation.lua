@@ -457,7 +457,6 @@ local TriggerEssenceRushT30 = setfenv( function()
 end, state )
 
 local GenerateEssenceBurst = setfenv( function ( baseChance, targets )
-
     local burstChance = baseChance or 0
     if not targets then targets = 1 end
 
@@ -466,7 +465,6 @@ local GenerateEssenceBurst = setfenv( function ( baseChance, targets )
     if burstChance >= 1 then
         addStack( "essence_burst" )
     end
-
 end, state )
 
 spec:RegisterStateExpr( "empowerment_level", function()
@@ -807,7 +805,7 @@ spec:RegisterAbilities( {
 
         damage = function () return 1.61 * stat.spell_power end,
         healing = function () return 2.75 * stat.spell_power * ( 1 + 0.03 * talent.enkindled.rank ) end,
-        spell_targets = function () return buff.leaping_flames.up and min( active_enemies, 1 + buff.leaping_flames.stack ) end,
+        spell_targets = function () return min( active_enemies, 1 + buff.leaping_flames.stack ) end,
 
         handler = function ()
             removeBuff( "ancient_flame" )
@@ -818,8 +816,7 @@ spec:RegisterAbilities( {
             if buff.stasis.stack == 1 then applyBuff( "stasis_ready" ) end
             removeStack( "stasis" )
 
-            if talent.essence_burst.enabled then GenerateEssenceBurst( 0.2, max( 2, ( group or health.percent < 100 and 2 or 1 ), action.living_flame.spell_targets ) ) end
-
+            if talent.essence_burst.enabled then GenerateEssenceBurst( 0.2, max( 2, ( ( group or health.percent < 100 ) and 2 or 1 ), action.living_flame.spell_targets ) ) end
         end,
 
         copy = { 361469, "chrono_flame", 431443 }

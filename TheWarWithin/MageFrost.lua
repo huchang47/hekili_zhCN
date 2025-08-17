@@ -1220,7 +1220,7 @@ spec:RegisterAbilities( {
 
         talent = "flurry",
         startsCombat = true,
-        flightTime = 0.5,
+        flightTime = function () return 0.5 + target.maxR * 0.0175 end,
 
         handler = function ()
             removeBuff( "brain_freeze" )
@@ -1542,7 +1542,8 @@ spec:RegisterAbilities( {
         spend = 0.03,
         spendType = "mana",
 
-        talent = "ice_barrier",
+        -- FIXME: Skeleton Generator strange edgecase doesn't find this talent
+        -- talent = "ice_barrier",
         startsCombat = false,
 
         handler = function ()

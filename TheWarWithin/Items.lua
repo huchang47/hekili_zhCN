@@ -1502,7 +1502,230 @@ all:RegisterAbilities( {
 } )
 
 -- 11.2
+all:RegisterAuras( {
+    alldevouring_nucleus = {
+        id = 1236691,
+        duration = 480,
+        max_stack = 1
+    },
+
+    arcane_hunter = {
+        id = 1245376,
+        duration = 8,
+        max_stack = 5
+    },
+
+    arcane_insanity = {
+        id = 1245643,
+        duration = 3600,
+        max_stack = 10
+    },
+
+    astral_antenna = {
+        id = 1239640,
+        duration = 20,
+        max_stack = 5
+    },
+
+    azhiccaran_mite = {
+        id = 1243828,
+        duration = 5,
+        max_stack = 1
+    },
+
+    barrier_of_the_oathsworn = {
+        id = 1240002,
+        duration = 20,
+        max_stack = 1
+    },
+
+    boon_of_the_oathsworn = {
+        id = 1240000,
+        duration = 10,
+        max_stack = 1
+    },
+
+    depleted_kareshi_battery = {
+        id = 1231104,
+        duration = 12,
+        max_stack = 1
+    },
+
+    diamantine_voidcore = {
+        id = 1239221,
+        duration = 15,
+        max_stack = 5
+    },
+
+    disturbed_sands = {
+        id = 1231664,
+        duration = 20,
+        max_stack = 5
+    },
+
+    -- FIXME: Meteor debuff?
+    -- screams_of_a_forgotten_sky = {},
+
+    eradicating_arcanocore = {
+        id = 1240896,
+        duration = 3600,
+        max_stack = 10
+    },
+
+    infuriated = {
+        id = 1235879,
+        duration = 3600,
+        max_stack = 15
+    },
+
+    manaforged_aethercell = {
+        id = 1245397,
+        duration = 15,
+        max_stack = 1
+    },
+
+    mindfracturing_odium = {
+        id = 1245637,
+        duration = 3600,
+        stack = 10
+    },
+
+    mitey_feast = {
+        id = 1243843,
+        duration = 30,
+        max_stack = 1
+    },
+
+    oathbound = {
+        id = 1239997,
+        duration = 3600,
+        max_stack = 1
+    },
+
+    shadowguards_twisted_harvester = {
+        id = 1246543,
+        duration = 10,
+        max_stack = 1
+    },
+
+    soulbreakers_sigil = {
+        id = 1225149,
+        duration = 10,
+        max_stack = 1
+    },
+
+    symbiotic_ethergauze = {
+        id = 1245431,
+        duration = 15,
+        max_stack = 1
+    },
+
+    twisted_mana_sprite = {
+        id = 1247511,
+        duration = 5,
+        max_stack = 1
+    },
+
+    veiling_mana_shroud = {
+        id = 1231221,
+        duration = 12,
+        max_stack = 1
+    },
+
+    void_reconstitution = {
+        id = 1236692,
+        duration = 6,
+        max_stack = 1
+    }
+} )
+
 all:RegisterAbilities( {
+    arazs_ritual_forge = {
+        cast = 0,
+        cooldown = 120,
+        gcd = "off",
+
+        item = 242402,
+        toggle = "cooldowns",
+
+        proc = "primary",
+        self_buff = "arazs_ritual_forge",
+
+        handler = function()
+            applyBuff( "arazs_ritual_forge" )
+        end,
+
+        auras = {
+            arazs_ritual_forge = {
+                id = 1232802,
+                duration = 30,
+                max_stack = 1
+            },
+        },
+    },
+
+    chaotic_nethergate = {
+        cast = 0,
+        cooldown = 120,
+        gcd = "off",
+
+        item = 246825,
+        toggle = "cooldowns",
+
+        proc = "healing",
+
+        handler = function()
+        end,
+    },
+
+    cursed_stone_idol = {
+        cast = 0,
+        cooldown = 90,
+        gcd = "off",
+
+        item = 246344,
+        toggle = "cooldowns",
+
+        proc = "crit",
+        self_buff = "cursed_stone_idol",
+
+        handler = function()
+            applyBuff( "cursed_stone_idol" )
+        end,
+
+        auras = {
+            cursed_stone_idol = {
+                id = 1241806,
+                duration = 15,
+                max_stack = 1
+            },
+        },
+    },
+
+    incorporeal_essencegorger = {
+        cast = 0,
+        cooldown = 120,
+        gcd = "off",
+
+        item = 246945,
+        toggle = "cooldowns",
+
+        proc = "secondary",
+        self_buff = "incorporeal_essencegorger",
+
+        handler = function()
+            applyBuff( "incorporeal_essencegorger" )
+        end,
+
+        auras = {
+            incorporeal_essencegorger = {
+                id = 1247207,
+                duration = 20,
+                max_stack = 1
+            },
+        },
+    },
+
     lily_of_the_eternal_weave = {
         cast = 0,
         cooldown = 90,
@@ -1511,7 +1734,7 @@ all:RegisterAbilities( {
         item = 242494,
         toggle = "cooldowns",
 
-        proc = "secondary",
+        proc = "mastery",
         self_buff = "woven_fate",
 
         handler = function()
@@ -1524,6 +1747,121 @@ all:RegisterAbilities( {
                 duration = 15,
                 max_stack = 1
             },
+        },
+    },
+
+    loomithars_living_silk = {
+        cast = 0,
+        cooldown = 90,
+        gcd = "off",
+
+        item = 242393,
+        toggle = "cooldowns",
+
+        proc = "defensive",
+        self_buff = "loomithars_living_silk",
+
+        handler = function()
+            applyBuff( "loomithars_living_silk" )
+        end,
+
+        auras = {
+            loomithars_living_silk = {
+                id = 1232721,
+                duration = 10,
+                max_stack = 1
+            },
+        },
+    },
+
+    observers_soul_fetters = {
+        cast = 0,
+        cooldown = 120,
+        gcd = "off",
+
+        item = 240171,
+        toggle = "cooldowns",
+
+        proc = "primary",
+        self_buff = "observers_soul_fetters",
+
+        handler = function()
+            applyBuff( "observers_soul_fetters" )
+        end,
+
+        auras = {
+            observers_soul_fetters = {
+                id = 1230285,
+                duration = 20,
+                max_stack = 1
+            }
+        },
+    },
+
+    perfidious_projector = {
+        cast = 0,
+        cooldown = 120,
+        gcd = "off",
+
+        item = 242403,
+        toggle = "cooldowns",
+
+        handler = function()
+        end,
+    },
+
+    soulbinders_embrace = {
+        cast = 0,
+        cooldown = 60,
+        gcd = "off",
+
+        item = 242396,
+        toggle = "essences",
+
+        proc = "defensive",
+        self_buff = "soulbinders_embrace",
+
+        handler = function()
+            applyBuff( "soulbinders_embrace" )
+        end,
+
+        auras = {
+            soulbinders_embrace = {
+                id = 1235425,
+                duration = 20,
+                max_stack = 1,
+            }
+        },
+    },
+
+    unyielding_netherprism = {
+        cast = 0,
+        cooldown = 90,
+        gcd = "off",
+
+        item = 242396,
+        toggle = "cooldowns",
+
+        proc = "primary",
+        self_buff = "unyielding_netherprism",
+        buff = "latent_energy",
+
+        handler = function()
+            removeBuff( "latent_energy" )
+            applyBuff( "unyielding_netherprism" )
+        end,
+
+        auras = {
+            latent_energy = {
+                id = 1239675,
+                duration = 3600,
+                max_stack = 18
+            },
+            unyielding_netherprism = {
+                id = 1233556,
+                duration = 20,
+                max_stack = 1
+            }
         },
     },
 } )

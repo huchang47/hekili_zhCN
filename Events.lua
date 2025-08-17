@@ -1096,7 +1096,7 @@ ns.castsAll = { 'no_action', 'no_action', 'no_action', 'no_action', 'no_action' 
 local castsOn, castsOff, castsAll = ns.castsOn, ns.castsOff, ns.castsAll
 
 
-function state:AddToHistory( spellID, destGUID )
+function state:AddToHistory( spellID, destGUID, rank )
     local ability = class.abilities[ spellID ]
     local key = ability and ability.key or dynamic_keys[ spellID ]
 
@@ -1106,7 +1106,7 @@ function state:AddToHistory( spellID, destGUID )
     player.lastcast = key
     player.casttime = now
 
-    if ability and not ability.essence then
+    if ability then
         local history = self.prev.history
         insert( history, 1, key )
         history[6] = nil
@@ -1125,6 +1125,7 @@ function state:AddToHistory( spellID, destGUID )
 
         ability.realCast = now
         ability.realUnit = destGUID
+        ability.realRank = rank
     end
 end
 
@@ -1285,6 +1286,37 @@ RegisterUnitEvent( "UNIT_SPELLCAST_CHANNEL_STOP", "player", nil, function( event
         Hekili:ForceUpdate( event )
         if state.holds[ ability.key ] then Hekili:RemoveHold( ability.key, true ) end
     end
+end )
+
+
+RegisterUnitEvent( "UNIT_SPELLCAST_CHANNEL_UPDATE", "player", nil, function( event, unit, _, spellID )
+    local ability = class.abilities[ spellID ]
+    if not ability or not ability.channeled then return end
+
+    state:RemoveSpellEvent( action, true, "CHANNEL_TICK" )
+    state:RemoveSpellEvent( action, true, "CHANNEL_FINISH", true )
+
+    local _, _, _, start, finish = UnitChannelInfo( "player" )
+
+    if start then
+        start = start / 1000
+        finish = finish / 1000
+
+        state:QueueEvent( ability.key, start, finish, "CHANNEL_FINISH", destGUID, true )
+
+        local tick_time = ability.tick_time or ( ability.aura and class.auras[ ability.aura ].tick_time )
+
+        if tick_time and tick_time > 0 then
+            local tick = tick_time
+
+            while ( start + tick < finish ) do
+                state:QueueEvent( ability.key, start, start + tick, "CHANNEL_TICK", destGUID, true )
+                tick = tick + tick_time
+            end
+        end
+    end
+
+    Hekili:ForceUpdate( event )
 end )
 
 
@@ -1596,7 +1628,10 @@ local cast_events = {
     SPELL_CAST_FAILED       = true,
     SPELL_CAST_SUCCESS      = true,
     SPELL_DAMAGE            = true,
-    SPELL_AURA_REMOVED      = true
+    SPELL_AURA_REMOVED      = true,
+    SPELL_EMPOWER_START     = true,
+    SPELL_EMPOWER_INTERRUPT = true,
+    SPELL_EMPOWER_END       = true
 }
 
 
@@ -1877,6 +1912,9 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
                     end
 
                     state:AddToHistory( ability.key, destGUID )
+
+                elseif subtype == "SPELL_EMPOWER_END" then
+                    state:AddToHistory( ability.key, destGUID, amount )
 
                 elseif subtype == "SPELL_DAMAGE" then
                     -- Could be an impact.

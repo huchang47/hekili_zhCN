@@ -286,9 +286,7 @@ spec:RegisterAuras( {
         max_stack = 6,
     },
     -- Fake buffs for demonsurge damage procs
-    demonsurge_hardcast = {
-        id = 452489
-    },
+    demonsurge_hardcast = {},
     demonsurge_consuming_fire = {},
     demonsurge_fel_desolation = {},
     demonsurge_sigil_of_doom = {},
@@ -853,14 +851,22 @@ local bonus_time_from_immo_aura = 0
 -- Variable to track the GUID of the initial target
 local initial_fiery_brand_guid = ""
 
+local sigilList = {
+    sigil_of_flame = { 204596, 389810, 452490, 469991 },
+    sigil_of_misery = { 207684, 389813 },
+    sigil_of_spite = { 390163, 389815 },
+    sigil_of_silence = { 202137, 389809 },
+    sigil_of_chains = { 202138, 389807 }
+}
+
 spec:RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", function( _ , subtype, _, sourceGUID, sourceName, _, _, destGUID, destName, destFlags, _, spellID, spellName )
     if sourceGUID ~= GUID then return end
 
-    if talent.charred_flesh.enabled and subtype == "SPELL_DAMAGE" and spellID == 258922 and destGUID == initial_fiery_brand_guid then
-        bonus_time_from_immo_aura = bonus_time_from_immo_aura + ( 0.25 * talent.charred_flesh.rank )
+    if state.talent.charred_flesh.enabled and subtype == "SPELL_DAMAGE" and spellID == 258922 and destGUID == initial_fiery_brand_guid then
+        bonus_time_from_immo_aura = bonus_time_from_immo_aura + ( 0.25 * state.talent.charred_flesh.rank )
 
     elseif subtype == "SPELL_CAST_SUCCESS" then
-        if talent.charred_flesh.enabled and spellID == 204021 then
+        if state.talent.charred_flesh.enabled and spellID == 204021 then
             bonus_time_from_immo_aura = 0
             initial_fiery_brand_guid = destGUID
         end
@@ -869,7 +875,7 @@ spec:RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", function( _ , subtype, _, sour
             soul_fragments.activateFragment()
         end
 
-        -- Fracture:  Generate 2-3 frags.
+        -- Fracture:  Generate 2-3 frags
         if spellID == 263642 then
             local timeStamp = GetTime()
             local metaActive = GetPlayerAuraBySpellID( 187827 )
@@ -877,12 +883,29 @@ spec:RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", function( _ , subtype, _, sour
             soul_fragments.queueFragments( frags, timeStamp )
         end
 
-        -- Shear:  Generate 1-2 frag.
+        -- Shear:  Generate 1-2 frags
         if spellID == 203782 then
             local timeStamp = GetTime()
             local metaActive = GetPlayerAuraBySpellID( 187827 )
             local frags = 1 + ( metaActive and 1 or 0 )
             soul_fragments.queueFragments( frags, timeStamp )
+        end
+
+        -- Sigils: Generate 1 frag
+        local foundSigil = false
+        for _, spellIDs in pairs( sigilList ) do
+            for _, id in ipairs( spellIDs ) do
+                if spellID == id then
+                    foundSigil = true
+                    break
+                end
+            end
+            if foundSigil then break end
+        end
+        if foundSigil then
+            local timeStamp = GetTime()
+            -- Pass in sigil activation time as additional delay to the spawning
+            soul_fragments.queueFragments( 1, timeStamp, state.activation_time )
         end
 
         -- We consumed or generated a fragment for real, so let's purge the inactive queue.
@@ -892,12 +915,18 @@ spec:RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", function( _ , subtype, _, sour
     end
 end, false )
 
-local sigil_types = { "chains", "flame", "misery", "silence" }
-
 -- Abilities that may trigger Demonsurge.
 local demonsurge = {
     demonic = { "soul_sunder", "spirit_burst" },
     hardcast = { "consuming_fire", "fel_desolation", "sigil_of_doom" },
+}
+
+-- Map old demonsurge names to current ability names due to SimC APL
+local demonsurge_spell_map = {
+    soul_sunder = "soul_cleave",
+    spirit_burst = "spirit_bomb",
+    fel_desolation = "fel_devastation",
+    sigil_of_doom = "sigil_of_flame"
 }
 
 spec:RegisterHook( "reset_precast", function ()
@@ -941,11 +970,7 @@ spec:RegisterHook( "reset_precast", function ()
         local metaRemains = buff.metamorphosis.remains
 
         for _, name in ipairs( demonsurge.demonic ) do
-            local ability_name = name
-            -- Map old demonsurge names to current ability names due to SimC APL
-            if name == "soul_sunder" then ability_name = "soul_cleave" end
-            if name == "spirit_burst" then ability_name = "spirit_bomb" end
-
+            local ability_name = demonsurge_spell_map[name] or name
             if class.abilities[ ability_name ] and IsSpellOverlayed( class.abilities[ ability_name ].id ) then
                 applyBuff( "demonsurge_" .. name, metaRemains )
             end
@@ -956,9 +981,7 @@ spec:RegisterHook( "reset_precast", function ()
                 applyBuff( "demonsurge_hardcast", metaRemains )
             end
             for _, name in ipairs( demonsurge.hardcast ) do
-                local ability_name = name
-                -- Map old demonsurge names to current ability names due to SimC APL
-                if name == "fel_desolation" then ability_name = "fel_devastation" end
+                local ability_name = demonsurge_spell_map[name] or name
                 if class.abilities[ ability_name ] and IsSpellOverlayed( class.abilities[ ability_name ].id ) then
                     applyBuff( "demonsurge_" .. name, metaRemains )
                 end
@@ -1026,8 +1049,6 @@ spec:RegisterStateExpr( "fury_spent", function ()
     return furySpent
 end )
 
-
-local sigilList = { "sigil_of_flame", "sigil_of_misery", "sigil_of_spite", "sigil_of_silence", "sigil_of_chains", "sigil_of_doom" }
 
 local TriggerDemonic = setfenv( function()
     local demonicExtension = 7
@@ -1581,7 +1602,13 @@ spec:RegisterAbilities( {
 
     -- Talent: Place a Sigil of Flame at your location that activates after $d.    Deals $204598s1 Fire damage, and an additional $204598o3 Fire damage over $204598d, to all enemies affected by the sigil.    |CFFffffffGenerates $389787s1 Fury.|R
     sigil_of_flame = {
-        id = function () return talent.precise_sigils.enabled and 389810 or 204596 end,
+        id = function()
+            if buff.demonsurge_hardcast.up then
+                return talent.precise_sigils.enabled and 469991 or 452490
+            else
+                return talent.precise_sigils.enabled and 389810 or 204596
+            end
+        end,
         known = 204596,
         cast = 0,
         cooldown = function() return ( pvptalent.sigil_of_mastery.enabled and 0.75 or 1 ) * 30 - ( talent.illuminated_sigils.enabled and 5 or 0 ) end,
@@ -1589,30 +1616,38 @@ spec:RegisterAbilities( {
         recharge = function() return ( pvptalent.sigil_of_mastery.enabled and 0.75 or 1 ) * 30 - ( talent.illuminated_sigils.enabled and 5 or 0 ) end,
         gcd = "spell",
         icd = function() return 0.25 + activation_time end,
-        school = "physical",
+        school = function() return buff.demonsurge_hardcast.up and "chaos" or "fire" end,
 
         spend = -30,
         spendType = "fury",
 
         startsCombat = false,
-        texture = 1344652,
-        nobuff = "demonsurge_hardcast",
+        texture = function() return buff.demonsurge_hardcast.up and 1121022 or 1344652 end,
 
         flightTime = function() return activation_time end,
         delay = function() return activation_time end,
         placed = function() return query_time < action.sigil_of_flame.lastCast + activation_time end,
 
         handler = function ()
+            if buff.demonsurge_sigil_of_doom.up then
+                removeBuff( "demonsurge_sigil_of_doom" )
+                if talent.demonic_intensity.enabled then addStack( "demonsurge" ) end
+            end
             if talent.cycle_of_binding.enabled then
-                for _, sigil in ipairs( sigilList ) do
+                for sigil, _ in pairs( sigilList ) do
                     reduceCooldown( sigil, 5 )
                 end
             end
         end,
 
         impact = function()
-            applyDebuff( "target", "sigil_of_flame" )
-            active_dot.sigil_of_flame = active_enemies
+            if buff.demonsurge_hardcast.up then
+                applyDebuff( "target", "sigil_of_doom" )
+                active_dot.sigil_of_doom = active_enemies
+            else
+                applyDebuff( "target", "sigil_of_flame" )
+                active_dot.sigil_of_flame = active_enemies
+            end
             if talent.soul_sigils.enabled then addStack( "soul_fragments", nil, 1 ) end
             if talent.student_of_suffering.enabled then applyBuff( "student_of_suffering" ) end
             if talent.flames_of_fury.enabled then gain( talent.flames_of_fury.rank * active_enemies, "fury" ) end
@@ -1628,62 +1663,9 @@ spec:RegisterAbilities( {
         end,
 
         bind = "sigil_of_doom",
-        copy = { 204596, 389810 }
+        copy = { 204596, 389810, 452490, 469991, "sigil_of_doom" }
     },
 
-    sigil_of_doom = {
-        id = function () return talent.precise_sigils.enabled and 469991 or 452490 end,
-        known = 204596,
-        cast = 0,
-        cooldown = function() return ( pvptalent.sigil_of_mastery.enabled and 0.75 or 1 ) * 30 - ( talent.illuminated_sigils.enabled and 5 or 0 ) end,
-        charges = function () return talent.illuminated_sigils.enabled and 2 or 1 end,
-        recharge = function() return ( pvptalent.sigil_of_mastery.enabled and 0.75 or 1 ) * 30 - ( talent.illuminated_sigils.enabled and 5 or 0 ) end,
-        gcd = "spell",
-        icd = function() return 0.25 + activation_time end,
-        school = "physical",
-
-        spend = -30,
-        spendType = "fury",
-
-        startsCombat = false,
-        texture = 1121022,
-        talent = "demonic_intensity",
-        buff = "demonsurge_hardcast",
-
-        flightTime = function() return activation_time end,
-        delay = function() return activation_time end,
-        placed = function() return query_time < action.sigil_of_doom.lastCast + activation_time end,
-
-        handler = function ()
-            if buff.demonsurge_sigil_of_doom.up then
-                removeBuff( "demonsurge_sigil_of_doom" )
-                if talent.demonic_intensity.enabled then addStack( "demonsurge" ) end
-            end
-            spec.abilities.sigil_of_flame.handler()
-            -- Sigil of Doom and Sigil of Flame share a cooldown.
-            setCooldown( "sigil_of_flame", action.sigil_of_doom.cooldown )
-        end,
-
-        impact = function()
-            applyDebuff( "target", "sigil_of_doom" )
-            active_dot.sigil_of_doom = active_enemies
-            if talent.soul_sigils.enabled then addStack( "soul_fragments", nil, 1 ) end
-            if talent.student_of_suffering.enabled then applyBuff( "student_of_suffering" ) end
-            if talent.flames_of_fury.enabled then gain( talent.flames_of_fury.rank * active_enemies, "fury" ) end
-            if talent.frailty.enabled then
-                if talent.soulcrush.enabled and debuff.frailty.up then
-                    -- Soulcrush allows for multiple applications of Frailty.
-                    applyDebuff( "target", "frailty", nil, debuff.frailty.stack + 1 )
-                else
-                    applyDebuff( "target", "frailty" )
-                end
-                active_dot.frailty = active_enemies
-            end
-        end,
-
-        bind = "sigil_of_flame",
-        copy = { 452490, 469991 }
-    },
 
     -- Talent: Place a Sigil of Misery at your location that activates after $d.    Causes all enemies affected by the sigil to cower in fear. Targets are disoriented for $207685d.
     sigil_of_misery = {

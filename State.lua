@@ -476,6 +476,8 @@ local mt_trinket = {
                 return state.cooldown[ t.ability ]
             end
             return state.cooldown.null_cooldown
+        elseif k == "cooldown_remains" then
+            return t.cooldown.remains
 
         elseif k == "cast_time" or k == "cast_time" then
             return t.usable and t.ability and class.abilities[ t.ability ] and class.abilities[ t.ability ].cast or 0
@@ -596,6 +598,18 @@ local mt_trinket_has_stat = {
 setmetatable( state.trinket.t1.has_stat, mt_trinket_has_stat )
 setmetatable( state.trinket.t2.has_stat, mt_trinket_has_stat )
 setmetatable( state.trinket.main_hand.has_stat, mt_trinket_has_stat )
+
+
+local mt_trinket_with_stat = {
+    __index = function( t, k )
+        local trinket = state.trinket[ t.slot ]
+        return trinket and trinket.has_stat[ k ] and trinket or no_trinket
+    end
+}
+
+setmetatable( state.trinket.t1.stat, mt_trinket_with_stat )
+setmetatable( state.trinket.t2.stat, mt_trinket_with_stat )
+setmetatable( state.trinket.main_hand.stat, mt_trinket_with_stat )
 
 
 local mt_trinkets_has_stat = {
@@ -5230,6 +5244,16 @@ do
             if k == "next_tick" then return next_tick end
             if k == "tick_time_remains" then return max( 0, next_tick - moment ) end
             if k == "ticks_remain" then return expires > moment and max( 0, 1 + floor( ( expires - next_tick ) / tick_time ) ) or 0 end
+
+            if k == "cast_time" then
+                local ability = class.abilities[ t.key ]
+                return ability and state.action[ t.key ].cast_time or 0
+            end
+
+            if k == "execute_time" then
+                local ability = class.abilities[ t.key ]
+                return ability and state.action[ t.key ].execute_time or gcd.max
+            end
 
             local attr = aura[ k ]
             if attr ~= nil then return attr end

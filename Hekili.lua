@@ -621,7 +621,7 @@ function Hekili:SaveDebugSnapshot( dispName )
                     end
                     break
                 end
-                overview = format( "%s%s%s|cFFFFD100(%0.2f)|r", overview, ( i == 1 and " - " or ", " ), rec.actionName, rec.time )
+                overview = format( "%s%s%s|cFFFFD100(%0.2f)|r", overview, ( i == 1 and " - " or ", " ), rec.actionName, rec.time or rec.exact_time or -1 )
             end
 
             insert( v.log, 1, overview )
