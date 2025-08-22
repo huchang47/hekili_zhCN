@@ -1,6 +1,6 @@
 ## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/warrior_arms.simc
-## SimulationCraft Commit Sync: 1bb8d5f
-## Date: 2025-08-06
+## SimulationCraft Commit Sync: a54c75c
+## Date: 2025-08-17
 
 actions.precombat+=/battle_shout
 actions.precombat+=/battle_stance,toggle=on
@@ -17,9 +17,27 @@ actions.precombat+=/variable,name=trinket_2_manual,value=trinket.2.is.algethar_p
 
 actions+=/charge,if=time<=0.5|movement.distance>8
 actions+=/potion,if=gcd.remains=0&debuff.colossus_smash.remains>8|boss&fight_remains<25
-actions+=/pummel,if=target.debuff.casting.react
-actions+=/call_action_list,name=variables
-actions+=/call_action_list,name=trinkets
+## [Syrif] - Redundant interrupt if casting removed (handled in class file)
+actions+=/pummel
+## [Syrif] - This variable sub-list has been "flattened" to the default action list.
+## actions+=/call_action_list,name=variables
+# Variables
+actions+=/variable,name=st_planning,value=active_enemies=1&(raid_event.adds.in>15|!raid_event.adds.exists)
+actions+=/variable,name=adds_remain,value=active_enemies>=2&(!raid_event.adds.exists|raid_event.adds.exists&raid_event.adds.remains>5)
+actions+=/variable,name=execute_phase,value=(talent.massacre.enabled&target.health.pct<35)|target.health.pct<20
+## Trinkets
+## [Syrif] - This trinket sub-list has been "flattened" to the default action list.
+## actions+=/call_action_list,name=trinkets
+## actions+=/do_treacherous_transmitter_task
+actions+=/use_item,name=cursed_stone_idol,if=cooldown.avatar.remains<2
+# Trinkets The trinket with the highest estimated value, will be used first and paired with Avatar.
+actions+=/use_item,slot=trinket1,if=variable.trinket_1_buffs&!variable.trinket_1_manual&(!buff.avatar.up&trinket.1.cast_time>0|!trinket.1.cast_time>0)&buff.avatar.up&(variable.trinket_2_exclude|!trinket.2.has_cooldown|trinket.2.cooldown.remains|variable.trinket_priority=1)|trinket.1.proc.any_dps.duration>=fight_remains
+actions+=/use_item,slot=trinket2,if=variable.trinket_2_buffs&!variable.trinket_2_manual&(!buff.avatar.up&trinket.2.cast_time>0|!trinket.2.cast_time>0)&buff.avatar.up&(variable.trinket_1_exclude|!trinket.1.has_cooldown|trinket.1.cooldown.remains|variable.trinket_priority=2)|trinket.2.proc.any_dps.duration>=fight_remains
+# If only one on use trinket provides a buff, use the other on cooldown. Or if neither trinket provides a buff, use both on cooldown.
+actions+=/use_item,slot=trinket1,if=!variable.trinket_1_buffs&(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)&!variable.trinket_1_manual&(!variable.trinket_1_buffs&(trinket.2.cooldown.remains|!variable.trinket_2_buffs)|(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)|cooldown.avatar.remains_expected>20)
+actions+=/use_item,slot=trinket2,if=!variable.trinket_2_buffs&(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)&!variable.trinket_2_manual&(!variable.trinket_2_buffs&(trinket.1.cooldown.remains|!variable.trinket_1_buffs)|(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)|cooldown.avatar.remains_expected>20)
+actions+=/use_item,slot=main_hand,if=!equipped.fyralath_the_dreamrender&!equipped.bestinslots&(!variable.trinket_1_buffs|trinket.1.cooldown.remains)&(!variable.trinket_2_buffs|trinket.2.cooldown.remains)
+actions+=/use_item,name=bestinslots,if=cooldown.avatar.remains>20|(buff.avatar.up&(!trinket.1.has_cooldown&!trinket.2.has_cooldown))
 actions+=/arcane_torrent,if=cooldown.mortal_strike.remains>1.5&rage<50
 actions+=/lights_judgment,if=debuff.colossus_smash.down&cooldown.mortal_strike.remains
 actions+=/bag_of_tricks,if=debuff.colossus_smash.down&cooldown.mortal_strike.remains
@@ -204,20 +222,3 @@ actions.slayer_sweep+=/execute,if=!talent.juggernaut
 actions.slayer_sweep+=/wrecking_throw,if=!buff.sweeping_strikes.up
 actions.slayer_sweep+=/slam
 actions.slayer_sweep+=/storm_bolt,if=buff.bladestorm.up
-
-# Trinkets
-## actions.trinkets=do_treacherous_transmitter_task
-actions.trinkets+=/use_item,name=cursed_stone_idol,if=cooldown.avatar.remains<1
-# Trinkets The trinket with the highest estimated value, will be used first and paired with Avatar.
-actions.trinkets+=/use_item,slot=trinket1,if=variable.trinket_1_buffs&!variable.trinket_1_manual&(!buff.avatar.up&trinket.1.cast_time>0|!trinket.1.cast_time>0)&buff.avatar.up&(variable.trinket_2_exclude|!trinket.2.has_cooldown|trinket.2.cooldown.remains|variable.trinket_priority=1)|trinket.1.proc.any_dps.duration>=fight_remains
-actions.trinkets+=/use_item,slot=trinket2,if=variable.trinket_2_buffs&!variable.trinket_2_manual&(!buff.avatar.up&trinket.2.cast_time>0|!trinket.2.cast_time>0)&buff.avatar.up&(variable.trinket_1_exclude|!trinket.1.has_cooldown|trinket.1.cooldown.remains|variable.trinket_priority=2)|trinket.2.proc.any_dps.duration>=fight_remains
-# If only one on use trinket provides a buff, use the other on cooldown. Or if neither trinket provides a buff, use both on cooldown.
-actions.trinkets+=/use_item,slot=trinket1,if=!variable.trinket_1_buffs&(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)&!variable.trinket_1_manual&(!variable.trinket_1_buffs&(trinket.2.cooldown.remains|!variable.trinket_2_buffs)|(trinket.1.cast_time>0&!buff.avatar.up|!trinket.1.cast_time>0)|cooldown.avatar.remains_expected>20)
-actions.trinkets+=/use_item,slot=trinket2,if=!variable.trinket_2_buffs&(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)&!variable.trinket_2_manual&(!variable.trinket_2_buffs&(trinket.1.cooldown.remains|!variable.trinket_1_buffs)|(trinket.2.cast_time>0&!buff.avatar.up|!trinket.2.cast_time>0)|cooldown.avatar.remains_expected>20)
-actions.trinkets+=/use_item,slot=main_hand,if=!equipped.fyralath_the_dreamrender&!equipped.bestinslots&(!variable.trinket_1_buffs|trinket.1.cooldown.remains)&(!variable.trinket_2_buffs|trinket.2.cooldown.remains)
-actions.trinkets+=/use_item,name=bestinslots,if=cooldown.avatar.remains>20|(buff.avatar.up&(!trinket.1.has_cooldown&!trinket.2.has_cooldown))
-
-# Variables
-actions.variables+=/variable,name=st_planning,value=active_enemies=1&(raid_event.adds.in>15|!raid_event.adds.exists)
-actions.variables+=/variable,name=adds_remain,value=active_enemies>=2&(!raid_event.adds.exists|raid_event.adds.exists&raid_event.adds.remains>5)
-actions.variables+=/variable,name=execute_phase,value=(talent.massacre.enabled&target.health.pct<35)|target.health.pct<20

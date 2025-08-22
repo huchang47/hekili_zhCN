@@ -1,6 +1,6 @@
 ## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/warrior_fury.simc
-## SimulationCraft Commit Sync: 1bb8d5f
-## Date: 2025-08-06
+## SimulationCraft Commit Sync: a54c75c
+## Date: 2025-08-17
 
 actions.precombat+=/battle_shout
 actions.precombat+=/berserker_stance,toggle=on
@@ -17,17 +17,17 @@ actions.precombat+=/variable,name=trinket_2_manual,value=trinket.2.is.algethar_p
 actions.precombat+=/variable,name=treacherous_transmitter_precombat_cast,value=2
 actions.precombat+=/use_item,name=treacherous_transmitter
 actions.precombat+=/recklessness,if=!equipped.fyralath_the_dreamrender
-actions.precombat+=/avatar
+actions.precombat+=/avatar,if=!equipped.cursed_stone_idol
 
 # Executed every time the actor is available.
 actions+=/charge,if=time<=0.5|movement.distance>5
 actions+=/heroic_leap,if=movement.distance>25
-actions+=/potion,if=boss&fight_remains>300|fight_remains<300&target.health.pct<35&buff.recklessness.up|boss&fight_remains<25
+actions+=/potion,if=fight_remains>300|fight_remains<300&target.health.pct<35&buff.recklessness.up|boss&fight_remains<25
 actions+=/use_item,name=treacherous_transmitter
 actions+=/pummel
 # Trinkets
 ## actions+=/do_treacherous_transmitter_task
-actions+=/use_item,name=cursed_stone_idol,if=cooldown.avatar.remains<1
+actions+=/use_item,name=cursed_stone_idol,if=cooldown.avatar.remains<2
 actions+=/use_item,name=unyielding_netherprism,if=cooldown.avatar.remains<=85
 # Trinkets The trinket with the highest estimated value, will be used first and paired with Avatar.
 actions+=/use_item,slot=trinket1,if=variable.trinket_1_buffs&!variable.trinket_1_manual&(!buff.avatar.up&trinket.1.cast_time>0|!trinket.1.cast_time>0)&buff.avatar.up&(variable.trinket_2_exclude|!trinket.2.has_cooldown|trinket.2.cooldown.remains|variable.trinket_priority=1)|trinket.1.proc.any_dps.duration>=fight_remains

@@ -137,18 +137,11 @@ state.off_hand = {
 
 state.gcd = {}
 
-state.hero_tree = setmetatable( {}, {
+state.hero_tree = setmetatable( {
+    current = "none"
+}, {
     __index = function( t, k )
-
-        if state.level < 71 then
-            return false
-        end
-
-        if k == "current" then
-            return ns.getActiveHeroTreeName()
-        end
-
-        return ns.getActiveHeroTreeName() == k
+        return k == t.current
     end
 } )
 
@@ -243,6 +236,13 @@ state.totem = {}
 state.trinket = {
     t1 = {
         slot = "t1",
+        __id = 0,
+        __ability = "null_cooldown",
+        __usable = false,
+        __has_use_buff = false,
+        __has_use_damage = false,
+        __use_buff_duration = nil,
+        ilvl = 0,
 
         --[[ has_cooldown = {
             slot = "t1"
@@ -269,6 +269,13 @@ state.trinket = {
 
     t2 = {
         slot = "t2",
+        __id = 0,
+        __ability = "null_cooldown",
+        __usable = false,
+        __has_use_buff = false,
+        __has_use_damage = false,
+        __use_buff_duration = nil,
+        ilvl = 0,
 
         --[[ has_cooldown = {
             slot = "t2",
@@ -295,6 +302,13 @@ state.trinket = {
 
     main_hand = {
         slot = "main_hand",
+        __id = 0,
+        __ability = "null_cooldown",
+        __usable = false,
+        __has_use_buff = false,
+        __has_use_damage = false,
+        __use_buff_duration = nil,
+        ilvl = 0,
 
         --[[ has_cooldown = {
             slot = "main_hand",
@@ -448,10 +462,12 @@ local mt_trinket = {
             return isEnabled and t.__id or 0
         elseif k == "ability" then
             return rawget( t, "__ability" ) or "null_cooldown"
-        elseif k == "usable" then
+        elseif k == "usable" or k == "has_use" then
             return rawget( t, "__usable" ) or false
         elseif k == "has_use_buff" or k == "use_buff" then
             return isEnabled and t.__has_use_buff or false
+        elseif k == "has_use_damage" then
+            return isEnabled and t.__has_use_damage or false
         elseif k == "use_buff_duration" or k == "buff_duration" then
             return isEnabled and t.__has_use_buff and t.__use_buff_duration or 0.01
         elseif k == "has_proc" or k == "proc" then
@@ -483,6 +499,7 @@ local mt_trinket = {
             return t.usable and t.ability and class.abilities[ t.ability ] and class.abilities[ t.ability ].cast or 0
         end
 
+        Hekili:Error( "Unknown trinket expression '%s' in %s.", k, state.this_id )
         return k
     end
 }
@@ -1896,6 +1913,7 @@ do
         selection_time = 1,
         this_action = 1,
         this_list = 1,
+        this_id = 1,
 
         -- Calculated from event data.
         aggro = 1,
@@ -2099,6 +2117,7 @@ do
             elseif k == "selection_time" then t[k] = 60
             elseif k == "this_action" then t[k] = "wait"
             elseif k == "this_list" then t[k] = "default"
+            elseif k == "this_id" then t[k] = "Not Set:default:1"
 
             -- Calculated from real event data.
             elseif k == "aggro" then t[k] = ( UnitThreatSituation( "player" ) or 0 ) > 1
@@ -3771,6 +3790,14 @@ local mt_resource = {
             -- Assassination, April 2021
             -- Using the same as time_to_max because our time_to_max uses modeled regen events...
             return state:TimeToResource( t, t.max )
+        
+        elseif k:sub(1, 16) == "time_to_deficit_" then
+            local amount = k:sub(17)
+            amount = tonumber(amount)
+
+            if not amount then return 0 end
+
+            return state:TimeToResource( t, t.max - amount )
 
         elseif k:sub(1, 8) == "time_to_" then
             local amount = k:sub(9)

@@ -2,6 +2,8 @@
 ## SimulationCraft Commit Sync: c50e3bc
 ## Date: 2025-08-14
 
+## [Hekili] There are a fair number of nested variables in this priority which can cause logic/timing issues.
+
 actions.precombat+=/raise_dead
 actions.precombat+=/army_of_the_dead,precombat_time=2
 actions.precombat+=/variable,name=trinket_1_buffs,value=trinket.1.has_use_buff|trinket.1.is.treacherous_transmitter|trinket.1.is.unyielding_netherprism
@@ -17,10 +19,11 @@ actions.precombat+=/variable,name=damage_trinket_priority,op=setif,value=2,value
 
 actions+=/mind_freeze
 actions+=/variable,name=st_planning,op=set,value=active_enemies=1
-actions+=/variable,name=adds_remain,op=set,value=active_enemies>1
-actions+=/variable,name=apoc_timing,op=set,value=3,value_else=0,condition=cooldown.apocalypse.remains<5&debuff.festering_wound.down&cooldown.unholy_assault.remains>5
+## [Hekili] This could be shifted to 'raid_event.adds.remains>6' because it does return remaining time on secondary targets (excluding current target).
+actions+=/variable,name=adds_remain,op=set,value=active_enemies>1&fight_remains>6
+actions+=/variable,name=apoc_timing,op=set,value=5,value_else=2,condition=cooldown.apocalypse.remains<5&debuff.festering_wound.down&cooldown.unholy_assault.remains>5
 actions+=/variable,name=pop_wounds,op=set,value=(cooldown.apocalypse.remains>variable.apoc_timing|!talent.apocalypse)&(debuff.festering_wound.up&cooldown.unholy_assault.remains<20&talent.unholy_assault&active_enemies=1|debuff.rotten_touch.up&debuff.festering_wound.up|debuff.festering_wound.stack>=4-pet.abomination.active)|fight_remains<5&debuff.festering_wound.up
-actions+=/variable,name=pooling_runic_power,op=set,value=talent.vile_contagion&cooldown.vile_contagion.remains<5&runic_power<30
+actions+=/variable,name=pooling_runic_power,op=set,value=cooldown.summon_gargoyle.remains>5&runic_power<40
 actions+=/variable,name=spend_rp,op=setif,value=(!talent.rotten_touch|talent.rotten_touch&!debuff.rotten_touch.up|runic_power.deficit<20)&((talent.improved_death_coil&(active_enemies=2|talent.coil_of_devastation)|rune<3|pet.gargoyle.active|buff.sudden_doom.up|!variable.pop_wounds&debuff.festering_wound.stack>=4))
 actions+=/variable,name=san_coil_mult,op=setif,value=2,value_else=1,condition=buff.essence_of_the_blood_queen.stack>=4
 actions+=/variable,name=epidemic_targets,value=3+talent.improved_death_coil+(talent.frenzied_bloodthirst*variable.san_coil_mult)+(talent.hungering_thirst&talent.harbinger_of_doom&buff.sudden_doom.up)
@@ -146,8 +149,11 @@ actions.cleave+=/any_dnd,if=!death_and_decay.ticking&variable.adds_remain|talent
 actions.cleave+=/death_coil,if=!variable.pooling_runic_power&talent.improved_death_coil
 actions.cleave+=/wound_spender,if=buff.vampiric_strike.up
 actions.cleave+=/death_coil,if=!variable.pooling_runic_power&!talent.improved_death_coil
-actions.cleave+=/festering_strike,cycle_targets=1,if=buff.vampiric_strike.down&!variable.pop_wounds&debuff.festering_wound.stack<2|buff.festering_scythe.up
-actions.cleave+=/festering_strike,cycle_targets=1,if=buff.vampiric_strike.down&cooldown.apocalypse.remains<variable.apoc_timing&debuff.festering_wound.down
+## [Hekili] Revised to allow Festering Strike with more wounds active; change is neutral/positive in sim and reduces wait time.
+## actions.cleave+=/festering_strike,cycle_targets=1,if=buff.vampiric_strike.down&!variable.pop_wounds&debuff.festering_wound.stack<2|buff.festering_scythe.up
+actions.cleave+=/festering_strike,cycle_targets=1,if=buff.vampiric_strike.down&!variable.pop_wounds&debuff.festering_wound.stack<4|buff.festering_scythe.up
+## [Hekili] Revised to allow Festering Strike with more wounds active; entry is typically not reached in SimC.
+actions.cleave+=/festering_strike,cycle_targets=1,if=buff.vampiric_strike.down&cooldown.apocalypse.remains<variable.apoc_timing&debuff.festering_wound.stack<4
 actions.cleave+=/wound_spender,if=variable.pop_wounds
 
 ## San'layn Fishing

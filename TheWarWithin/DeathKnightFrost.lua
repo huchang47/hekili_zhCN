@@ -28,6 +28,7 @@ local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 -- local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
 -- local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
 -- local IsActiveSpell = ns.IsActiveSpell
+local NewTimer = C_Timer.NewTimer
 
 -- Specialization-specific local functions (if any)
 
@@ -509,11 +510,7 @@ spec:RegisterAuras( {
     exterminate = {
         id = 441416,
         duration = 30,
-        max_stack = function()
-            local base = talent.reapers_onslaught.enabled and 1 or 2
-            local tier_bonus = set_bonus.tww3 >= 2 and 1 or 0
-            return base + tier_bonus
-        end
+        max_stack = function() return ( talent.reapers_onslaught.enabled and 1 or 2 ) + ( set_bonus.tww3 > 1 and 1 or 0 ) end,
     },
     -- Reduces damage dealt to $@auracaster by $m1%.
     -- https://wowhead.com/beta/spell=327092
@@ -676,7 +673,7 @@ spec:RegisterAuras( {
     -- https://wowhead.com/beta/spell=207256
     obliteration = {
         id = 207256,
-        duration = 3600,
+        duration = 9,
         max_stack = 1
     },
     -- Grants the ability to walk across water.
@@ -718,16 +715,26 @@ spec:RegisterAuras( {
         id = 434765,
         duration = 12.0,
         tick_time = 1.0,
-        max_stack = function() if set_bonus.tww3 >= 4 then return 55 else
-            return 40 end end,
+        max_stack = function() return set_bonus.tww3 >= 4 and 55 or 40 end,
         copy = "reapers_mark_debuff",
+
         onRemove = function()
+            -- 4-piece tier set: 10% crit chance after explosion
             if set_bonus.tww3 >= 4 then
                 applyBuff( "empowered_soul" )
             end
             if talent.exterminate.enabled then
                 local stacks = talent.reapers_onslaught.enabled and 1 or 2
                 applyBuff( "exterminate", nil, stacks )
+            end
+            -- Wave of Souls: Damage amplification debuff
+            if talent.wave_of_souls.enabled then
+                applyDebuff( "target", "wave_of_souls_debuff" )
+                active_dot.wave_of_souls_debuff = max( active_dot.wave_of_souls_debuff, active_enemies )
+            end
+            -- Swift and Painful: Strength buff if no enemies struck (single target optimization)
+            if talent.swift_and_painful.enabled and active_enemies == 1 then
+                applyBuff( "swift_and_painful_strength" )
             end
         end,
     },
@@ -912,6 +919,12 @@ spec:RegisterAuras( {
         duration = 6,
         max_stack = 1
     },
+    -- Swift and Painful Strength
+    swift_and_painful_strength = {
+        id = 469169,
+        duration = 8,
+        max_stack = 1
+    },
 } )
 
 spec:RegisterTotem( "ghoul", 1100170 )
@@ -993,11 +1006,15 @@ local spendHook = function( amt, resource )
         if talent.rune_carved_plates.enabled then
             addStack( "rune_carved_plates", nil, amt )
         end
+
+        -- Nazgrim's Conquest: Each Rune spent increases Apocalyptic Conquest Strength by 1%
+        if talent.nazgrims_conquest.enabled and buff.apocalyptic_conquest.up then
+            addStack( "apocalyptic_conquest", nil, amt )
+        end
     end
 end
 
 spec:RegisterHook( "spend", spendHook )
-
 
 spec:RegisterHook( "TALENTS_UPDATED", function()
     class.abilityList.any_dnd = "|T136144:0|t |cff00ccff[Any " .. class.abilities.death_and_decay.name .. "]|r"
@@ -1007,66 +1024,68 @@ spec:RegisterHook( "TALENTS_UPDATED", function()
     rawset( cooldown, "any_dnd", cooldown.death_and_decay )
 end )
 
-local ERWDiscount = 0
 
-spec:RegisterStateExpr( "erw_discount", function()
-    return ERWDiscount
-end )
+local PendingKillingMachine = 0
+local PendingObliteration, ObliterationTimer = 0
 
---[[
-Exterminate Killing Machine Prediction System
+local function ExpireObliteration()
+    if PendingObliteration == 0 then return end
+    
+    -- local now = GetTime()
+    -- local duration = 10 + now - PendingObliteration
+    -- print( strformat( "%6.3f - Obliteration: Discount expired after %.3f; overlayed: %s.", now, duration, IsSpellOverlayed( 49020 ) and "YES" or "NO" ) )
 
-Problem: When using Obliterate/Frostscythe with Exterminate, there's a ~0.5 GCD delay
-between the ability cast and when the Killing Machine proc actually appears. This causes
-recommendation flickering as Hekili doesn't know the KM proc is coming.
-
-Solution: Track Exterminate consumption via combat logs and provide immediate KM procs
-in the simulation to bridge the timing gap until the real proc arrives.
-
-Components:
-1. Combat log tracking of Exterminate buff state (ExterminatesReady -> exterminates_ready)
-2. Immediate KM grants in ability handlers for instant feedback
-3. Backup KM grants in reset_precast for cases where immediate grants aren't sufficient
---]]
-
--- Track current Exterminate stack count for Killing Machine proc prediction
-local ExterminatesReady = 0
--- Track if the last frostscythe/obliterate consumed exterminate for better KM prediction
-local LastCastHadExterminate = false
-
--- Register state expression so the simulation engine can access this variable
-spec:RegisterStateExpr( "exterminates_ready", function()
-    return ExterminatesReady
-end )
-
--- Register state expression for tracking last cast exterminate status
-spec:RegisterStateExpr( "last_cast_had_exterminate", function()
-    return LastCastHadExterminate
-end )
+    PendingObliteration = 0
+end
 
 spec:RegisterCombatLogEvent( function( _, subtype, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellID, spellName )
-    if spellID == 47568 and ( subtype == "SPELL_CAST_SUCCESS" ) and state.talent.obliteration.enabled and state.buff.pillar_of_frost.up then
-        ERWDiscount = 1
-    elseif spellID == 49020 or spellID == 207230 then
-        ERWDiscount = 0
-        -- Track if this Obliterate (49020) or Frostscythe (207230) was cast with Exterminate
-        if subtype == "SPELL_CAST_SUCCESS" and sourceGUID == state.GUID and state.talent.exterminate.enabled then
-            -- Check if we had exterminate when we cast
-            LastCastHadExterminate = ExterminatesReady > 0
+    if sourceGUID ~= state.GUID then return end
+
+    local now = GetTime()
+
+    -- ERW -> KM often has a delay, but no more than 1s.
+    if subtype == "SPELL_CAST_SUCCESS" then
+        if spellID == 47568 then
+            PendingKillingMachine = now + 1
+            -- print( strformat( "%6.3f - ERW Cast; Virtual KM expected within 1s.", now ) )
+        end
+
+        if state.talent.obliteration.enabled and GetPlayerAuraBySpellID( 51271 ) then
+            -- Frost Strike, Glacial Advance, and Howling Blast
+            if spellID == 49143 or spellID == 194913 or spellID == 49184 then
+                PendingKillingMachine = now + 1
+                -- print( strformat( "%6.3f - %s during PoF; Virtual KM expected within 1s.", now, spellName ) )
+            
+            elseif spellID == 47568 then
+                PendingObliteration = now + 10
+                ObliterationTimer = NewTimer( 10, ExpireObliteration )
+                -- print( strformat( "%6.3f - ERW during PoF; next Obliterate or Frostscythe within ~10s is free.", now ) )
+            end
+        end
+
+        if spellID == 207230 or spellID == 49020 then
+            if PendingObliteration > 0 then
+                ObliterationTimer:Cancel()
+                ExpireObliteration()
+            end
+
+            if state.talent.exterminate.enabled and GetPlayerAuraBySpellID( 441416 ) then
+                -- We don't really need to care why KM is pending, just that it's pending.
+                PendingKillingMachine = now + 1
+                -- print( strformat( "%6.3f - Virtual KM from Exterminate %s expected within 1s.", now, spellName ) )
+            end
+        end
+
+        -- All SPELL_CAST_SUCCESS events completed.
+        return
+    end
+    
+    if spellID == 51124 and ( subtype == "SPELL_AURA_APPLIED" or subtype == "SPELL_AURA_APPLIED_DOSE" or subtype == "SPELL_AURA_REFRESH" ) then
+        if PendingKillingMachine > 0 then
+            PendingKillingMachine = 0
+            -- print( strformat( "%6.3f - Virtual KM consumed.", now ) )
         end
     end
-
-    -- Track Exterminate buff changes to maintain accurate stack count
-    -- Spell ID 441416 is the Exterminate buff that grants empowered Obliterate/Frostscythe
-    if sourceGUID == state.GUID and spellID == 441416 and state.talent.exterminate.enabled then
-        if subtype == "SPELL_AURA_APPLIED" or subtype == "SPELL_AURA_REMOVED" or
-           subtype == "SPELL_AURA_APPLIED_DOSE" or subtype == "SPELL_AURA_REMOVED_DOSE" then
-            -- Sync with actual buff state using API call (more reliable than simulation state)
-            local aura = GetPlayerAuraBySpellID( 441416 )
-            ExterminatesReady = aura and aura.applications or 0
-        end
-    end
-
 end )
 
 local BreathOfSindragosaExpire = setfenv( function()
@@ -1092,49 +1111,33 @@ spec:RegisterHook( "reset_precast", function ()
         state:QueueAuraEvent( "breath_of_sindragosa", BreathOfSindragosaExpire, buff.breath_of_sindragosa.expires, "AURA_EXPIRATION" )
     end
 
-    -- Force refresh of exterminates_ready and last_cast_had_exterminate by setting to nil
-    -- This ensures state expressions retrieve fresh data from local variables
-    exterminates_ready = nil
-    last_cast_had_exterminate = nil
-
-    -- Predictive KM logic for Exterminate consumption
-    -- The handler adds KM immediately, but the simulation might need reinforcement
-    -- during the GCD to ensure recommendations don't flicker
-    if talent.exterminate.enabled then
-        local prev_gcd1 = prev_gcd[1]
-        local recently_used_empowered = prev_gcd1.frostscythe or prev_gcd1.obliterate
-        
-        if recently_used_empowered then
-            -- Only add predictive KM if we don't already have it
-            -- This prevents double-adding while ensuring KM is present for recommendations
-            
-            -- Case 1: We still have exterminate stacks and no KM
-            -- (KM was consumed but exterminate should grant another)
-            if exterminates_ready > 0 and not buff.killing_machine.up then
-                addStack( "killing_machine" )
-            
-            -- Case 2: We just consumed the last exterminate stack
-            -- The handler should have added KM, but reinforce if missing
-            elseif last_cast_had_exterminate and exterminates_ready == 0 and not buff.killing_machine.up then
-                addStack( "killing_machine" )
-            end
+    if PendingKillingMachine > 0 then
+        if PendingKillingMachine > now then
+            addStack( "killing_machine" )
+            if Hekili.ActiveDebug then Hekili:Debug( "Applied virtual KM.", now ) end
+        else
+            PendingKillingMachine = 0
+            if Hekili.ActiveDebug then Hekili:Debug( "Virtual KM expired.", now ) end
         end
     end
 
+    if PendingObliteration > 0 then
+        applyBuff( "obliteration", nil, PendingObliteration - now )
+        if Hekili.ActiveDebug then Hekili:Debug( "Applied virtual 'Obliteration' (%.2f) discount for Oblit / Frostscythe.", buff.obliteration.remains ) end
+    end
 end )
 
 
 
 local KillingMachineConsumer = setfenv( function ()
+    local stacksConsumed = 1
 
-    local stacksConsumed = 0
     -- Killing Streak
     if talent.killing_streak.enabled then
         stacksConsumed = buff.killing_machine.stack
         removeBuff( "killing_machine" )
-        addStack( "killing_streak", stacksConsumed )
+        addStack( "killing_streak", buff.killing_machine.stack )
     else
-        stacksConsumed = 1
         removeStack( "killing_machine" )
     end
 
@@ -1156,6 +1159,13 @@ local KillingMachineConsumer = setfenv( function ()
 
     -- Breath of Sindragosa
     if buff.breath_of_sindragosa.up then buff.breath_of_sindragosa.expires = buff.breath_of_sindragosa.expires + 0.8 * stacksConsumed end
+
+    -- Arctic Assault - fires Glacial Advance through target
+    if talent.arctic_assault.enabled then
+        -- This would trigger the glacial advance effect in the game
+        -- For simulation purposes, we can apply Razorice stacks to represent the effect
+        spec.abilities.glacial_advance.handler()
+    end
 
 end, state )
 
@@ -1513,7 +1523,7 @@ spec:RegisterAbilities( {
 
         cycle = function ()
             if debuff.mark_of_fyralath.up then return "mark_of_fyralath" end
-            if death_knight.runeforge.razorice and talent.shattering_blade.disabled and debuff.razorice.at_max_stacks then return "razorice" end
+            if talent.shattering_blade.disabled and debuff.razorice.at_max_stacks then return "razorice" end
         end,
 
         handler = function ()
@@ -1524,7 +1534,7 @@ spec:RegisterAbilities( {
             if talent.icy_onslaught.enabled then addStack( "icy_onslaught" ) end
             removeBuff( "frostbane" )
             if death_knight.runeforge.razorice then applyDebuff( "target", "razorice", nil, min( 5, debuff.razorice.stack + 1 ) ) end
-            if talent.frostreaper.enabled then removeBuff( "frost_reaper" ) end
+            if talent.frostreaper.enabled then removeBuff( "frostreaper" ) end
             -- Legacy / PvP
             if pvptalent.bitter_chill.enabled and debuff.chains_of_ice.up then
                 applyDebuff( "target", "chains_of_ice" )
@@ -1548,14 +1558,14 @@ spec:RegisterAbilities( {
 
     -- A sweeping attack that strikes all enemies in front of you for $s2 Frost damage. This attack always critically strikes and critical strikes with Frostscythe deal $s3 times normal damage. Deals reduced damage beyond $s5 targets. ; Consuming Killing Machine reduces the cooldown of Frostscythe by ${$s1/1000}.1 sec.
     frostscythe = {
-        id = 207230,
+        id = 207230, 
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
         spend = function()
-            if talent.obliteration.enabled and erw_discount > 0 then return 0 end
-            if talent.exterminate.enabled and buff.exterminate.up then return 1 end
+            if buff.obliteration.up then return 0 end
+            if buff.exterminate.up  then return 1 end
             return 2
         end,
         spendType = "runes",
@@ -1567,28 +1577,34 @@ spec:RegisterAbilities( {
 
         handler = function ()
             removeStack( "inexorable_assault", 3 )
-
-            if talent.obliteration.enabled then erw_discount = 0 end
+            removeBuff( "obliteration" )
 
             -- Handle KM and Exterminate atomically to prevent flickering
             if buff.exterminate.up then
-                -- Process KM consumption and exterminate proc together
-                if buff.killing_machine.up then
-                    -- Consume KM but we'll immediately replace it from exterminate
-                    KillingMachineConsumer( )
-                end
-                -- Exterminate empowers this cast to summon two scythes
-                -- First scythe: Grants Killing Machine proc (immediate for prediction accuracy)
+                if buff.killing_machine.up then KillingMachineConsumer() end
+
                 addStack( "killing_machine" )
-                -- Second scythe: Applies Frost Fever to all enemies around target
                 applyDebuff( "target", "frost_fever" )
                 active_dot.frost_fever = max ( active_dot.frost_fever, active_enemies )
+
                 removeStack( "exterminate" )
-            else
-                -- No exterminate, just consume KM normally
-                if buff.killing_machine.up then KillingMachineConsumer( ) end
+            elseif buff.killing_machine.up then KillingMachineConsumer() end
+
+            -- Horsemen interactions
+            if talent.trollbanes_icy_fury.enabled and ( debuff.chains_of_ice_trollbane_slow.up or debuff.chains_of_ice_trollbane_damage.up ) then
+                removeDebuff( "target", "chains_of_ice_trollbane_slow" )
+                removeDebuff( "target", "chains_of_ice_trollbane_damage" )
+                -- Apply AoE damage and slow to nearby enemies
+                if active_enemies > 1 then
+                    active_dot.chains_of_ice_trollbane_slow = min( active_dot.chains_of_ice_trollbane_slow, active_enemies )
+                end
             end
 
+            if talent.whitemanes_famine.enabled and debuff.undeath.up then
+                addStack( "undeath" )
+                -- Infect another nearby enemy
+                active_dot.undeath = min( active_dot.undeath + 1, active_enemies )
+            end
         end,
     },
 
@@ -1605,7 +1621,15 @@ spec:RegisterAbilities( {
         toggle = "cooldowns",
 
         handler = function ()
-            -- if talent.apocalypse_now.enabled then do stuff end
+            -- Apocalypse Now: Frostwyrm's Fury calls upon all 4 Horsemen for 20 sec
+            if talent.apocalypse_now.enabled then
+                -- Summon all 4 Horsemen
+                applyBuff( "mograines_might" )           -- Mograine
+                applyDebuff( "target", "undeath" )       -- Whitemane
+                applyDebuff( "target", "chains_of_ice_trollbane_slow" )   -- Trollbane
+                applyDebuff( "target", "chains_of_ice_trollbane_damage" ) -- Trollbane
+                applyBuff( "apocalyptic_conquest" )      -- Nazgrim
+            end
             applyDebuff( "target", "frostwyrms_fury" )
             if set_bonus.tier30_4pc > 0 then applyDebuff( "target", "lingering_chill" ) end
             if legendary.absolute_zero.enabled then applyDebuff( "target", "absolute_zero" ) end
@@ -1662,6 +1686,7 @@ spec:RegisterAbilities( {
                 if set_bonus.tier30_2pc > 0 then addStack( "wrath_of_the_frostwyrm" ) end
                 if talent.frostbound_will.enabled then reduceCooldown( "empower_rune_weapon", 6 ) end
                 if buff.breath_of_sindragosa.up then buff.breath_of_sindragosa.expires = buff.breath_of_sindragosa.expires + 0.8 end
+                if talent.cryogenic_chamber.enabled then addStack( "cryogenic_chamber" ) end
             end
 
             if pvptalent.delirium.enabled then applyDebuff( "target", "delirium" ) end
@@ -1719,6 +1744,10 @@ spec:RegisterAbilities( {
 
         handler = function ()
             if conduit.spirit_drain.enabled then gain( conduit.spirit_drain.mod * 0.1, "runic_power" ) end
+            if talent.coldthirst.enabled then
+                gain( 10, "runic_power" )
+                reduceCooldown( "mind_freeze", 3 )
+            end
             interrupt()
         end,
     },
@@ -1731,8 +1760,8 @@ spec:RegisterAbilities( {
         gcd = "spell",
 
         spend = function()
-            if talent.obliteration.enabled and erw_discount > 0 then return 0 end
-            if talent.exterminate.enabled and buff.exterminate.up then return 1 end
+            if buff.obliteration.up then return 0 end
+            if buff.exterminate.up then return 1 end
             return 2
         end,
         spendType = "runes",
@@ -1743,33 +1772,39 @@ spec:RegisterAbilities( {
 
         cycle = function ()
             if hero_tree.rider_of_the_apocalypse then return "chains_of_ice_trollbane_slow" end
-         end,
-
+        end,
         cycle_to = true,
 
         handler = function ()
             if talent.inexorable_assault.enabled then removeStack( "inexorable_assault", 3 ) end
-            if talent.obliteration.enabled then erw_discount = 0 end
-            
+            removeBuff( "obliteration" )
+
             -- Handle KM and Exterminate atomically to prevent flickering
             if buff.exterminate.up then
-                -- Process KM consumption and exterminate proc together
-                if buff.killing_machine.up then
-                    -- Consume KM but we'll immediately replace it from exterminate
-                    KillingMachineConsumer( )
-                end
-                -- Exterminate empowers this cast to summon two scythes
-                -- First scythe: Grants Killing Machine proc (immediate for prediction accuracy)
+                if buff.killing_machine.up then KillingMachineConsumer() end
+
                 addStack( "killing_machine" )
-                -- Second scythe: Applies Frost Fever to all enemies around target
                 applyDebuff( "target", "frost_fever" )
                 active_dot.frost_fever = max ( active_dot.frost_fever, active_enemies )
+
                 removeStack( "exterminate" )
-            else
-                -- No exterminate, just consume KM normally
-                if buff.killing_machine.up then KillingMachineConsumer( ) end
+            elseif buff.killing_machine.up then KillingMachineConsumer() end
+
+            -- Horsemen interactions
+            if talent.trollbanes_icy_fury.enabled and ( debuff.chains_of_ice_trollbane_slow.up or debuff.chains_of_ice_trollbane_damage.up ) then
+                removeDebuff( "target", "chains_of_ice_trollbane_slow" )
+                removeDebuff( "target", "chains_of_ice_trollbane_damage" )
+                -- Apply AoE damage and slow to nearby enemies (simulated)
+                if active_enemies > 1 then
+                    active_dot.chains_of_ice_trollbane_slow = min( active_dot.chains_of_ice_trollbane_slow, active_enemies )
+                end
             end
 
+            if talent.whitemanes_famine.enabled and debuff.undeath.up then
+                addStack( "undeath" )
+                -- Infect another nearby enemy (simulated by expanding the debuff)
+                active_dot.undeath = min( active_dot.undeath + 1, active_enemies )
+            end
             -- Koltira's Favor is not predictable.
             if conduit.eradicating_blow.enabled then addStack( "eradicating_blow", nil, 1 ) end
         end,
@@ -1813,7 +1848,16 @@ spec:RegisterAbilities( {
 
         handler = function ()
             applyBuff( "pillar_of_frost" )
+            -- Delay by 0.1s to help match trinket usage to simulation.
+            buff.pillar_of_frost.applied = buff.pillar_of_frost.applied + 0.1
+
             if talent.frozen_dominion.enabled then spec.abilities.remorseless_winter.handler() end
+
+            -- 2-piece tier set: Pillar of Frost summons Trollbane for 10 sec
+            if hero_tree.rider_of_the_apocalypse and set_bonus.tww3_rider_of_the_apocalypse >= 2 then
+                applyDebuff( "target", "chains_of_ice_trollbane_slow" )
+                applyDebuff( "target", "chains_of_ice_trollbane_damage" )
+            end
 
             -- Legacy
             if set_bonus.tier30_2pc > 0 then
@@ -2102,4 +2146,4 @@ spec:RegisterSetting( "ams_usage", "damage", {
     sorting = { "damage", "defensives", "both", "none" }
 } )
 
-spec:RegisterPack( "冰霜Simc", 20250816, [[Hekili:T3t7Unoos(SeSODBNoXXsPDME7loa9n3T4M5MBVbt65xl2itllhRlYsELKJ7SWWp7xvK6dsjskkB5KEawGb90TjvX6BwvXsIpy9WxF4(5KuVh(R2JShp6tw3m0AK9pyB9W9PVS27H7xtCFI8i8xcjRG)8VehLKUF6)X)noYlbrK5iesI2e7cJUmnDDYNV6Qh9txUz2q3OvxL4VAtaj1pk0nMSif)3UxnliA2vPl92sI3ct1p8QV4It5xJ9JI9tF5x8tstUAU3cYMGu4)tsx(uO)JltDwGR)qeipC)Sn(bP)u4dZQrcJU5J)WhF4EYM0LrXpC)9(R(ra58Np3JnBVe4XXzF5OpDPL9N3p9l)6VSF69Ve6UF6L7NABpBK7457)59)C(SgDdmRFk0p1NeqN(d3hGyjs(Kip4)9xPmtVqYSaV5p8Vd)mLME4EkoN4(cqWS1o2FnBKVe5TF6VfLsy)tyGuVyFYd33F)0zBwSy4t(bb(Hp6SI4cCjVHjPG4y)0jakUF6UD7NQAIBwVFAV9tJ3ecRWDW8VE)0b0)d(veXE2ZXl0BLVxcB8NjWcdy(qoS1znipEifySvOSseDPxCKtASN3Wy)5EXorlCWhKSoYLe8Y6ep6co3JIKUlj(Hj4C8D9GNkkiygj0ZjjiABogFci7sjr0SaeXrLfGQUwjvrHDS)QcaMsc8ctz8MzrBcN7Sfw5HzpmdNodOZOS54SW7zV4HP(UpbOxjcSmAlfFNfqssrC4J60zCssJ9FYJhZY4KXK)jyO4YZzgZJOjljP4tWwQ5ELyQeX)T5p8zCQbXRDwhfHiB(qc8aqSLdta9EXnaKNK4h9adcWoaiSX6zUkeCcyaiefWH2P2k18dqSBuWX50nE11VBG6LZH)bJuF1O79jLaqUIqjOEmG4c(bDiZFMe6szR)zZawvz6zuB5mvRcraSicASucAnW0iujaBtaKPDi(ZuPyynQvAgaA3TkhdA2c4y5wYvKSQUXLGStNc7rImQ0mtHikG)DbIQBZvEHJWER3tHW(PFLcc5BZEk2Sr72LTCJfngVv3861yJdvUfKPuvDJTw7Ds9giNDmyBUiZ3f(LTWE0quM(U(P0TbVEKcgPK9noUn0uftIAN6n5tUk(AO39U3fJCct7(dVn(yYYVOW7s(ux5dMHla36)tpEuwIHDeOaNa(NkE0C(k(3c24r3Lid7RIFMrafHw2euWPTGMIuS3kCNgQcT9iko5WsEZfKZZJ2g64U0Z9jzErmIGKIT8R6JUZhUI8nrVNBcxgf8cQG6f(y6sH4HQoMuGnOaEz8IzrHEpcg)WwVGFTWcF25qLBCowQ6rvTQdY1dRfNX(PwmKsR3vCcn6WAaVGAX2foiatK5jTzzuzCj0uNNHRNxmLkYvbaILS2lobS2IFsGYVHBtn0LipEj4btIp6MrTCrxmIyO2dSr)8yYJrjeblIc8u6m5X3pUF65CYlrV7mkA0(PFGkaVEm9VnM(iujMV7lorHjbKnGPtUj3L0jBnIongNqq8W5(vYgdnZeUohFSORa8xG57akKBsgMUD71okcN05JRDR7Kg27L8mQrX89Nu3ZcWUIIt8c8ssGWlcbfWCkDaLYeIB6Vugv8(P(ap27FSbl5bjLgGt2U8xa)(3C9wd)iwbhi8keLbPbIHBx67c)evVdaW)BXgbqiZGlkCEuObaztiIvG8oJiawbJkyRngHaNzHKstuDdZM5(MQc23yTW7qhTfEN0)qLbnwQJIXo2NPNEjduNZNCHOrCHuRKViBHk9XleiWSAbUeaYLWu0Pw8JVK74cOOpPENPccNXLk3Dsppf5pmxVA5MdYR14MWx89cMJQ2HEGmpgK5jRKfmrUSguDcFYl1QA0ISFEyQ1qxy3FNui4tknoIscfbdLnphlMZ3AbWvo(ksi1OOfCOCCWE4ssItUss2UdLdY5Gode4eQHcRZQukDpglktdsKmLJfOlJ2SjzRIpzBgFYUb(K9XWNS0XNSoi(KDD(KT0eGRRpvH5E)gWBC0IfoW(oy0JC8Xgu2yuPbvoajNcIKYT2(s8QeNfBIFHZyPd0GlwfDX0jNSAVdGcurTtlUiUEfmCumplN5ByPAW8pleBDLTm)XLKWqpkjIS9c0kb3CmayYZawfOXGJ7Tik2RKNtJWZQAEf1TtRO0AI(NCJ4xh9Vw5zOD6F2Vv6FNihskMNTw9puPrvfGu70sEjaoiFg95MWCYkYJyjnLBHLfw0rzkZNfw)g3qVLQeNPlSeHkZQmp98K01Gx86uQTxeS6uApKfWP5vhyGQceynUIVSFcCFffg8c(NE4Fq9CvqA7NUoo6zWNb84egd5I8zGjmeLsdVhFScYaYaa(jFaWHE(SXBgAZIWSkeGdvRx1bMv6AuVwER8mzQwUTuT8w7WqLwUop5VLA5sWlTA5wVLA5sc7RA5lkkai8GoWE6ZRLSKkUs)MyUgTnxzfU06CwRoD)g0XU1eePr)XgbLbgs2IYzDsVsbdk(uDsURJQEopfCmXkGQAbThxlalC9uxB((6QnyMw7Je01hRonrXRQP1MRcvDELLs0AuzIuskPtSIYx2RgjI4g3jDuhwuYv9biyq0J9kOBUYxfgTvzfwmUEYYkYnNZld8hw5mtkdRLs2QpOIVBjBdOz68Qv0PBQEExI8c7Q1pq2zW14QwnJdXYzH0w5jOARXnGnhYwHTrrw1NITPyQr5gCauKE8wvYFYqczNBMU9C63WU5k0QK5(Zwv(g8NKGXBy2SbWDfNDICvbzh6ST6tD(mtSmR6eNLat2UQhXX4j4As(XyAEiofkGXe)5oEptPP5Ztg69nSHeZuaRmMFiLJQmH(YKn)q9hUCWkP7xCovQeuxR3)IjNXFlex3vC(FhP8sghmN72R(q510xcp3OaLUu(Zk5NBwsONHRUjgmIH30bXFKSDMzsrqEdTxkM6IINr8bmkKZwzTjtD)n1iuVmMgMA16dw4SM4dJaBynVARnOoCVmUeZppDFMOnbspMrXjWFA7kAYk0xEjYHpMddkuus1X84TIgdJd94O3cZxmA)(ChFTTOgKSEmzq9yJUT4OIl1OfpP4cIx(bjNrENt3dJTay0C8UghnuAwgxR6mBAGOluQKmVHl2eGmw3L4ULz5RF7K8Z6VbbKL4PvNXoYNp2ZgKNQAYykXQ6GxMfefnNPs3CACsHSYOQGqv8IzDL9Hbz1TnUsOKV4KyxSLpxdwhSoqxD8kncRaCZ2eN)VnZFCfiqOGtvbnWM0feuKahWZEGrlJecxv(2l8J9OcSdfWQtSUPnCAyNb6y1B8ioTbYJ4dLg77(eTQ6xRTT5AcD0Hl9vIoQrvPzdEoTpmqVAsxonpZaDeU68ELfMfeyh2OgUPI7USj0H93DWxog2RitwtkGVKmWS)Ok)B6EwXUbM28ERb3zrRMrK2CWznbI)IsWNRpY33eLfxl5LqxfhIlwdxuNfz2TiiN2LGSSs2vUH)70est5SMKxawUIozYAxaAPtwal0JMfiWGSETXXd9ZDp15FwZ3Wst74ex2Qfx2VYIl7)yiUKIMglUAFtIQ8iq6v9es8HOIxrpeOeV5ojEKfrX(Bw5SM4c(XEkRRffTqefXvovL3(bhi3fdl7S0dPFoROERKDAFaSZQwmvk9)B)GszN2LSZdOhulLCiukoOD5YTIrtpKw9KJSACTSfwlfn2OPojZpFYMop0d6GLKD(96o5t1n5Ga8B0Z6vn0OedY7NwRHS03uRvLptjWlH(AaxcR88Ferp)GNdO1OH3Bg93gqruRrzExP)3D1GG0TqLrGwgrG18cPKaTmIaTKqG2kjqXDqSku)PNZA1qQnutwXbU3gfAzJZRZvJYWqBRWc0sAvdAUfoeO79POfxL6iI1xc0ZOQAm0TyzTB3YAxUS0WUFgsFgxH831E7hUFljoeB07hU)R0wgF16O409tHDE2p99zVJnVF)0yV)XgirrioMKiS(dKnPrRiP4p4UKe(OxYW9)8V4J1T5tFE)0FpmzZAes4eq1AqMVIvYx0q4VHToUmI4V)VTFkekv8l7No3pHYHkG7FgG7pgfc0afQVpNPW1ToaIMgXnuQ4y9T(2GgbNO3XAqS2Wgc0c3fzz4jbWsMYje4fG1AKA4QKXARMXQeEw65S1g2uO2i1lDkNsOxcxRUvP9vdEhLvGgO2i3SzZGog6LW1UJTdETG3XzxPgQnYnnWUQBHEjCV(KO3QgQnITgO32TqVz4EO(e6A49XtIERAO2i30a92Uf6nd3d1NqxdVXDkDFAHEZW9WSSmfRpmOdWLgP9IOGGOT0xAscKHiKsZwp8DlH9MMGh2mTLSZdzgRNoEMbP5ZlmIgM(MqHzpFoo55KuYmsI3N3)Z0CafElbXVlwsI1VOK8VVvr7RoGe(mAvyCZnSilVz9K8SQ1POWnNtk4pza(ncVJwND8yjmvlvITE91xB(ENzqLXbGObhF37k(jvfJFYOb72z0cvakTfF)DVthcbR2Gg0MFnylV(CLgzkfAtQJ7vRlHAdlO7Rjy6g19LpNtk4pza(ncVv7sW(KQ7lbhFBDjibHK6s41NT86ZvAKPuOnPoLIJifa1aTXdstYkzYZy4YFer(OhO4tmmV)sua5QZPJb)rG4RGSo8IFrhExoLUf4hbwdJLaA0b(PAXCXP19lYrqblrwJoCpFcDjGpc8fpHiDOB24DiyvHSQZUwRBl9vzsnqnXfu1vYKNXWLxRBl9rNPhO69RiFoDm4pcexLNfPtPBb(rG168OOCAD)ICeuGCVlsMqxc4JaFL6FP(4DiyvHSQlZg4OWDij8fN5Rt0vRavZRJxge5Dub(BuYBmd8QNxhVmAPIF4uSfIkGEuHtRgtpSujpXG3aaB6MdA3754bVkZu1qg7Cfjal7NnciwYbIvlbsZYgdQBzxdEdaCZYgdYw64bFBf9DIu7y0FQvNNZu1Iw9u1BwcLPG3HZUDNPWv0GD7udn9v9qthfo48(wdh)bfwJWOk6Eq85(GWYImUlRing8oRrJgmyWD91xPwnDeyve0Qre0skcAvbbTfqWCfHVZLKx92jjVYijzDe8vtsMHGLo((uxy6RciTYjK6UYtzNkkdYAMRWYPPz1mF90p3S17v)qAXa9XZM9NwL34KFueY4HU(W9jR9CXx(El8TOkAHp2MO)P)0(P)NFZZDd9Xk)kfIhNl(VF0peE4PFXf)M)MGOv4LljXRwSjiFjsyF4WGLGcmSXtjPzFzVYyCjLV(kxG9Nj(P)cxUx2pLvYzaelaYfl6m(fgEv27Jl715L9YSc)oEAZS6kZMFzLLFFIW3Dm8JzgK7tc2gWbBaqSKqXD88PXZsN(jlo2lDtmWGSWvma)kUK)lJgogOMmQByXXB)HjfgYxGDl7erlYlIwpH2EZxqx0jwxu2aXtaqEHBu4CFAfUlv15n2vvQFTL4V0t7P5mqnUK(VtdEGL0Vnmu7dLHA3Lm0tZji1EgQIZiPnm0S9RZyKIQF5aV3zcEG1xBqE1oEwoq6c)UqOUshmRowshJRkrshFj(SshbDj2koKTuoKTcoKbvpLxpsohssEGshSghsED0KoEfoK9rWHkJzPMAK06D0gyBRc2kQLYfTb45Vbjv9NyZ7pXIZBYXeVRYWDpKODpU0wKOFzCaVvI3vzIlhxEls8ryCeVvc4vmZftupu8Eg1bAj1hjx0kIT3nrKymbRlxl2lOtnBrLbO2gOBlh6Ac)fJ)umys8MqecWJ9vhjpyxmeo8cEG8mXpGYIkqRjC3)omy9JlJIW4Y(IqqYye5qGHSP83(V8Ec8(933p938wf9mgGDyONRxscbx8cPf72Mywmj0DjgBkcKeco)F8x)DgsMfaBg2aSg8BMb)NMaglkNHLufb(6sKWOexWwYlj08g2GhxWmpxYMIpvU5bXh5Le(E6NcxV5(UPSV8pu2winGDoKzIOukb0wdiH4BFL(yK40wriv(XCyIvV(Nj)tye4YQ(3VOD7Q)B3znEGoEqsujNazeDaFOM(kIkzF4XYyaI05DtSnKqxVbV(1Od0R68ZAa37glWg09ea3XE0Bo3jXlKAM6oppUMsFRC6qCBfXXpl9HwdU5U8zFAxYbTIyTPE3R)TrzaU1O0Ny3oHVNC3ApsnMu8L5khjKUA5qk7ZIYUDSPv)lYspP)ELhhW8CAT6nrfOTrHGSBGkvJuf6d61VIoS1UDsVNPMmUirJQ3Vud0RyWFFoLX5K)vTSxXU7XsU3OU9MEiKU96Y4I4u5ul166LVbIDDL1sxYz6ZnlFH)45zsRECF(WU9MrFO)1J)W4ZPYQQ3WudUSV1OZreEqBzxF3raadF)0VZUWO04KOerPr5LXfV(d9ToVV53ax9ol3SV6nVfZ0ow2TTfFSO1qm1FUznqq3qzeY3ZYEe4Us)ubFtCAb3nP)nJU0E05YnjPeKzrkLf1yPM9emhy895MnU8ajVWFXek)uYfu1DFs(2jzelSvVgo2UDmpWA4wcYQcKf)gKNtmwi6XLtxX7d1DJQNCO68bYJEVrYjwEwLssqm7HKKxzEMntSAM(SfOpB90NTM8DAh9zPG(Q)UBPJ(SzoMoMRLNQA2kucWFo7Jz3eQkHCnI(N143o8D7kOWQFwqZvkpiflL1PmFlajyCt2pfRMAhxY3B7eOjlz0YYmC3eXpjXnP1)VeOAeOV1YodmiTvl)SFvKFg4j0y5NDhl)AWGSRC9kTGMhQb5)sGAKb5BJS7pXoG1VtVTOAu3Ifc3H4cUS6jkQD8eiv9dXDjM0FFj(VPk4AvyotDmTqYh9otr1xeoxcULdvUuzlWzhPqJhR5LYY6mOADDSg3OOYwUOYaJZMfv28IkZnKeevv9fDIfv2nkQSE9fv4mOFf(lsCtgn0xhX3ORuSKBknyvQEi7qQYPOMwrDwRn(WdAKGyS)6mzZsSgRncvroBiXGK4phf6gN0cXmmReIOgeeea(5NM(q)o6g9wWT6YyVftE)Y001jF(QR2UD7WTrBx6rMd0)QRsw7femXA0OBgDfTmbx6hUyd(jH7939RSM15NY(HBVIChT0obTaYJTS)bRRyCRlJwCjLBbGMR7GO1BIb88k(iYS8dFo6jphVVL6fhscOAbmgg7lJFogJmLcLMCjv218tTdvk72)5l)p3VFAq0J(U1Q5ojemijWiojlbsbHox5ua((cFx)07(4OE06O48uik2hUWpgSLjqOiOi5w6XKzO8NlB1Czo7UpREutkOZA1yFC1voUw1SeaNqSK1RxDMFLk3PzdY9di9Uod0UuwiTC8mVi59eq)7SeoIa5O(3hyPitUs8OiA2y4S9YWAXRRffr53KFOYJeP6zUmqBtsXZU7qI4eIV)bIXRRQVcfQ9MrFpkhAf6lkwQSASArQbCksTvELR3Tdp7I7OP7O7egBlsCyRxJeERPBdYD0aCTboHryvNHaYau9940gyDp5hjmgtAnvxXnrkpWXleUZ5ylQsO2KPd2fb6u)KygFMCRuXn0Ww6ODhbFHht(71e1jfOPrkK0(dkR5sEzf(GQl6kUQXuC8(vzzx3fCmAZH0owwDsvrdGGNPwnMsJjoCz9NP2pPJnDyCfjAbTLV07SI0ahAVmpxxjZJFAnMLKgDX60(RM6PGxIIRvnr3s8ZH72nJZdAS4LMwEmLvVj1y)U0lPRBT5xfjx)x19u2N2Ve25YN63kAde6hGRh)HC9aHMbqw)bqrPZhpOh3va2TJgoU14yHKXSl0SBNCJoEKfEi)z0G4vxMem1SSVIjU(KaUCVkV0Ymo)lHn5kUzYoOhN)UfZWhPYviMHpL4Lj2bHRf3yyh0tlC3vXzkj44sPNh6Vl5s4s3ciBdsLUap4Mk78RZAnbnbBF(102UGZZJ41Mvw7qg5Db765IXuRUF31ncbi2PYBClQfX(PFjYB)0FlkTsx9dlgFR1q9VO2sKwVvfED6XI976bdQTdDPF(YvIw6lbBvexakQqm5DbJaCaCcYs5Z9BorO8YJTe5444(UyrJJccMHMxjbrBr)JfH(D4ePahueRnkLnZWunofpiSCz0w6uNfqyzcW2Wc7BA4PYStOcPz4lTOd2PfW(mZJY(vNfy)GpmfmTaWit6XMgRLQQk)YGF12CSNI(IKkMumgJXWWuc7Qa9N1Gisc9xfGvHKI603oM7ClkBTVIGXlWmPOvPTMkbihW5AZY)4AyPKK0yhjrO1viQC7kJrsTMrvN8Jb0qnCiZFg38LUJKevNguuuOqu0nJMS52FmCm3juA7uR6ocqLH7XH9103uf5FVwUm0idUNgTW(PFLfUGKGeeINyI4wDD2ouclstgzk2Rsn066Td0Bc3kAXqKMlswJWMEso)QBVEK6vZa5QbEiBKgAfJteN6yJRgLsDJzg9U36H)))]] )
+spec:RegisterPack( "冰霜Simc", 20250819, [[Hekili:T3t)VTnow(3sWG6ANM4yPu3PtrCa619wCtV52BWKU)0HlY0YYX6ISKxj54Mfg(V979i1hKsKuu2YjDawGbDAfPE89fFFXNfV36(VD)DZjPE3)3ShzpE0hT(LHwJS)LrxF)DPpV27(7wtCFK8a8xcjRG)8VghLKUF6F5)eh55GiYCecjrBIDHrxMMUo5txD1d(Pl3mBOB0QRs8xTjGK6hf6gtwKI)B3RMfen7Q0LEBjXBHP6hE1NDXP87X(rX(Pp)B(jPjxn3Bbztqk8)jPlFm0)HLPolW1FicK7VB2g)G0Fn8(zYjbR7VJSjDzu893DN)QVayN)85ESP7LaVpo9lh9XlT(5pTF6F4DzS3t(jE7NMsIFWdiYKTK1j7)6(VwmrByIF(3)T9tV75q39tVC)uB7zJChpNFwJ(amRFn0p1NeqN(93fG0dYOirEW)7Vrz7EHKzbEZV)FdEmL6V)ok1L4(mWAyizS)A2iFocqS)ikLW(NWaPEX(K7VR)(PZ2SyXWh9dc8dFWzfXf4NEdtsbb3(PtauC)0D72pv1e3SE)0E7NgVjewHBH5F9(PdO)h8ueXEYZXl0BLVxcB8NiWcdy(qoS1zni5UpfebkOSOzbigJIjoK)eG5a4F2nWZHjetqEnGwxxbTQGcX(RkaxkjWlmLrCZI2eo3zlSUdZEzggD2(PZJYMJZcVN8IhM67(iGCLu8YOTuSDwajjfXH3RtO7KKg7)OaZzUhd3i)typHlpFzmfrPJYqtcLBiN0h3XlBg)jzjjfFdgfo3RKbjrT5M8x(mo1N41oRJIqEu(qcSEKMYrBPe2h0ltvOTiGbGMJao0o1DPBBbe7Np(9anGSYziF0iLCnAO)IsaixUvcQhciUG5ohY8NiHUuUG1iZGwvzWz0n8zQcfSmyve0WOu0AGRrIDIwK5wa5AhIDlvcslv2PLljpPKLCrUvv7TcyJovRJezuPdLcbda)7cevN3oEUOGZU7Oqy)0VL5iwMFVtHRdj(VoyhfA2Mv1z0lHfzvBGLPuv1rvRTJu1LJGs5HJT5ImFx4jBbFUqaI(U(Pu)lxpsbJSZ9uivbwIzFZTEwfFvBi)eBIroHP1TWRJnMSudkSUKp1v(W2WfXEE)tpEuwYg7iqbobSpv8Q58v8VfSXJgzDg2xf)mJakcvSjOGtBbn7MyVve)qwat2JO4KdlVlxqoppABOJ7sp3hLzfXicsk2YVQp4oF4kY3fTEUjCzuWZOcQx4dPlZfVshtkWguaVmEXSOqVhGn)ZHDXXKWcB25qLBCowQ6rvTQdY1dRfqW(PwmKsR1vCcnAWAaVGAX2foiatKzjTzz0sV4ihGx6nKM17mC98IPurUkaqSK1EXjWUT4hfO8pW5udnjYJxcwWKyJUzulx0fJigQ9ao6NhtEikHiSJOapLotE8997NEoN8s06oJIgTF67OcWRht)BJPVcvI57(StuysazdS1jFl3L0jBnIongNqq8Wz(vIJHcMqPjo4F6a6BBsgMUD71oX(OshqsyWJK1rUKGNxN458(1UuLQr1TedoyjpHQnmd8j1nFa8KO4eVaVKeigIqyLZnbkew0FTm609t9bwO3)ydwIbskn(LmN4xap)7UERHhI1wbIEcrzGzJy42L(UWJOQvaa(VlSZVF6sWceopk0aGSjeXhqCMH(7NMH)S1gdaGtRxzi1vuJC8csG)(1fAvVxMRZUtzSVX6J3IMClStP)LkdFSuBfJISptJ9sgOanqvBNzMMe0mLTqLw7RgsqoJzt4Z(EbZr1RqpG7hdC)Kv1cXjaeXHPO5V4hEo3ehqXFuTpScgdJlw6htpph5FmJ0A52dYlOOccqsyh5KmOfg(OxQv14kzpEyQ1qxiobNuimvUTKfHnLnphlMz6AH6vo(ksiD)vl4q54G9WLKeNCLOm)iLdYzkpde4eQHcRZkhk1BKfLPLeeLYXcKLNDf(KTk(KTz8j7g4t2hdFYshFY6G4t215t2AtMVuFQcZ9UnGH9OflCapuyCMC8Xgu2yuz5MFfEnyKtbrs5wBFoEvIZInXpZTzPd0GlwfDr)jNSAVbGcurTrnUyZEb24OyEwoZ3WskHz)wik8kEF)YssyOhLer2EbALG(zdaM8mGvbAm44ElII9k55jslvt99PvuAnr)t(M4xg9VwzzOD6F2Vw6FNidskMNTw9puPrvTIuB0sEXcoiBg95MWCYkYdEoQ2HLf20rTvMpFT(n6qVLQeNPlSKYchFMMm6ZtNxdEXRtPE)IWUoL7hYci186imqvPeSgxXw2VcMVIcdEg)tp8pOwUkiT9txhh9eyZaEDcJHCr(mWCpIsPzkGVwbzajtapYhaCONpB8MH2Simbfb4q16vDuzLMg1RL3kltMQLBlvlV1gmuPLRZs(RPwUe8sRwU1RPwUKW(uD(N4l6a(0NxlzjvCL(nXCnYnxzTW0ACwRoD)g0XUXeePr7XgbLbgs2IYzDsVsbdk(ux7(coKyTrvTa2JlL9RJYYEwmalC9uxfFTvrmtR9bcA6JvSNO4v10AZvHQoVYIoAnQmrkj1fkwrHo7vJKrCJ7mrQdlk5Q(Ogmi6XEf0nxLWcJ2QScmgx5zzLdNZ4Lb2dRC6kLH1sjB1hPXpSKTb0mDE1kk1hQEYyI8cBTNtVPRA1moel3fsBLN1QTgZa2CiBf2gfzRMepxkrgIPgLBWbqr6X7MpNEDEv63G)Af6nLOKmGlZ8NTQ8n4pZbJDy28gGBloLf5QcYoEAB1Np9zMSZSQrCwcmzEvpId8tW0K8d808qCkuaJj(ZD8EIstZNNm077yVeMPawzm)qkhvzc9LjB(U6VC5Gvs3V4eTujOUwV9ft6gGwiUUT4Kcps5Lmoyo3Tx9HYR5VeEUrbkDP83vYJBwsONHRoKjJy4nDK9hjBNTnPiiVH2lftDrX7i(cgfYzR2TjtD)vDtOEzmnm1Q1hSWynXhgbCynVAtqOoCVmUeZop1rr0MaPNvP4e4pxEfTJfAlVe5WxZHbfkkPouS(CNLTTOsISgozq9WFUP4CJlvAfp24c6t(PkNrbNtDtXwamGnERFJgYLyH3k6k7qpT9TarkplJRvhZvHEJeqnCXMaK35UeDiMLs(ntYp4)gKbw5mclkbLXoYNp2ahKhRUROtiw1XSPifoU4wcIIMZ06Lbz1rv1mKHOz8IzTSTeiRUHXBeYKyxc2RfBWt6gHL64vAewbOZ2eN)VnZFyfiTOGtT)0gbh2BUGGMe4ag)dKs4ToFBo7u(XEubMuaRoX6MC40GNb6y1Brjorn5b8LsJ9DFKwv9R12GDnHo6WL(krh1OQ0SbpN2shOjpPlNM3zGocxTXwzHzbb2H98HBQO3LnHoS)Ud(7AH9RBjRjgWFFlWSFVQZKw37k23W028BnyRlA1mI02ioRjr8xuc(Cvu((QOS4Ajph6Q4qCXA4I6SiZUfb50UeKLvYUsh(VrtinLZAsEby5k6KjRDbOLozbSqpAwGade7OhQNHSMZHLM2XjUSvlUSFHfx2)5qCjfnnwC1(2jv5rG0R6jK4drfVIEiqjEZDs8ilII93SYznXfSJ9yw)nkUdruex5uvE9hCGCtmSSZspKo)SI6Ts2P9bWoRUJPsP)F9huk70UKDEaDRAPKdHsXbTlxUvmAQMMcT51YU51YwyTu04JMAKm)8jB68qpOdws253R7Kpv3KdcWVrlRx1qJsmGgPdMhZqwUDQ1QYNPe4Lq)f8wcR8KJerp)GNcO1OH3Ag9zdOiQ1OmRR0)72AqqQluzeOLreynRqkjqlJiqljeOTscu0dIvH6p9CwRgsTHAYkoW92OqlBCEDUAuggABfwGwsRAqZTWGa13NQE0vMHiwFjqpJQQXq3IL1UDlRD5Ysd7(ji3yCfY)b1)Z3F3wsCi2Z43F33ODFoK6FC6(PGNN9tFB2VgN3UFAS3)ydKfiehtsewCcYM0OvKu8bUljHp4LmC)x)nFSOo)YN2p9lrHWArh(T5ipxx1aamnIBOuXX6B99bncorRy1GyTHneOfBRZYetcGLmLtiWlaR1i1WvjJ1wnJvj8S0ZzRnSPqTrQx6uoLqVeUwDRs7lg8oQDbAGAJCZM3g0XqVeU2D8(Gxk4DC7Rud1g5MgSVQBHEjCV(KO3QgQnITgO32TqVz4EO2e6A49(tIERAO2i30a92Uf6nd3d1MqxdVXDkDFAHEZW9W2zzkwFyqFi(PFssmXfLU(TTkQy1beWN5NInxCdlsYnlNYZ(uNGIBoNuWFYa8ReEhTo7yKG8rXUdqLyRxF91WU3zgubzaiAWX38MIhPQO1tgny3oJwOcqPTi1V5n6qiy1g0G28lbB5LNR0itPqBsDCNAnjuBybDFnbZ2OUV85Csb)jdWVs4TAtc2NuDFj44RRjbjiKutcV8SLxEUsJmLcTj1H0FeHGRgOnEGtswjtEhdx(JiYh9afFJH59HHcixDoDm4pceFfe1Vx8Z6W7YP0Ta)iWAySeqJoWpvlMloTUFrockyjYA0H75tOlb8rGV4jPOdDZgVdbRkKvD2TAnBPVkpQbQjMGQUsM8ogU8AnBPp6m9avVDf5ZPJb)rG4QSSiDkDlWpcSwNffLtR7xKJGcKBDrYe6saFe4Ru7l1hVdbRkKvDzUadfUdjHp7mFDIUAfOAED8YGiVJkW)bL8gZaV651XlJwQ4NpfUqub0JkCA1y6HLk5jg8gaytDoO13ZXdEvBtvdzSdpKaSShBeqSKdeRwcKMLngu3YUg8ga4MLngKT0Xd(2k67eP2XO)uRopNPQvM6PQhMektbVbND7otHPOb72PgA6R6HMoVBW59Tgo(Dk2ncJQOl7W37DcllY4USI0yWBSgnAWGb32xFLA105CvrqRgrqlPiOvfe0wabZve(bxsE1RNK8kJKK1rWxmjzgcwA47JDXwFvaPvgHu3vCk7OpzqwZCfwonnlM5RN(5MTE0JiDruqq0w6htwciQbJIB9WpuEBOF28qdK0VVuSgCC)u8hhe(dGknFEHr0ZxDtOWSNphN8CskzgjX7t7)kTHwXa9XZM9xPhllc)3lcz8qxV)UK1EU4psDl8xBu0cFSDk)PFA)0xYRYO9FfxX7ka)xqWJYLvRWVU94Ln0N4UQHWj)xiPE4ZkUcJqsfh4F)7EUBOKB5xHq8yOX)9d(Harp9ZU4Nh4eKDgE5ss8QfBcYznjSpmydZag2yPWkLq)YDLjWtk)5PCbW29XpTx4Y98(PSsLdGybiMqYd)yeVk7hJl73Yl73jk8C8uYz1dNn)YkI)2eHVRy4hRmiNTeSnFd2aGyjHI745QJNbp9RBCSx6MyqWAHRya(vAj)jJgogOMmQByXXY)UjfgGUa7g2jIwsUiA9eA7lFbDrNyDrzdcpba5fUrHZ9ryoPClkVrkvhrH2JMO0dXP5SBn(OiEJg8apkI2WqTpugQDxYqpnN8v7zOkoBN2WqZIZiJrkQ(Ld8ENj45qFnn5v74z5aPl8CHq0Loyw93Kogx1TKo(s8DLocAkVvCiBPCiBfCidQ6lVEKCoKK8xLoynoK86)jD8kCi7JGdvgRvn1iP1PPnW2wfSvudOlAdWZ)fIu1EInV9eloRjhtC6kdt)qIs)4s3sI(LXbQxjoDLjCDC5BjXgHXrQxjqDXmUmr9qXVJOoqlP(i5IwrS92jIeJjyD5AX(b4uBVOYaRBd0TLdDnHTxpys8ooecWJ9jhjpiDmeo8UGG8eXpGYIkqRjC3epmy9LLrryCzFwi4EmtciWq2u(F(p8EeS(9)I3gNRIEctmim0Z1ljHGlEH0IDXumlMe6UeJnfbscbN)x(9)odjZcGndBawd(bVG)tpaJfLZWsQIaFBjsyuIlyl55eA(oBWJ5yMNlztXNc38KpI8scFl9tDR3CF3u2x2hkBlKMObhYmrukLaARbKq8xxL(yK40wriv(XAyIvV(Nj)tueyYQ(3NOD7Q)SBTgpqhpijQKtGmIoGputFfrLSpSyzmar682j2gsOR3GxeB0b6vD(znU7TJfyd6EdG7yp6vN7K4fs3M6oppUMsBRC6qCUI44NL2qRb3Ct(SVMl5GwrS2uR71)2NmaDnk9n2Tt47f3n2JuJjfF5TYrcPRwoKY(SNSBhBA1)IR0t6ZR86aMNtRvVtQaTnkeKDxuPAKQqFqV(v0HT2Tt6no1KXfjAu9MMAGEfd(B2PmoN8VAL9k8Uhl5gK6Mp0dH0nxxgxeNkNAPwxV8nqSRRSw6sotFUz5l87pptA1J7Bh2nFy076F943n(CQSQ6Dn1Gl7Bn6CeHh0w21pCeaWW3p9hS7wQ6XdqtnJ5QFH)3ZXimOGnHyXTi0HrRSaY0GP0fLelnsXmjX1VRV159n)c)Q3z5MoQEfFXmpel7A9IpEwtrS3ZhhW1CXbyoUE7OddBvJRQ)85AGIDdLnj3hT9iW8S(Pc2I506VDs)pm6s7rNl3eeL5BwKHzrjxUtEcMZpOrVInU8aNVWFXek3uYfU1TFuU7ZmIfcTrdhB3oMhhnClbzvbYIFt1Zjgle94YHT43ngOD0I8FYZwPrYjwEw0ssio7LKKhDEMCtSAM(SfOpB90NTM87Ah9zPG(Q)BCth9zZmeFmxZqv1SvOeGpo7JZ3eQkHCnI(N143c9D7kOqkZP(Lh0GdsXszDzZD5jbJBA)tXQP2WLCF5NanzjJwwwLBNi(jwUjT()LavJa91w2zWgsB1Yp7xe5Nbwcnw(z3XYVg2q2vMELwa3dDd5)sGA0gYxhz3pXoq5FqV9RAu3Ifc3HycUSArkQv(eliy7dWCjwKJ(sSFtvW1QWCM6yAHup6DMIQnjComClhQCPAVa3(ifA8yn(uwgRbvRJL14gfv2YfvgS5SzrLnVOY8nscIQQ2IoXIk7gfvwV8IkCg0BvGIe3Krd91r8nAkflXOYnSkvpKDOC5uutROUDRn(YdAKGyS)6mzZsSgRfevroBiXGK4p3iQJtAzEgMvYuudcccyyEbI(7Oz0BaZQlJ9wm5T59S12TBhUnA7spYCwJBT2liyI1OrFy0v0YeCPF4In4N4U3E7VZAoPFn7b3Cf5wAPScAbKhBz)ZwxX4wxgT4sk3canx3qrRVgd48v4QKz5h(u0JEoEFp1loKeq1cymm2hz)Cmgzkfkn5sQSRTOAfnl72m6Z)x3TFAq0d(1lmgje2qsGrCswcKccDUYPa89f(U(P3((r9O1rXH17Adx4hd7LjqOiOi5g6XcAO8NlB1Czo76yREutkOZANPW4QRCCTAzjaoHyjRxF(m7kvUJ2gKBhq6D3gODPSmA54z(Hc0ta9V1s4irKJ6)yGLIm5kXJIOzJHZ2ldRfV(zueLFt2HkpcOQNX0aTnfgp7UdjIti((NigVUQ(kuO2pm6hr5qRqFrXsLvJvlsnGtrQTYRC9UD4z1ClnDhDNOABrIdB9AKWBnDBqUJgGRnWjmcR6meqgGQ7JtBG19KFe4ymP1uDfDIuEaRxiCh6XwuLqTPToyxtOt9tY24ZKVlv0Hg2clYdNxvlhuyXK)EArDsbAACejT7HYAUKxwH3P6I7IRAmfTZqvw21DbhJ2mmTJLvNuv0Wl4zQvJP0yIdxw)DQ9iDSPdJRirlOT8LENvKg4q7L556kzE8tRXSK0OlwN2FXupfSsuCnXjAwIFoC3wBCwqJfVe4YJPS6ndh75sVrYUXMFvKCtIv3szFA)HyNlFQFfWnqO)hUE87Y1deA(bz9dbfLoF8GEC33z3mA44wJJfsgZU92UzYh0XJSWgsiJgeVN2KGPML9vmX1NeWL7v5nSMX5Fj4KR4Au7GED(7kndFLkxjAg(wI38zheUwC9MDqVTWDXf3wjbdxkT8qFUKlvmDlGmhKknbEWnr35xN1AcAc2(8RPTDbNLhXRbSS2)mY7c21ngJPw1F31ncbi2PYBqm6oI9t)CK3(P)ruALFfdWIX3Tnu7lQ3jsR3QcRo9yX(D9Gb18qxANVCLOL(syVkIlafviM8UGraoaobzP8P(nNiuE5XwICCCCFxSOXrbbZWTxjbrBr7JfH(D4ePahueRvfNz3TylJ2sN6SaclGEMFhSDVH3ktDNYRNH)grDWgMaCxmpk7PolW2yFykSdbaJmHaBAS(IQQyid(v7oZEkANtk3wXySDvmmLWU(s)QgercN9fhWQOErD(BgZDUgLT6yrW6fyMu0QCVOkndoGZ12P)5DJNssQd2NzmS1UTQ6KFiGgbHdz(tOpvQJgjs8gKVkKJfTOOj(S(ZH92oHsBN2WjzjRPKOkk8ETCzOEPVJ65E)0VL1vV1Dyl4BFchdOlDZiSinTZqHdh1qRRn9QFFxROfdrAUOkncB6j5SKU56rQxndKRgywRrAOvmorCQJ3C1OuQB2MrVxVU))p]] )

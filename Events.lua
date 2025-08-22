@@ -755,6 +755,7 @@ do
         state.trinket.t1.__ability = "null_cooldown"
         state.trinket.t1.__usable = false
         state.trinket.t1.__has_use_buff = false
+        state.trinket.t1.__has_use_damage = false
         state.trinket.t1.__use_buff_duration = nil
 
         if T1 then
@@ -774,6 +775,9 @@ do
                 state.trinket.t1.__ability = tSpell
 
                 local ability = class.abilities[ tSpell ]
+
+                state.trinket.t1.__has_use_damage = ability and ability.proc == "damage"
+
                 local aura = ability and class.auras[ ability.self_buff or spellID ]
 
                 if spellID and SpellIsSelfBuff( spellID ) and aura then
@@ -805,6 +809,7 @@ do
         state.trinket.t2.__ability = "null_cooldown"
         state.trinket.t2.__usable = false
         state.trinket.t2.__has_use_buff = false
+        state.trinket.t2.__has_use_damage = false
         state.trinket.t2.__use_buff_duration = nil
         state.trinket.t2.ilvl = 0
 
@@ -825,6 +830,9 @@ do
                 state.trinket.t2.__ability = tSpell
 
                 local ability = class.abilities[ tSpell ]
+
+                state.trinket.t2.__has_use_damage = ability and ability.proc == "damage"
+
                 local aura = class.auras[ ability.self_buff or spellID ]
 
                 if spellID and SpellIsSelfBuff( spellID ) and aura then

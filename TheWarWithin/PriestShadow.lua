@@ -147,6 +147,37 @@ spec:RegisterResource( Enum.PowerType.Insanity, {
 
         interval = function () return 1.5 * state.haste * ( state.conduit.rabid_shadows.enabled and 0.85 or 1 ) end,
         value = 2
+    },
+
+    -- Gain 10 insanity every new halo ring via power surge (5s)
+    halo_power_surge = {
+        aura = "power_surge",
+
+        last = function ()
+            local app = state.buff.power_surge.applied
+            local t = state.query_time
+
+            return app + floor( t - app )
+        end,
+
+        interval = 5,
+        value = 10,
+    },
+
+    -- Gain 10 insanity over 5s
+    halo_power_surge_tww3_2pc = {
+        aura = "power_surge",
+        set_bonus = "tww3_2pc",
+
+        last = function ()
+            local app = state.buff.power_surge.applied
+            local t = state.query_time
+
+            return app + floor( t - app )
+        end,
+
+        interval = 1,
+        value = 2,
     }
 } )
 spec:RegisterResource( Enum.PowerType.Mana )
@@ -603,6 +634,7 @@ spec:RegisterAuras( {
         max_stack = 1
     },
     power_surge = {
+        id = 453113,
         duration = 10,
         tick_time = 5,
         max_stack = 1
@@ -737,6 +769,11 @@ spec:RegisterAuras( {
         id = 423846,
         duration = 3600,
         max_stack = 1
+    },
+    sustained_potency = {
+        id = 454002,
+        duration =  60,
+        max_stack = 6
     },
     -- Taking Shadow damage every $t1 sec.
     -- https://wowhead.com/beta/spell=363656
@@ -985,6 +1022,10 @@ spec:RegisterStateExpr( "tww3_archon_4pc_helper_stacks", function()
     return PowerSurgeDPs
 end )
 
+spec:RegisterStateExpr( "tww3_archon_halo_extensions", function()
+    return floor( PowerSurgeDPs / 2 )
+end )
+
 spec:RegisterStateTable( "priest", setmetatable( {},{
     __index = function( t, k )
         if k == "self_power_infusion" then return true
@@ -1017,7 +1058,7 @@ spec:RegisterGear( {
             tww3_archon_4pc_helper = {
                 -- id = 999999, -- dummy ID
                 duration = spec.auras.power_surge.duration,
-                max_stack = 6, -- 3 extensions max * 2 casts per extension
+                max_stack = 4, -- 3 extensions max * 2 casts per extension
                 generate = function( t )
                     if tww3_archon_4pc_helper_stacks > 0 and state.buff.power_surge.up then
                         local power_surge_expiry = state.buff.power_surge.expires
@@ -1166,12 +1207,15 @@ spec:RegisterHook( "reset_precast", function ()
 
     rift_extensions = nil
 
-    if talent.power_surge.enabled and query_time - action.halo.lastCast < 10 then
-        applyBuff( "power_surge", ( 10 + 5 * floor( tww3_archon_4pc_helper_stacks / 2 ) ) - ( query_time - action.halo.lastCast ) )
-        if buff.power_surge.remains > 5 then
-            state:QueueAuraEvent( "power_surge", PowerSurge, buff.power_surge.expires - 5, "TICK" )
+    if buff.power_surge.up then
+        local tick, expires = buff.power_surge.applied, buff.power_surge.expires
+        local final_tick = ( 2 + tww3_archon_halo_extensions )
+        for i = 1, final_tick do
+            tick = tick + 5
+            if tick > query_time and tick <= expires then
+                state:QueueAuraEvent( "create_additional_halo", PowerSurge, tick, "AURA_TICK" )
+            end
         end
-        state:QueueAuraExpiration( "power_surge", PowerSurge, buff.power_surge.expires )
     end
 
     local vwRemains = cooldown.voidwraith.true_remains
@@ -1218,10 +1262,10 @@ local InescapableTorment = setfenv( function ()
 end, state )
 
 local TWW3ArchonTrigger = setfenv( function()
-    if tww3_archon_4pc_helper_stacks >= 6 then
+    if tww3_archon_4pc_helper_stacks >= 4 then
         return
     else
-        tww3_archon_4pc_helper_stacks = min( 6, tww3_archon_4pc_helper_stacks + 1 )
+        tww3_archon_4pc_helper_stacks = min( 4, tww3_archon_4pc_helper_stacks + 1 )
         if tww3_archon_4pc_helper_stacks % 2 == 0 then
             buff.power_surge.expires = buff.power_surge.expires + 5
         end
@@ -1480,7 +1524,7 @@ spec:RegisterAbilities( {
     halo = {
         id = 120644,
         cast = 1.5,
-        cooldown = 40,
+        cooldown = 60,
         gcd = "spell",
         school = "shadow",
 
@@ -1491,8 +1535,28 @@ spec:RegisterAbilities( {
         startsCombat = true,
 
         handler = function ()
-            gain( 10, "insanity" )
-            if talent.power_surge.enabled then applyBuff( "power_surge" ) end
+            if talent.power_surge.enabled then
+                if buff.power_surge.down then
+                    -- Don't repeatedly run these during "additional Halos", only run during initial cast
+                    gain( 10, "insanity" )
+                    applyBuff( "power_surge", nil, 10 )
+                    for i = 5, 10, 5 do
+                        -- Queue the additional Halos, one every 5 seconds until expiry
+                        -- Further halos beyond base duration from TWW3 set will be added during reset_precast
+                        state:QueueAuraEvent( "create_additional_halo", PowerSurge, query_time + i, "AURA_TICK" )
+                    end
+                end
+                if talent.manifested_power.enabled then addStack( "mind_flay_insanity" ) end
+                if talent.sustained_potency.enabled then
+                    if buff.voidform.up then
+                        buff.voidform.expires = buff.voidform.expires + 1
+                    else
+                        addStack( "sustained_potency" )
+                    end
+                end
+            else
+                gain( 10, "insanity" )
+            end
         end,
     },
 
@@ -2158,9 +2222,9 @@ spec:RegisterAbilities( {
             end
         end,
 
-        readyTime = function() 
+        readyTime = function()
             local holdCount = settings.hold_crash
-            if holdCount > 0 and active_enemies < holdCount then return action.shadow_crash.full_recharge_time end 
+            if holdCount > 0 and active_enemies < holdCount then return action.shadow_crash.full_recharge_time end
         end,
 
         copy = { 205385, 457042 }
@@ -2400,7 +2464,7 @@ spec:RegisterAbilities( {
                 spend( spec.abilities.void_bolt.spend, spec.abilities.void_bolt.spendType )
                 applyBuff( "power_infusion", buff.power_infusion.remains + 5 )
             end
-            applyBuff( "voidform" )
+            applyBuff( "voidform", nil, ( 20 + ( buff.sustained_potency.stack ) ) )
             if talent.ancient_madness.enabled then applyBuff( "ancient_madness", nil, 20 ) end
         end,
     },

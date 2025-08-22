@@ -1679,7 +1679,8 @@ all:RegisterAbilities( {
     },
 
     cursed_stone_idol = {
-        cast = 0,
+        cast = 1,
+        channeled = true,
         cooldown = 90,
         gcd = "off",
 
@@ -1805,17 +1806,18 @@ all:RegisterAbilities( {
 
         item = 242403,
         toggle = "cooldowns",
+        proc = "damage",
 
         handler = function()
         end,
     },
-
+    -- https://www.wowhead.com/item=242391/soulbinders-embrace
     soulbinders_embrace = {
         cast = 0,
         cooldown = 60,
         gcd = "off",
 
-        item = 242396,
+        item = 242391,
         toggle = "essences",
 
         proc = "defensive",
@@ -1833,7 +1835,7 @@ all:RegisterAbilities( {
             }
         },
     },
-
+    -- https://www.wowhead.com/item=242396/unyielding-netherprism
     unyielding_netherprism = {
         cast = 0,
         cooldown = 90,
@@ -1852,6 +1854,7 @@ all:RegisterAbilities( {
         end,
 
         auras = {
+            -- spellID for the spell event should be 1233553, if needed
             latent_energy = {
                 id = 1239675,
                 duration = 3600,

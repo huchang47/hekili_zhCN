@@ -1,6 +1,6 @@
 ## https://github.com/simulationcraft/simc/blob/thewarwithin/ActionPriorityLists/default/druid_feral.simc
 ## SimulationCraft Commit Sync: 5340e2f
-## Date: 2025-08-10
+## Date: 2025-08-17
 
 ## [Syrif] - This APL is VERY edited with CelestialRepose's rubber stamp. The true feral APL has 29 variables in it to essentially min-max trinkets, and CD sync on long fights.
 actions.precombat+=/mark_of_the_wild
@@ -108,11 +108,13 @@ actions.finisher+=/rip,cycle_targets=1,if=refreshable&(!talent.primal_wrath|spel
 # only bite with ravage in aoe with berserk
 actions.finisher+=/call_action_list,name=aoe_builder,if=hero_tree.druid_of_the_claw&buff.bs_inc.up&!buff.ravage.up&spell_targets>=2
 ## actions.finisher+=/call_action_list,name=builder,if=buff.ravage.up&buff.preparing_to_strike.remains<2&buff.preparing_to_strike.up&buff.bs_inc.up
-actions.finisher+=/wait,sec=debuff.sabertooth.remains,if=debuff.sabertooth.up&energy.deficit>40
+## [Hekili] Removing SbT wait and merging into Ferocious Bite conditions.
+## [Hekili] Note: This takes advantage of the fact there are no other (real) recommendations after these FBs in the *whole* priority.
+## actions.finisher+=/wait,sec=debuff.sabertooth.remains,if=debuff.sabertooth.up&energy.deficit>40
 actions.finisher+=/pool_resource,for_next=1
-actions.finisher+=/ferocious_bite,max_energy=1,cycle_targets=1,if=!buff.bs_inc.up
+actions.finisher+=/ferocious_bite,max_energy=1,cycle_targets=1,if=!buff.bs_inc.up&(debuff.sabertooth.down|energy.deficit<40)
 actions.finisher+=/pool_resource,for_next=1
-actions.finisher+=/ferocious_bite,cycle_targets=1
+actions.finisher+=/ferocious_bite,cycle_targets=1,if=buff.bs_inc.up&(debuff.sabertooth.down|energy.deficit<40)
 
 # what rips new duration would be if applied in current state
 actions.variable+=/variable,name=rip_duration,value=((4+(4*combo_points))*(1-(0.2*talent.circle_of_life_and_death))*(1+(0.25*talent.veinripper)))+(variable.rip_max_pandemic_duration>?dot.rip.remains)

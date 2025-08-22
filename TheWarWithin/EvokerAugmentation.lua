@@ -784,12 +784,15 @@ spec:RegisterHook( "reset_precast", function()
     boss = true
 end )
 
-spec:RegisterStateTable( "evoker", setmetatable( {}, {
+spec:RegisterStateTable( "evoker", setmetatable( {
+    allied_cds_up = 1
+}, {
     __index = setfenv( function( t, k )
         if k == "prescience_buffs" then return active_dot.prescience end
         if k == "allied_cds_up" then
+            -- Will never reach this point since allied_cds_up is set in the evoker table.
             if buff.sense_power.up then return group and active_dot.sense_power_active or 1 end
-            return 1 -- If Sense Power isn't used, always assume there's a CD active.
+            return 1
         end
         if k == "scales_up" then return active_dot.blistering_scales > 0 end
         if k == "use_early_chaining" then k = "use_early_chain" end

@@ -771,6 +771,8 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                 state.this_action = action
                 state.this_list = listName
+                state.this_id = scriptID
+
                 state.delay = nil
 
                 local ability = class.abilities[ action ]
