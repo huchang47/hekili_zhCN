@@ -303,6 +303,11 @@ local displayTemplate = {
         anchor = "RIGHT",
         x = 0,
         y = 0,
+
+        width = 20,
+        height = 20,
+        zoom = 30,
+        keepAspectRatio = true,
     },
 
     targets = {
@@ -467,7 +472,7 @@ do
 
                 flashTexture = "Interface\\Cooldown\\star4",
                 performance = {
-                    mode = 1,    -- 1=Low, 2=Medium, 3=High
+                    frameBudget = 0.7,
                 },
                 toggles = {
                     pause = {
@@ -2933,6 +2938,63 @@ return "位置" end,
                                 disabled = function () return data.indicators.enabled == false end,
                             },
 
+                            size = {
+                                type = "group",
+                                inline = true,
+                                name = "外观样式",
+                                order = 1.5,
+                                args = {
+                                    width = {
+                                        type = "range",
+                                        name = "宽度",
+                                        desc = "设置提示图标的宽度。",
+                                        min = 8,
+                                        max = 100,
+                                        step = 1,
+                                        width = 1.49,
+                                        order = 1,
+                                    },
+
+                                    height = {
+                                        type = "range",
+                                        name = "高度",
+                                        desc = "设置提示图标的高度。",
+                                        min = 8,
+                                        max = 100,
+                                        step = 1,
+                                        width = 1.49,
+                                        order = 2,
+                                    },
+
+                                    spacer01 = {
+                                        type = "description",
+                                        name = " ",
+                                        width = "full",
+                                        order = 3
+                                    },
+
+                                    zoom = {
+                                        type = "range",
+                                        name = "图标缩放",
+                                        desc = "选择图标纹理的缩放百分比。（大约30%会裁剪掉Blizzard默认的边框。）",
+                                        min = 0,
+                                        softMax = 100,
+                                        max = 200,
+                                        step = 1,
+                                        width = 1.49,
+                                        order = 4,
+                                    },
+
+                                    keepAspectRatio = {
+                                        type = "toggle",
+                                        name = "保持纵横比",
+                                        desc = "当启用时，提示图标将在调整大小时保持其原始纵横比。",
+                                        width = 1.49,
+                                        order = 5,
+                                    },
+                                }
+                            },
+
                             pos = {
                                 type = "group",
                                 inline = true,
@@ -5103,26 +5165,61 @@ found = true end
                             name = "性能",
                             order = 10,
                             args = {
-                                mode = {
-                                    type = "select",
-                                    name = "CPU利用率",
-                                    desc = "选择最适合您的 系统/CPU 的性能选项。\n" ..
-                                        "• 低（默认）：最小化 CPU 占用以减少对帧率（FPS）的影响，尤其适合老旧系统。\n" ..
-                                        "• 中：提高 CPU 占用以实现更流畅的更新，可能会对老旧系统的帧率产生影响。\n" ..
-                                        "• 高：优化 CPU 占用以获得最流畅的更新，仅适用于高端处理器。",
+                                frameBudget = {
+                                    type = "range",
+                                    name = "帧预算",
+                                    desc = "设定可以用于计算推荐技能的时间。",
+                                    min = 0.1,
+                                    softMin = 0.2,
+                                    softMax = 0.9,
+                                    max = 1,
+                                    step = 0.05,
+                                    isPercent = true,
+                                    get = function( _ ) return Hekili.DB.profile.performance.frameBudget or 0.7 end,
+                                    set = function( _, v ) Hekili.DB.profile.performance.frameBudget = v end,
                                     order = 1,
-                                    values = { "低", "中", "高" },
-                                    get = function(info)
-                                        return Hekili.DB.profile.performance.mode
-                                    end,
-                                    set = function(info, v)
-                                        Hekili.DB.profile.performance.mode = v
-                                    end,
-                                    width = 1.5,
+                                    width = "full"
                                 },
-                            },
-                        },
-                    },
+                                frameBudgetInfo = {
+                                    type = "description",
+                                    name = function()
+                                        -- Use smoothed FPS from UI.lua to avoid menu-induced frame drops
+                                        local smoothedFPS = Hekili.GetSmoothedFPS and Hekili.GetSmoothedFPS() or nil
+                                        local rawFPS = GetFramerate()
+                                        local fps = smoothedFPS or 60
+
+                                        -- Safeguard: ensure FPS is reasonable (between 10 and 300)
+                                        if fps < 10 then
+                                            -- print( "[Hekili Debug] WARNING: Unreasonable FPS value detected:", fps, "- using fallback" )
+                                            fps = 60
+                                        end
+
+                                        local budget = Hekili.DB.profile.performance.frameBudget or 0.7
+                                        local frameBudgetMs = ( 1000 / fps ) * budget
+
+                                        return
+                                            "\n设定可以用于计算推荐技能的时间。\n\n" ..
+                                            "|cFFFFD100• 较高值|r 允许推荐技能 |cFF00FF00更快速地更新|r 但可能会风险降低帧率，" ..
+                                            "尤其是当其他插件同时工作时。\n" ..
+                                            "|cFFFFD100• 较低值|r 意味着推荐技能可能会 |cFF00FF00更慢地更新|r 但可能会 |cFF00FF00保留帧率|r。\n\n" .. 
+                                            
+                                            "|cFFFFD100• 平衡|r 允许推荐技能 |cFF00FF00平滑地更新|r 但可能会风险降低帧率，" ..
+                                            "尤其是当其他插件同时工作时。\n" ..
+                                            "|cFFFFD100• 响应|r 意味着推荐技能可能会 |cFF00FF00更慢地更新|r 但可能会 |cFF00FF00保留帧率|r。\n\n" .. 
+                                            
+                                            "|cFF00B4FF默认（推荐）|r: |cFFFFD10070%|r\n\n" ..
+
+                                            "在 |cFFFFD700" .. format( "%.1f", fps ) .. " FPS|r 的帧率下，|cFFFFD700" .. ( budget * 100 ) .. "%|r 的预算 " ..
+                                            "允许每次更新最多使用 |cFFFFD700" .. format( "%.2f", frameBudgetMs ) .. " 毫秒|r 的帧时间。计算耗时更长的建议 " ..
+                                            "将至少延迟 1 帧。"
+                                    end,
+                                    fontSize = "medium",
+                                    order = 2,
+                                    width = "full",
+                                }
+                            }
+                        }
+                    }
                 }
 
                 local specCfg = class.specs[ id ] and class.specs[ id ].settings
@@ -7001,7 +7098,7 @@ n = tonumber( n ) + 1
                                     type = "toggle",
                                     name = "显示设置项",
                                     desc = "如果勾选，可以调整更多的设置项和条件。",
-                                    order = 20,
+                                    order = 999,
                                     width = "full",
                                     hidden = function ()
                                         local e = GetListEntry( pack )
@@ -8769,76 +8866,7 @@ do
                     },
                 }
             },
-            translate = {
-                type = "group",
-                name = "技能翻译（开发中）",
-                desc = "你可以轻松翻译技能/物品/光环/天赋的中英文名称",
-                order = 98,
-                childGroups = "tab",
-                args = {
-                    trans_input = {
-                        type = "input",
-                        name = "中英文查询：",
-                        desc = "输入技能、光环、天赋名称，支持中英文",
-                        get = function(info)
-                            return trans_in or ""
-                        end,
-                        set = function( info, val )
-                            trans_in = val
-                            if val == "" then
-                                info.option.type = "input"
-                                return
-                            end
-                            local trans_list = {"",}
-                            if trans_in and not Hekili.Trans.isChinese(trans_in) then
-                                for k, v in pairs( class.abilityList ) do
-                                    if k == trans_in then
-                                        trans_list[ k ] = class.abilityList[ k ] or v
-                                    end
-                                end
-                            
-                            elseif trans_in and Hekili.Trans.isChinese(trans_in) then
-                                for k, v in pairs( class.abilityList ) do
-                                    if v then
-                                        if  string.find(v, trans_in)  then
-                                            trans_list[ k ] = class.abilityList[ k ] or v
-                                        end
-                                    end
-                                end
-                            else
-                                for k, v in pairs( class.abilityList ) do
-                                    trans_list[ k ] = class.abilityList[ k ] or v
-                                end
-                            end
-                            info.option.values = trans_list
-                            info.option.type = "select"
-                            if info.option.values[val] == "" then
-                                info.option.values = nil
-                                info.option.type = "input"
-                            else
-                                -- 遍历 trans_list 查找对应的键
-                                for k, v in pairs(trans_list) do
-                                    if v == info.option.values[val] then
-                                        trans_out = k
-                                        break
-                                    end
-                                end
-                            end
-                        end,
-                        width = 1.5,
-                        order = 3.56,
-                    },
-                    
-                    trans_result = {
-                        type = "input",
-                        name = "翻译结果：",
-                        desc = "翻译结果",
-                        get = function () return trans_out end,
-                        width = 1.5,
-                        order = 3.57,
-                    },      
-                }
-            },
+
             abilities = {
                 type = "group",
                 name = "技能",
@@ -9579,11 +9607,11 @@ do
         { "time_to_pct_(%d+)%.remains"                      , "time_to_pct_%1"                          },
         { "trinket%.(%d)%.([%w%._]+)"                       , "trinket.t%1.%2"                          },
         --[[ { "trinket%.(t?%d)%.stat%.([%w_]+)%.([%w%._]+)", -- Christ.
-                                                              "trinket.%1.has_stat.%2&trinket.%1.%3" }, ]]
+                                                              "trinket.%1.has_stat.%2&trinket.%1.%3"    }, ]]
         { "trinket%.([%w_]+)%.cooldown"                     , "trinket.%1.cooldown.duration"            },
-        { "trinket%.([%w_]+)%.proc%.([%w_]+)%.duration"     , "trinket.%1.buff_duration"                },
+        --[[ { "trinket%.([%w_]+)%.proc%.([%w_]+)%.duration"     , "trinket.%1.proc_duration"                }, ]]
         { "trinket%.([%w_]+)%.buff%.a?n?y?%.?duration"      , "trinket.%1.buff_duration"                },
-        { "trinket%.([%w_]+)%.proc%.([%w_]+)%.[%w_]+"       , "trinket.%1.has_use_buff"                 },
+        -- { "trinket%.([%w_]+)%.proc%.([%w_]+)%.[%w_]+"       , "trinket.%1.has_use_buff"                 },
         { "trinket%.([%w_]+)%.has_buff%.([%w_]+)"           , "trinket.%1.has_use_buff"                 },
         { "trinket%.([%w_]+)%.has_use_buff%.([%w_]+)"       , "trinket.%1.has_use_buff"                 },
         { "min:([%w_]+)"                                    , "%1"                                      },
@@ -9676,7 +9704,7 @@ do
                             if s4 then token = token:gsub( "%%4", s4 ) end
                             if s5 then token = token:gsub( "%%5", s5 ) end
 
-                            if times > 0 then
+                            if times > 0 and not ignore then
                                 insert( warnings, "第" .. line .. "行：转换'" .. pre .. "'为'" .. token .. "'（" ..times .. "次）。" )
                             end
                         end

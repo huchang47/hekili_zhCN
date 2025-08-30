@@ -234,6 +234,41 @@ state.totem = {}
 
 
 state.trinket = {
+
+    none = {
+        slot = "none",
+        __id = 0,
+        __ability = "null_cooldown",
+        __usable = false,
+        __has_use_buff = false,
+        __has_use_damage = false,
+        __use_buff_duration = 0.01,
+        __proc = false,
+        ilvl = 0,
+
+        --[[ has_cooldown = {
+            slot = "none",
+        }, ]]
+
+        stacking_stat = {
+            slot = "none"
+        },
+        has_stacking_stat = {
+            slot = "none"
+        },
+
+        stat = {
+            slot = "none"
+        },
+        has_stat = {
+            slot = "none",
+        },
+
+        is = {
+            slot = "none",
+        },
+    },
+
     t1 = {
         slot = "t1",
         __id = 0,
@@ -241,7 +276,8 @@ state.trinket = {
         __usable = false,
         __has_use_buff = false,
         __has_use_damage = false,
-        __use_buff_duration = nil,
+        __use_buff_duration = 0.01,
+        __proc = false,
         ilvl = 0,
 
         --[[ has_cooldown = {
@@ -274,7 +310,8 @@ state.trinket = {
         __usable = false,
         __has_use_buff = false,
         __has_use_damage = false,
-        __use_buff_duration = nil,
+        __use_buff_duration = 0.01,
+        __proc = false,
         ilvl = 0,
 
         --[[ has_cooldown = {
@@ -307,7 +344,8 @@ state.trinket = {
         __usable = false,
         __has_use_buff = false,
         __has_use_damage = false,
-        __use_buff_duration = nil,
+        __use_buff_duration = 0.01,
+        __proc = false,
         ilvl = 0,
 
         --[[ has_cooldown = {
@@ -393,17 +431,37 @@ local mt_no_trinket = {
     end
 }
 
+local no_trinket = state.trinket.none
+--[[
 local no_trinket = setmetatable( {
     slot = "none",
-    cooldown = setmetatable( {}, mt_no_trinket_cooldown ),
-    stacking_stat = setmetatable( {}, mt_no_trinket_stacking_stat ),
-    stat = setmetatable( {}, mt_no_trinket_stat ),
-    is = setmetatable( {}, {
-        __index = function( t, k )
-            return false
-        end
-    } )
-}, mt_no_trinket )
+    __id = 0,
+    __ability = "null_cooldown",
+    __usable = false,
+    __has_use_buff = false,
+    __has_use_damage = false,
+    __use_buff_duration = nil,
+    __proc = false,
+    ilvl = 0,
+
+    stacking_stat = {
+        slot = "none"
+    },
+    has_stacking_stat = {
+        slot = "none"
+    },
+
+    stat = {
+        slot = "none"
+    },
+    has_stat = {
+        slot = "none",
+    },
+
+    is = {
+        slot = "none",
+    }
+}, mt_no_trinket ) ]]
 
 setmetatable( state.trinket, {
     __index = function( t, k )
@@ -472,6 +530,10 @@ local mt_trinket = {
             return isEnabled and t.__has_use_buff and t.__use_buff_duration or 0.01
         elseif k == "has_proc" or k == "proc" then
             return isEnabled and t.__proc or false
+        elseif k == "proc_duration" then
+            return t.__proc and t.__use_buff_duration or 0
+        elseif k == "duration" then
+            return t.__use_buff_duration or 0
         end
 
         if k == "up" or k == "ticking" or k == "active" then
@@ -493,7 +555,8 @@ local mt_trinket = {
             end
             return state.cooldown.null_cooldown
         elseif k == "cooldown_remains" then
-            return t.cooldown.remains
+            if t.usable and t.ability and state.cooldown[ t.ability ] then return state.cooldown[ t.ability ].remains end
+            return state.cooldown.null_cooldown.remains
 
         elseif k == "cast_time" or k == "cast_time" then
             return t.usable and t.ability and class.abilities[ t.ability ] and class.abilities[ t.ability ].cast or 0
@@ -504,6 +567,7 @@ local mt_trinket = {
     end
 }
 
+setmetatable( state.trinket.none, mt_trinket )
 setmetatable( state.trinket.t1, mt_trinket )
 setmetatable( state.trinket.t2, mt_trinket )
 setmetatable( state.trinket.main_hand, mt_trinket )
@@ -520,6 +584,7 @@ local mt_trinket_is = {
     end,
 }
 
+setmetatable( state.trinket.none.is, mt_trinket_is )
 setmetatable( state.trinket.t1.is, mt_trinket_is )
 setmetatable( state.trinket.t2.is, mt_trinket_is )
 setmetatable( state.trinket.main_hand.is, mt_trinket_is )
@@ -578,6 +643,7 @@ local mt_trinket_has_stacking_stat = {
     end
 }
 
+setmetatable( state.trinket.none.has_stacking_stat, mt_trinket_has_stacking_stat )
 setmetatable( state.trinket.t1.has_stacking_stat, mt_trinket_has_stacking_stat )
 setmetatable( state.trinket.t2.has_stacking_stat, mt_trinket_has_stacking_stat )
 setmetatable( state.trinket.main_hand.has_stacking_stat, mt_trinket_has_stacking_stat )
@@ -612,6 +678,7 @@ local mt_trinket_has_stat = {
     end
 }
 
+setmetatable( state.trinket.none.has_stat, mt_trinket_has_stat )
 setmetatable( state.trinket.t1.has_stat, mt_trinket_has_stat )
 setmetatable( state.trinket.t2.has_stat, mt_trinket_has_stat )
 setmetatable( state.trinket.main_hand.has_stat, mt_trinket_has_stat )
@@ -624,9 +691,15 @@ local mt_trinket_with_stat = {
     end
 }
 
+setmetatable( state.trinket.none.stat, mt_trinket_with_stat )
 setmetatable( state.trinket.t1.stat, mt_trinket_with_stat )
 setmetatable( state.trinket.t2.stat, mt_trinket_with_stat )
 setmetatable( state.trinket.main_hand.stat, mt_trinket_with_stat )
+
+state.trinket.none.proc = state.trinket.none.stat
+state.trinket.t1.proc = state.trinket.t1.stat
+state.trinket.t2.proc = state.trinket.t2.stat
+state.trinket.main_hand.proc = state.trinket.main_hand.stat
 
 
 local mt_trinkets_has_stat = {
@@ -3248,11 +3321,27 @@ do
                 local start, duration = 0, 0
 
                 if id > 0 then
-                    start, duration = GetCooldown( id )
+                    local _, modRate = nil, 1
+                    start, duration, _, modRate = GetCooldown( id )
+
                     local lossStart, lossDuration = GetSpellLossOfControlCooldown( id )
                     if lossStart and lossDuration and lossStart + lossDuration > start + duration then
                         start = lossStart
                         duration = lossDuration
+                    end
+
+                    --[[
+                        Void Emissary: Voidbinding
+                        If Voidbinding has 10s remaining, and the affected spell shows 15s remaining on its cooldown, then
+                        when 10s passes, the spell CD will jump from 5s to 6.5s.
+                    ]]--
+
+                    if state.debuff.voidbinding.up and modRate and modRate ~= 1 then
+                        local extraTime = start + duration - state.query_time - state.debuff.voidbinding.remains
+                        if extraTime > 0 then
+                            if Hekili.ActiveDebug then Hekili:Debug( "Extending '%s' remaining cooldown by %.2f because the cooldown exceeds Voidbinding's remaining time by %.2f.", ( extraTime * 0.3 ), extraTime ) end
+                            duration = duration + ( extraTime * 0.3 )
+                        end
                     end
                 end
 
@@ -3289,6 +3378,8 @@ do
                 if ability.charges and ability.charges > 1 then
                     local charges, _
                     charges, _, start, duration = GetSpellCharges( id )
+
+                    -- TODO: Determine if any charged abilities matter enough to solve for Voidbinding CDR.
 
                     if not duration then duration = max( ability.recharge or 0, ability.cooldown or 0 ) end
 
@@ -3790,7 +3881,7 @@ local mt_resource = {
             -- Assassination, April 2021
             -- Using the same as time_to_max because our time_to_max uses modeled regen events...
             return state:TimeToResource( t, t.max )
-        
+
         elseif k:sub(1, 16) == "time_to_deficit_" then
             local amount = k:sub(17)
             amount = tonumber(amount)
@@ -4887,68 +4978,48 @@ do
     } )
 end
 
+local tierSetAliasMap = {
+    -- For specs with APLs that don't use the normal tier/season identifier that the majority uses
+    thewarwithin_season_2 = "tww2",
+    thewarwithin_season_3 = "tww3",
+}
+
 -- Table of set bonuses. Some string manipulation to honor the SimC syntax.
 local mt_set_bonuses = {
     __index = function( t, k )
         if type( k ) == "number" then return 0 end
 
-        local aliasMap = {
-            -- For specs with APLs that don't use the normal tier/season identifier that the majority uses
-            thewarwithin_season_2 = "tww2",
-            thewarwithin_season_3 = "tww3",
-        }
-
-        -- Match hero tree set bonus: e.g. tww3_rider_of_the_apocalypse_2pc
-        local prefix, heroPieces = k:match( "^(.+)_([24])pc$" )
-        if prefix and heroPieces then
-            local heroSet, heroTree = prefix:match( "^([%w]+)_(.+)$" )
-
-            if heroSet and heroTree then
-                heroSet = aliasMap[ heroSet ] or heroSet
-                heroPieces = tonumber( heroPieces )
-
-                local count = rawget( t, heroSet )
-                if not count then return 0 end
-
-                if state.hero_tree and state.hero_tree.current == heroTree then
-                    return count >= heroPieces and 1 or 0
-                end
-                return 0
-            end
-        end
-
-        -- Match standard set bonus: e.g. tww2_2pc
-        local rawSet, pieces = k:match( "^([%w_]+)_([24])pc$" )
-        if rawSet and pieces then
-            rawSet = aliasMap[ rawSet ] or rawSet
+        -- Match specific set bonus effect checks, 2pc/4pc
+          -- standard (tww2_2pc)
+          -- hero tree (tww3_rider_of_the_apocalypse_2pc)
+        local prefix, pieces = k:match( "^(.+)_([24])pc$" )
+        if prefix and pieces then
             pieces = tonumber( pieces )
 
-            local count = rawget( t, rawSet )
-            if not count then return 0 end
-            return count >= pieces and 1 or 0
-        end
-
-        -- Match hero tree set name only: e.g. tww3_rider_of_the_apocalypse
-        local heroSet, heroTree = k:match( "^([%w]+)_(.+)$" )
-        if heroSet and heroTree then
-            heroSet = aliasMap[ heroSet ] or heroSet
-
-            local count = rawget( t, heroSet )
-            if not count then return 0 end
-
-            if state.hero_tree and state.hero_tree.current == heroTree then
-                return count
+            -- Try as hero tree first (contains additional underscore for hero tree name)
+            local heroSet = prefix:match( "^([%w_]+)_" .. state.hero_tree.current .. "$" )
+            if heroSet then
+                heroSet = tierSetAliasMap[ heroSet ] or heroSet
+                return ( rawget( t, heroSet ) or 0 ) >= pieces and 1 or 0
             end
-            return 0
+
+            -- Try as standard set bonus (no additional hero tree part)
+            local standardSet = tierSetAliasMap[ prefix ] or prefix
+            return ( rawget( t, standardSet ) or 0 ) >= pieces and 1 or 0
         end
 
-        -- Match basic set name: e.g. tww3
-        local set = aliasMap[ k ] or k
-        local count = rawget( t, set )
-        if count then
-            return count
+        -- Check if this is a basic set name that should be aliased first
+        if tierSetAliasMap[ k ] then return rawget( t,  tierSetAliasMap[ k ] ) or 0 end
+
+        -- Match hero tree set name (tww3_rider_of_the_apocalypse)
+        local heroSet = k:match( "^([%w_]-)_" .. state.hero_tree.current .. "$" )
+        if heroSet then
+            -- Hero tree set name
+            heroSet = tierSetAliasMap[ heroSet ] or heroSet
+            return rawget( t, heroSet ) or 0
         end
 
+        -- t[ k ] is nil or this metafunction would not have fired.
         return 0
     end
 }
@@ -5214,7 +5285,7 @@ do
             local moment = state.query_time
             local applied = meta and meta.applied and meta.applied( t, "debuff" ) or t.applied
             local expires = meta and meta.expires and meta.expires( t, "debuff" ) or t.expires
-            local remains = meta and meta.remains and meta.remains( t, "debuff" ) or applied > 0 and applied <= moment and expires > moment and expires - moment or 0
+            local remains = meta and meta.remains and meta.remains( t, "debuff" ) or applied ~= 0 and applied <= moment and expires > moment and expires - moment or 0
 
             if k == "remains" then return remains end
 
