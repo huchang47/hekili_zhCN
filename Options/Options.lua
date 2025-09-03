@@ -40,6 +40,10 @@ local GetSpellDescription = C_Spell.GetSpellDescription
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
+-- EasyPlay提供的查询功能
+ns.seachID = ""
+ns.searchItemName = ""
+
 -- One Time Fixes
 local oneTimeFixes = {
     resetAberrantPackageDates_20190728_1 = function( p )
@@ -4219,6 +4223,11 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         db = db or self.Options
         if not db then return end
 
+        -- 清空现有的技能选项以实现筛选功能
+        if db.args and db.args.abilities and db.args.abilities.plugins and db.args.abilities.plugins.actions then
+            wipe(db.args.abilities.plugins.actions)
+        end
+
         local abilities = {}
         local toggles = {}
 
@@ -4238,9 +4247,17 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                 useName = ability.key or ability.id or "???"
             end
 
-            local option = {
-                type = "group",
-                name = function () return useName .. ( state:IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end,
+            -- 筛选功能：如果有搜索条件，只显示匹配的项目
+            if ns.seachID ~= "" and not string.find(useName, ns.seachID) then
+                -- 跳过不匹配的项目，继续下一个循环
+            else
+                local option = {
+                    type = "group",
+                    -- EasyPlay提供的技能查询
+                    name = function()
+                        local name = useName .. (state:IsDisabled(v, true) and "|cFFFF0000禁|r" or "")
+                        return name
+                    end,
                 order = 1,
                 set = "SetAbilityOption",
                 get = "GetAbilityOption",
@@ -4499,6 +4516,25 @@ found = true end
             }
 
             db.args.abilities.plugins.actions[ v ] = option
+            end
+        end
+        
+        -- 如果有搜索条件但没有匹配结果，显示提示信息
+        if ns.seachID ~= "" then
+            local hasResults = false
+            for k, v in pairs(db.args.abilities.plugins.actions or {}) do
+                hasResults = true
+                break
+            end
+            
+            if not hasResults then
+                db.args.abilities.plugins.actions["no_results"] = {
+                    type = "description",
+                    name = "|cFFFF6600没有找到匹配 '" .. ns.seachID .. "' 的技能|r",
+                    fontSize = "medium",
+                    order = 1,
+                }
+            end
         end
     end
 
@@ -4611,6 +4647,11 @@ found = true end
         db = db or self.Options
         if not db then return end
 
+        -- 清空现有的装备选项以实现筛选功能
+        if db.args and db.args.items and db.args.items.plugins and db.args.items.plugins.equipment then
+            wipe(db.args.items.plugins.equipment)
+        end
+
         local abilities = {}
         local toggles = {}
 
@@ -4623,9 +4664,18 @@ found = true end
 
         for k, v in orderedPairs( abilities ) do
             local ability = class.abilities[ v ]
-            local option = {
-                type = "group",
-                name = function () return ability.name .. ( state:IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end,
+            
+            -- 筛选功能：如果有搜索条件，只显示匹配的项目
+            if ns.searchItemName ~= "" and not string.find(ability.name, ns.searchItemName) then
+                -- 跳过不匹配的项目，继续下一个循环
+            else
+                local option = {
+                    type = "group",
+                    -- EasyPlay提供的装备和道具
+                    name = function()
+                        local name = ability.name .. (state:IsDisabled(v, true) and "|cFFFF0000禁|r" or "")
+                        return name
+                    end,
                 order = 1,
                 set = "SetItemOption",
                 get = "GetItemOption",
@@ -4721,6 +4771,25 @@ found = true end
             }
 
             db.args.items.plugins.equipment[ v ] = option
+            end
+        end
+        
+        -- 如果有搜索条件但没有匹配结果，显示提示信息
+        if ns.searchItemName ~= "" then
+            local hasResults = false
+            for k, v in pairs(db.args.items.plugins.equipment or {}) do
+                hasResults = true
+                break
+            end
+            
+            if not hasResults then
+                db.args.items.plugins.equipment["no_results"] = {
+                    type = "description",
+                    name = "|cFFFF6600没有找到匹配 '" .. ns.searchItemName .. "' 的装备|r",
+                    fontSize = "medium",
+                    order = 1,
+                }
+            end
         end
 
         self.NewItemInfo = false
@@ -5202,11 +5271,10 @@ found = true end
                                             "|cFFFFD100• 较高值|r 允许推荐技能 |cFF00FF00更快速地更新|r 但可能会风险降低帧率，" ..
                                             "尤其是当其他插件同时工作时。\n" ..
                                             "|cFFFFD100• 较低值|r 意味着推荐技能可能会 |cFF00FF00更慢地更新|r 但可能会 |cFF00FF00保留帧率|r。\n\n" .. 
-                                            
-                                            "|cFFFFD100• 平衡|r 允许推荐技能 |cFF00FF00平滑地更新|r 但可能会风险降低帧率，" ..
-                                            "尤其是当其他插件同时工作时。\n" ..
-                                            "|cFFFFD100• 响应|r 意味着推荐技能可能会 |cFF00FF00更慢地更新|r 但可能会 |cFF00FF00保留帧率|r。\n\n" .. 
-                                            
+
+                                            "调整此预算以平衡 |cFF00FF00流畅的游戏体验|r 和 |cFF00FF00及时的技能推荐|r。 " ..
+                                            "请根据你的系统情况，设置最高的数值，确保游戏运行流畅，且屏幕不会出现冻结或卡顿。\n\n" ..
+
                                             "|cFF00B4FF默认（推荐）|r: |cFFFFD10070%|r\n\n" ..
 
                                             "在 |cFFFFD700" .. format( "%.1f", fps ) .. " FPS|r 的帧率下，|cFFFFD700" .. ( budget * 100 ) .. "%|r 的预算 " ..
@@ -8874,6 +8942,21 @@ do
                 order = 80,
                 childGroups = "select",
                 args = {
+                    -- EasyPlay提供的技能查询
+                    searchInPut = {
+                        type = "input",
+                        name = "技能搜索(模糊输入)",
+                        desc = "匹配到的技能会筛选显示在列表中",
+                        order = 0.2,
+                        width = "full",
+                        set = function(info, val)
+                            ns.seachID = val
+                            -- 重新构建技能选项列表以实现筛选
+                            Hekili:EmbedAbilityOptions()
+                        end,
+                        get = function()
+                        end
+                    },
                     spec = {
                         type = "select",
                         name = "职业专精",
@@ -8897,15 +8980,49 @@ do
                 order = 81,
                 childGroups = "select",
                 args = {
+                    -- EasyPlay提供装备道具查询
+                    searchInPut = {
+                        type = "input",
+                        name = "装备搜索(模糊输入)",
+                        desc = "匹配到的装备会筛选显示在列表中",
+                        order = 0.2,
+                        width = "full",
+                        set = function(info, val)
+                            ns.searchItemName = val
+                            -- 重新构建装备选项列表以实现筛选
+                            Hekili:EmbedItemOptions()
+                        end,
+                        get = function()
+                        end
+
+                    },
                     spec = {
                         type = "select",
                         name = "职业专精",
                         desc = "这些选项对应你当前选择的职业专精。",
                         order = 0.1,
-                        width = "full",
+                        width = 1.49,
                         set = SetCurrentSpec,
                         get = GetCurrentSpec,
                         values = GetCurrentSpecList,
+                    },
+                    disable_items = {
+                        type = "toggle",
+                        name = "禁用装备和物品",
+                        desc = function()
+                            return format( "如果勾选，无论下方选择了任何选项，|cFFFFD100%s|r 中带有 |cFF00FF00使用：|r 效果的" 
+                            .. "已装备饰品、武器和护甲都不会被推荐。", ( GetCurrentSpec() and GetCurrentSpecList()[ GetCurrentSpec() ] or "本专精" ) )
+                        end,
+                        order = 0.2,
+                        width = 1.49,
+                        get = function()
+                            local spec = GetCurrentSpec()
+                            return Hekili.DB.profile.specs[ spec ].disable_items or false
+                        end,
+                        set = function( info, val )
+                            local spec = GetCurrentSpec()
+                            Hekili.DB.profile.specs[ spec ].disable_items = val
+                        end,
                     },
                 },
                 plugins = {
