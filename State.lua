@@ -4230,10 +4230,11 @@ do
                 return t.remains / t.tick_time
 
             elseif k == "tick_time_remains" then
-                if t.remains == 0 then return 0 end
+                -- Match SimC behavior:  They return the max of a 64 bit integer ... 3600 is sufficient.
+                if t.remains == 0 then return 3600 end
                 if t.applied <= state.query_time and state.query_time < t.expires then
                     if not aura.tick_time then return t.remains end
-                    return aura.tick_time - ( ( query_time - t.applied ) % aura.tick_time )
+                    return aura.tick_time - ( ( state.query_time - t.applied ) % aura.tick_time )
                 end
                 return 0
 
@@ -7624,7 +7625,7 @@ do
         if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return true, "display" end
         if ability.item and not ability.bagItem and not state.equipped[ ability.item ] then return false, "not equipped" end
         if toggleSpell[ spell ] and toggle and toggle ~= "none" then
-            if not self.toggle[ toggle ] or ( profile.toggles[ tQoggle ].separate and state.filter ~= toggle and not spec.noFeignedCooldown ) then return true, format( "%s filtered", toggle ) end
+            if not self.toggle[ toggle ] or ( profile.toggles[ toggle ].separate and state.filter ~= toggle and not spec.noFeignedCooldown ) then return true, format( "%s filtered", toggle ) end
         end
 
         return false
